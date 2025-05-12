@@ -126,6 +126,7 @@ def input_data():
 
 def execute(cmd, env=None, codes=[0]):
     """ Execute CodeChecker commands """
+    cmd = sys.executable + ' ' + cmd
     process = subprocess.Popen(
         cmd,
         env=env,
