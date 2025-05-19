@@ -1,0 +1,56 @@
+name: codechecker-tests
+
+# Triggers the workflow on push or pull request events.
+on: [push, pull_request]
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Note: UI related linter tests will run in the gui job.
+  #lint:
+  #  name: Linters (pylint, pycodestyle)
+
+  #  runs-on: ubuntu-24.04
+
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - uses: actions/setup-python@v4
+  #      with:
+  #        python-version: '3.8'
+  #    - name: Install dependencies
+  #      run: |
+  #        pip install $(grep -iE "pylint|pycodestyle" analyzer/requirements_py/dev/requirements.txt)
+  #    - name: Run tests
+  #      run: make pylint pycodestyle
+
+  analyzer:
+    name: Analyzer
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Setup Bazel
+        uses: abhinavsingh/setup-bazel@v3
+        with:
+          version: 6.5.0
+
+      - name: Install dependencies
+        run: sh .github/workflows/install-deps.sh
+
+      - name: Install CodeChecker
+        run: |
+          pip3 install codechecker
+          CodeChecker version
+
+      - name: Run analyzer tests
+        working-directory: test/
+        run: pytest -c pytest.ini .
+
