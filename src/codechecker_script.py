@@ -126,6 +126,7 @@ def input_data():
 
 def execute(cmd, env=None, codes=[0]):
     """ Execute CodeChecker commands """
+    cmd = sys.executable + ' ' + cmd
     process = subprocess.Popen(
         cmd,
         env=env,
@@ -173,6 +174,8 @@ def analyze():
 
     output = execute("%s analyzers --details" % CODECHECKER_PATH, env=env)
     logging.debug("Analyzers:\n\n%s", output)
+    if "ccache" in output:
+        fail("ccache is not supported!")
 
     command = "%s analyze --skip=%s %s --output=%s/data --config %s %s" % (
         CODECHECKER_PATH,
