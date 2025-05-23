@@ -187,30 +187,32 @@ def _run_analyzer(
     )
     return outfile
 
+def check_valid_file_type(src):
+    """
+    Returns True if the file type matches one of the permitted
+    srcs file types for C and C++ header/source files.
+    """
+    permitted_file_types = [
+        ".c",
+        ".cc",
+        ".cpp",
+        ".cxx",
+        ".c++",
+        ".C",
+        ".h",
+        ".hh",
+        ".hpp",
+        ".hxx",
+        ".inc",
+        ".inl",
+        ".H",
+    ]
+    for file_type in permitted_file_types:
+        if src.basename.endswith(file_type):
+            return True
+    return False
+
 def _rule_sources(ctx):
-    def check_valid_file_type(src):
-        """
-        Returns True if the file type matches one of the permitted srcs file types for C and C++ header/source files.
-        """
-        permitted_file_types = [
-            ".c",
-            ".cc",
-            ".cpp",
-            ".cxx",
-            ".c++",
-            ".C",
-            ".h",
-            ".hh",
-            ".hpp",
-            ".hxx",
-            ".inc",
-            ".inl",
-            ".H",
-        ]
-        for file_type in permitted_file_types:
-            if src.basename.endswith(file_type):
-                return True
-        return False
 
     srcs = []
     if hasattr(ctx.rule.attr, "srcs"):
