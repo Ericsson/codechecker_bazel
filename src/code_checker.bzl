@@ -18,11 +18,21 @@ COMPILE_COMMANDS_JSON=$1
 shift
 COMPILE_COMMANDS_ABS=$COMPILE_COMMANDS_JSON.abs
 sed 's|"directory":"."|"directory":"'$(pwd)'"|g' $COMPILE_COMMANDS_JSON > $COMPILE_COMMANDS_ABS
-echo "Running: $@" $COMPILE_COMMANDS_ABS > $LOG_FILE
-echo "==================================" >> $LOG_FILE
+echo "CodeChecker command: $@" $COMPILE_COMMANDS_ABS > $LOG_FILE
+echo "===-----------------------------------------------------===" >> $LOG_FILE
+echo "                   CodeChecker error log                   " >> $LOG_FILE
+echo "===-----------------------------------------------------===" >> $LOG_FILE
 eval "$@" $COMPILE_COMMANDS_ABS >> $LOG_FILE 2>&1
 # ls -la $DATA_DIR
 # NOTE: the following we do to get rid of md5 hash in plist file names
+ret_code=$?
+echo "===-----------------------------------------------------===" >> $LOG_FILE
+if [ $ret_code -eq 1 ] || [ $ret_code -ge 128 ]; then
+    echo "===-----------------------------------------------------==="
+    echo "[ERROR]: CodeChecker returned with $ret_code!"
+    cat $LOG_FILE
+    exit 1
+fi
 cp $DATA_DIR/*_clang-tidy_*.plist $CLANG_TIDY_PLIST
 cp $DATA_DIR/*_clangsa_*.plist    $CLANGSA_PLIST
 
@@ -90,30 +100,32 @@ def _run_code_checker(
     )
     return outputs
 
+def check_valid_file_type(src):
+    """
+    Returns True if the file type matches one of the permitted
+    srcs file types for C and C++ header/source files.
+    """
+    permitted_file_types = [
+        ".c",
+        ".cc",
+        ".cpp",
+        ".cxx",
+        ".c++",
+        ".C",
+        ".h",
+        ".hh",
+        ".hpp",
+        ".hxx",
+        ".inc",
+        ".inl",
+        ".H",
+    ]
+    for file_type in permitted_file_types:
+        if src.basename.endswith(file_type):
+            return True
+    return False
+
 def _rule_sources(ctx):
-    def check_valid_file_type(src):
-        """
-        Returns True if the file type matches one of the permitted srcs file types for C and C++ header/source files.
-        """
-        permitted_file_types = [
-            ".c",
-            ".cc",
-            ".cpp",
-            ".cxx",
-            ".c++",
-            ".C",
-            ".h",
-            ".hh",
-            ".hpp",
-            ".hxx",
-            ".inc",
-            ".inl",
-            ".H",
-        ]
-        for file_type in permitted_file_types:
-            if src.basename.endswith(file_type):
-                return True
-        return False
 
     srcs = []
     if hasattr(ctx.rule.attr, "srcs"):
