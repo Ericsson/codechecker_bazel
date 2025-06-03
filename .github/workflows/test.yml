@@ -10,25 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Note: UI related linter tests will run in the gui job.
-  #lint:
-  #  name: Linters (pylint, pycodestyle)
-
-  #  runs-on: ubuntu-24.04
-
-  #  steps:
-  #    - uses: actions/checkout@v2
-  #    - uses: actions/setup-python@v4
-  #      with:
-  #        python-version: '3.8'
-  #    - name: Install dependencies
-  #      run: |
-  #        pip install $(grep -iE "pylint|pycodestyle" analyzer/requirements_py/dev/requirements.txt)
-  #    - name: Run tests
-  #      run: make pylint pycodestyle
-
   analyzer:
-    name: Analyzer
+    name: Analysis
     runs-on: ubuntu-24.04
 
     steps:
@@ -45,6 +28,7 @@ jobs:
       - name: Install dependencies
         run: sh .github/workflows/install-deps.sh
 
+      # TODO: Consider using top-of-the-tree CodeChecker as well.
       - name: Install CodeChecker
         run: |
           pip3 install codechecker
@@ -52,5 +36,4 @@ jobs:
 
       - name: Run analyzer tests
         working-directory: test/
-        run: pytest -c pytest.ini .
-
+        run: python -m unittest discover .

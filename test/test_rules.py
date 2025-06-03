@@ -20,10 +20,11 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import unittest
 
 
-class TestBaseTest(unittest.TestCase):
+class TestCodeCheckerBazelRules(unittest.TestCase):
     """Unittest base abstract class"""
 
     BAZEL_BIN_DIR = os.path.join("..", "bazel-bin", "test")
@@ -46,10 +47,8 @@ class TestBaseTest(unittest.TestCase):
         os.environ = cls.save_env
 
     def setUp(self):
-        """Before every test: clean Bazel cache"""
+        """Before every test"""
         logging.debug("\n%s", "-" * 70)
-
-        self.check_command("bazel clean")
 
     def check_command(self, cmd, exit_code=0):
         """Run shell command and check status"""
@@ -66,8 +65,6 @@ class TestBaseTest(unittest.TestCase):
                     f"command: {cmd}",
                     f"stdout: {stdout.decode('utf-8')}",
                     f"stderr: {stderr.decode('utf-8')}"]))
-            print(stdout)
-            print(stderr)
 
     def grep_file(self, filename, regex):
         """Grep given filename"""
@@ -165,7 +162,7 @@ class TestBaseTest(unittest.TestCase):
 
     def test_bazel_test_clang_ctu_fail(self):
         """Test: bazel test :clang_ctu_fail"""
-        # FIXME: This test currently failes in the github CI.
+        # FIXME: Currently failing in github CI.
         # self.check_command("bazel test :clang_ctu_fail", exit_code=3)
         # logfile = os.path.join(
         #     self.BAZEL_TESTLOGS_DIR, "clang_ctu_fail", "test.log")
@@ -194,3 +191,23 @@ class TestBaseTest(unittest.TestCase):
         logfile = os.path.join(
             self.BAZEL_TESTLOGS_DIR, "code_checker_ctu", "test.log")
         self.grep_file(logfile, "// CTU example")
+
+
+def setup_logging():
+    """Setup logging level for test execution"""
+    # Enable debug logs for tests if "super verbose" flag is provided
+    if "-vvv" in sys.argv:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="[TEST] %(levelname)5s: %(message)s")
+
+
+def main():
+    """Run unittest"""
+    setup_logging()
+    logging.debug("Start testing...")
+    unittest.main(buffer=True)
+
+
+if __name__ == "__main__":
+    main()
