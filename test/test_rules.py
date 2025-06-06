@@ -24,7 +24,7 @@ import sys
 import unittest
 
 
-class TestCodeCheckerBazelRules(unittest.TestCase):
+class TestBase(unittest.TestCase):
     """Unittest base abstract class"""
 
     BAZEL_BIN_DIR = os.path.join("..", "bazel-bin", "test")
@@ -77,6 +77,14 @@ class TestCodeCheckerBazelRules(unittest.TestCase):
                     return line
         self.fail(f"Could not find r'{regex}' in '{filename}'")
         return ""
+
+class TestBasic(TestBase):
+    """Basic tests"""
+
+    def setUp(self):
+        """Before every test: clean Bazel cache"""
+        super().setUp()
+        self.check_command("bazel clean")
 
     def test_bazel_test_all(self):
         """Test: bazel test ..."""
