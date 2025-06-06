@@ -9,12 +9,6 @@ sudo apt-get update -q
 
 sudo apt-get install \
   g++-13 \
-  gcc-multilib \
-  libc6-dev-i386 \
-  libpq-dev \
-  libldap2-dev \
-  libsasl2-dev \
-  libssl-dev \
   clang-14 \
   clang-tidy-14 \
   cppcheck
