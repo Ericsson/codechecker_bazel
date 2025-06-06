@@ -21,7 +21,7 @@ jobs:
           python-version: '3.8'
 
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.15.0
+        uses: abhinavsingh/setup-bazel@v3
         with:
           version: 6.5.0
 
