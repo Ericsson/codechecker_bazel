@@ -17,6 +17,8 @@ sudo apt-get install \
 ldd --version
 
 sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-14 9999
+sudo update-alternatives --install /usr/bin/clang-extdef-mapping \
+  clang-extdef-mapping /usr/bin/clang-extdef-mapping-14 9999
 sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 9999
 sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 9999
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 9999
