@@ -10,6 +10,7 @@ sudo apt-get update -q
 sudo apt-get install \
   g++-13 \
   clang-14 \
+  clang-tools-14 \
   clang-tidy-14 \
   cppcheck
 
