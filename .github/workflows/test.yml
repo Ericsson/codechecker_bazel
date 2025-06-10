@@ -36,4 +36,4 @@ jobs:
 
       - name: Run analyzer tests
         working-directory: test/
-        run: python -m unittest discover .
+        run: python test_rules.py -vvv
