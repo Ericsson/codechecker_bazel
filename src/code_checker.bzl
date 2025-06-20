@@ -153,6 +153,9 @@ def _toolchain_flags(ctx, action_name = ACTION_NAMES.cpp_compile):
         feature_configuration = feature_configuration,
         action_name = action_name,
     )
+    if "ccache" in compiler:
+        fail("ccache is not supported!")
+
     return [compiler] + flags
 
 def _compile_args(compilation_context):
