@@ -24,5 +24,22 @@ jobs:
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
 
-      - name: Print bazel version
-        run: bazel version
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install CodeChecker analyzers
+        run: sh .github/workflows/install-deps.sh
+
+      - name: Install CodeChecker
+        run: pip3 install codechecker
+
+      - name: Print versions
+        run: |
+          bazel version
+          CodeChecker version
+          echo "[NOTE]: If you are debugging, its possible that " \
+               "CodeChecker finds different analyzers when running in " \
+               "bazel's sandbox environment!"
+          CodeChecker analyzers
