@@ -177,9 +177,6 @@ codechecker_test(
     targets = [
         "test_fail",
     ],
-    analyze = [
-        "--analyzers clangsa clang-tidy",
-    ],
 )
 
 # This codechecker_test CTU example supposed to fail showing findings report
