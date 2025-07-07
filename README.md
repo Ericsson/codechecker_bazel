@@ -131,7 +131,9 @@ codechecker_test(
 Then invoke bazel:
 
 ```bash
-bazel build ://your_codechecker_rule_name
+bazel test ://your_codechecker_rule_name
+# Or, as a part of the rest of the testsuite
+bazel test ...
 ```
 
 You can find the analysis results in the `bazel-bin/` folder, on which you
@@ -141,6 +143,8 @@ or [`CodeChecker parse`](https://github.com/Ericsson/codechecker/blob/master/doc
 ```bash
 CodeChecker parse bazel-bin/path/to/results
 ```
+
+<!-- For now, we consider codechecker() to be an internal rule.
 
 ### Build-only CodeChecker analysis: `codechecker()`
 
@@ -153,6 +157,8 @@ load(
     "codechecker"
 )
 ```
+
+-->
 
 ### Multiplatform CodeChechecker analysis: `codechecker_suite()`
 
@@ -168,7 +174,7 @@ load(
 
 ### `codechecker_config()`
 
-Using the Bazel rule `codechecker_config()` you can parse a CodeChecker [configuration file](https://github.com/Ericsson/codechecker/blob/master/docs/config_file.md).
+Using the Bazel rule `codechecker_config()` you can utilize a CodeChecker [configuration file](https://github.com/Ericsson/codechecker/blob/master/docs/config_file.md).
 
 First, include the rule in your BUILD file:
 
@@ -179,7 +185,7 @@ load(
 )
 ```
 
-Create a CodeChecker configuration file e.g. `config.json` (see example [here](https://github.com/Szelethus/codechecker_bazel/blob/readme_update/test/config.json)) and parse it using `codechecker_config()`. 
+Create a CodeChecker configuration file e.g. `config.json` (see example [here](https://github.com/Ericsson/codechecker_bazel/blob/readme_update/test/config.json)) and parse it using `codechecker_config()`.
 
 ```python
 codechecker_config(
@@ -246,7 +252,9 @@ code_checker_test(
 ```
 
 ```bash
-bazel build ://your_code_checker_rule_name
+bazel test ://your_code_checker_rule_name
+# Or, as a part of the rest of the testsuite
+bazel test ...
 ```
 
 The analysis results can be found and stored/parsed similarly to [`codechecker_test`](README.md#standard-codechecker-invocation-codechecker_test)
