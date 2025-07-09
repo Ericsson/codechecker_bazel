@@ -1,0 +1,32 @@
+name: 'Setup environment'
+description: 'Sets up analyzers, CodeChecker and Bazel'
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bazel
+      uses: bazel-contrib/setup-bazel@0.15.0
+    
+    # Writing out bazel version forces bazelisk to install bazel here
+    - name: Set bazel version to 6.5.0
+      run: |
+        echo "6.5.0" > .bazelversion
+        bazel version
+      shell: bash
+
+    - name: Install python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install CodeChecker analyzers
+      run: |
+        sudo apt-get update --quiet
+        sudo apt-get install --no-install-recommends \
+          clang \
+          clang-tools \
+          clang-tidy
+      shell: bash
+
+    - name: Install CodeChecker
+      run: pip3 install codechecker
+      shell: bash

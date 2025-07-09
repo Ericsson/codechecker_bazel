@@ -18,27 +18,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set bazel version to 6.5.0
-        run: echo "6.5.0" > .bazelversion
-
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.15.0
-
-      - name: Install python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install CodeChecker analyzers
-        run: |
-          sudo apt-get update --quiet
-          sudo apt-get install --no-install-recommends \
-            clang \
-            clang-tools \
-            clang-tidy
-
-      - name: Install CodeChecker
-        run: pip3 install codechecker
+      - name: Setup environment
+        uses: ./.github/actions/env_setup
 
       - name: Print versions
         run: |
@@ -48,3 +29,31 @@ jobs:
                "CodeChecker finds different analyzers when running in " \
                "bazel's sandbox environment!"
           CodeChecker analyzers
+
+  small_test:
+    # Test the bazel rules introduced by repository on an independent open-source project.
+    name: Test On Small Project
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/env_setup
+
+      - name: Patching codechecker_bazel targets onto test_project
+        run:  |
+          sh .github/workflows/patch-test-proj.sh ${{ github.repository }} ${{ github.ref }}
+
+      # Running bazel with test will signal failure because CodeChecker found problems
+      - name: Run Monolithic Bazel CodeChecker
+        run: |
+          cd test_project
+          bazel test :codechecker_test || [ $? -eq 3 ] && exit 0 || exit $?
+
+      # Running bazel with test will signal failure because CodeChecker found problems
+      - name: Run Per File Bazel CodeChecker
+        run: |
+          cd test_project
+          bazel test :code_checker_test || [ $? -eq 3 ] && exit 0 || exit $?
