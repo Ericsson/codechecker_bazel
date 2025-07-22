@@ -139,7 +139,10 @@ def _toolchain_flags(ctx, action_name = ACTION_NAMES.cpp_compile):
         cc_toolchain = cc_toolchain,
     )
     user_comp_flag_builder = ctx.fragments.cpp.copts
-    user_comp_flag_builder += ctx.fragments.cpp.cxxopts if action_name == ACTION_NAMES.cpp_compile else ctx.fragments.cpp.conlyopts
+    if action_name == ACTION_NAMES.cpp_compile:
+        user_comp_flag_builder += ctx.fragments.cpp.cxxopts
+    else:
+        user_comp_flag_builder += ctx.fragments.cpp.conlyopts
     compile_variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
