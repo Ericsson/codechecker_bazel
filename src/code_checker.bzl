@@ -14,6 +14,8 @@ CLANGSA_PLIST=$1
 shift
 LOG_FILE=$1
 shift
+METADATA=$1
+shift
 COMPILE_COMMANDS_JSON=$1
 shift
 COMPILE_COMMANDS_ABS=$COMPILE_COMMANDS_JSON.abs
@@ -35,6 +37,7 @@ if [ $ret_code -eq 1 ] || [ $ret_code -ge 128 ]; then
 fi
 cp $DATA_DIR/*_clang-tidy_*.plist $CLANG_TIDY_PLIST
 cp $DATA_DIR/*_clangsa_*.plist    $CLANGSA_PLIST
+cp $DATA_DIR/metadata.json        $METADATA
 
 # sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANG_TIDY_PLIST
 # sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANGSA_PLIST
@@ -56,11 +59,13 @@ def _run_code_checker(
     clang_tidy_plist_file_name = "{}/{}_clang-tidy.plist".format(*file_name_params)
     clangsa_plist_file_name = "{}/{}_clangsa.plist".format(*file_name_params)
     codechecker_log_file_name = "{}/{}_codechecker.log".format(*file_name_params)
+    codechecker_metadata_file_name = "{}/{}_metadata.json".format(*file_name_params)
 
     # Declare output files
     clang_tidy_plist = ctx.actions.declare_file(clang_tidy_plist_file_name)
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
+    codechecker_metadata = ctx.actions.declare_file(codechecker_metadata_file_name)
 
     if "--ctu" in options:
         inputs = [compile_commands_json] + sources_and_headers
@@ -87,6 +92,7 @@ def _run_code_checker(
     args.add(clang_tidy_plist.path)
     args.add(clangsa_plist.path)
     args.add(codechecker_log.path)
+    args.add(codechecker_metadata.path)
     args.add(compile_commands_json.path)
     args.add("CodeChecker")
     args.add("analyze")
