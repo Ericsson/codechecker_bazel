@@ -62,7 +62,7 @@ def _run_code_checker(
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
-    inputs = [compile_commands_json] + sources_and_headers
+    inputs = depset([compile_commands_json, src], transitive = [sources_and_headers])
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
     # Create CodeChecker wrapper script
@@ -274,20 +274,19 @@ def _compile_commands_impl(ctx):
     return compile_commands_json
 
 def _collect_all_sources_and_headers(ctx):
-    all_files = []
-    headers = depset()
+    sources_and_headers = depset()
     for target in ctx.attr.targets:
         if not CcInfo in target:
             continue
         if CompileInfo in target:
             if hasattr(target[CompileInfo], "arguments"):
                 srcs = target[CompileInfo].arguments.keys()
-                all_files += srcs
                 compilation_context = target[CcInfo].compilation_context
-                headers = depset(
-                    transitive = [headers, compilation_context.headers],
+                srcs_hdrs = depset(
+                    srcs,
+                    transitive = [compilation_context.headers],
                 )
-    sources_and_headers = all_files + headers.to_list()
+                sources_and_headers = depset(transitive = [srcs_hdrs])
     return sources_and_headers
 
 def _code_checker_impl(ctx):
