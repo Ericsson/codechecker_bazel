@@ -62,7 +62,7 @@ def _run_code_checker(
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
-    inputs = depset([compile_commands_json, src], transitive = [sources_and_headers])
+    inputs = depset([compile_commands_json, src], transitive = sources_and_headers)
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
     # Create CodeChecker wrapper script
@@ -273,25 +273,23 @@ def _compile_commands_impl(ctx):
     )
     return compile_commands_json
 
-def _collect_all_sources_and_headers(ctx):
-    sources_and_headers = depset()
-    for target in ctx.attr.targets:
-        if not CcInfo in target:
-            continue
-        if CompileInfo in target:
-            if hasattr(target[CompileInfo], "arguments"):
-                srcs = target[CompileInfo].arguments.keys()
-                compilation_context = target[CcInfo].compilation_context
-                srcs_hdrs = depset(
-                    srcs,
-                    transitive = [compilation_context.headers],
-                )
-                sources_and_headers = depset(transitive = [srcs_hdrs])
-    return sources_and_headers
+def _collect_sources_and_headers(target):
+    if not CcInfo in target:
+        return []
+    if not CompileInfo in target:
+        return []
+    if not hasattr(target[CompileInfo], "arguments"):
+        return []
+    srcs = target[CompileInfo].arguments.keys()
+    compilation_context = target[CcInfo].compilation_context
+    sources_and_headers = depset(
+        srcs,
+        transitive = [compilation_context.headers],
+    )
+    return [sources_and_headers]
 
 def _code_checker_impl(ctx):
     compile_commands_json = _compile_commands_impl(ctx)
-    sources_and_headers = _collect_all_sources_and_headers(ctx)
     options = ctx.attr.default_options + ctx.attr.options
     all_files = [compile_commands_json]
     for target in ctx.attr.targets:
@@ -302,6 +300,7 @@ def _code_checker_impl(ctx):
                 srcs = target[CompileInfo].arguments.keys()
                 all_files += srcs
                 compilation_context = target[CcInfo].compilation_context
+                sources_and_headers = _collect_sources_and_headers(target)
                 for src in srcs:
                     args = target[CompileInfo].arguments[src]
                     outputs = _run_code_checker(
