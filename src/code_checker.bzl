@@ -62,7 +62,9 @@ def _run_code_checker(
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
-    inputs = depset([compile_commands_json, src], transitive = sources_and_headers)
+    # NOTE: we collect only headers, so CTU may not work!
+    headers = depset([src], transitive = [compilation_context.headers])
+    inputs = depset([compile_commands_json, src], transitive = [headers])
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
     # Create CodeChecker wrapper script
