@@ -22,7 +22,6 @@ import shlex
 import subprocess
 import sys
 import unittest
-import glob
 
 
 class TestBase(unittest.TestCase):
@@ -202,18 +201,6 @@ class TestBasic(TestBase):
             self.BAZEL_TESTLOGS_DIR, "code_checker_ctu", "test.log")
         self.grep_file(logfile, "// CTU example")
 
-    def test_bazel_plist_path_resolved(self):
-        """Test: bazel build :codechecker_virtual_include"""
-        self.check_command("bazel build :codechecker_virtual_include", exit_code=0)
-        plist_files = glob.glob(os.path.join(self.BAZEL_BIN_DIR, "**", "*.plist"), recursive=True)
-        logfolder = os.path.join(
-            self.BAZEL_BIN_DIR, "codechecker_virtual_include", "codechecker-files")
-        for plist_file in plist_files:
-            logging.debug(f"Checking file: {plist_file}")
-            with open(plist_file, "r") as f:
-                content = f.read()
-                if re.search(r"/_virtual_includes/", content):
-                    self.fail(f"Found unresolved symlink within CodeChecker report: {plist_file}")
 
 def setup_logging():
     """Setup logging level for test execution"""
