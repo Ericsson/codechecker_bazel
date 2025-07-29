@@ -240,7 +240,7 @@ load(
 )
 ```
 
-Create a `code_checker_test()` target by passing other targets you'd like CodeChecker to analyze:
+Create a `code_checker_test()` target by passing targets you'd like CodeChecker to analyze, similarly to `codechecker_test`:
 
 ```python
 code_checker_test(
@@ -251,13 +251,7 @@ code_checker_test(
 )
 ```
 
-```bash
-bazel test ://your_code_checker_rule_name
-# Or, as a part of the rest of the testsuite
-bazel test ...
-```
-
-The analysis results can be found and stored/parsed similarly to [`codechecker_test`](README.md#standard-codechecker-invocation-codechecker_test)
+You can run the analysis and store/parse the results similarly to [`codechecker_test`](README.md#standard-codechecker-invocation-codechecker_test).
 
 ## CodeChecker independent rules
 
