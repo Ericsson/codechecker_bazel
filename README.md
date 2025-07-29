@@ -275,7 +275,11 @@ clang_tidy_test(
 )
 ```
 
-The Bazel aspect `clang_tidy_aspect` uses `clang_tidy_test` under the hood, but can be invoked from the command line by passing the following parameter to Bazel build/test: `--aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect`.
+You can also run clang-tidy via the Bazel aspect `clang_tidy_aspect` that can be invoked from the command line by passing the following parameter to Bazel build/test: `--aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect`:
+
+```bash
+bazel build ... --aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect --output_groups=report
+```
 
 ### Clang Static Analyzer: `clang_analyze_test()` and `clang_ctu_test`
 
