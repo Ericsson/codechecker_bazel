@@ -48,8 +48,7 @@ def _run_code_checker(
         label,
         options,
         compile_commands_json,
-        compilation_context,
-        sources_and_headers):
+        compilation_context):
     # Define Plist and log file names
     data_dir = ctx.attr.name + "/data"
     file_name_params = (data_dir, src.path.replace("/", "-"))
@@ -275,20 +274,23 @@ def _compile_commands_impl(ctx):
     )
     return compile_commands_json
 
-def _collect_sources_and_headers(target):
-    if not CcInfo in target:
-        return []
-    if not CompileInfo in target:
-        return []
-    if not hasattr(target[CompileInfo], "arguments"):
-        return []
-    srcs = target[CompileInfo].arguments.keys()
-    compilation_context = target[CcInfo].compilation_context
-    sources_and_headers = depset(
-        srcs,
-        transitive = [compilation_context.headers],
-    )
-    return [sources_and_headers]
+def _collect_all_sources_and_headers(ctx):
+    # NOTE: we are not using this function
+    all_files = []
+    headers = depset()
+    for target in ctx.attr.targets:
+        if not CcInfo in target:
+            continue
+        if CompileInfo in target:
+            if hasattr(target[CompileInfo], "arguments"):
+                srcs = target[CompileInfo].arguments.keys()
+                all_files += srcs
+                compilation_context = target[CcInfo].compilation_context
+                headers = depset(
+                    transitive = [headers, compilation_context.headers],
+                )
+    sources_and_headers = all_files + headers.to_list()
+    return sources_and_headers
 
 def _code_checker_impl(ctx):
     compile_commands_json = _compile_commands_impl(ctx)
@@ -302,7 +304,6 @@ def _code_checker_impl(ctx):
                 srcs = target[CompileInfo].arguments.keys()
                 all_files += srcs
                 compilation_context = target[CcInfo].compilation_context
-                sources_and_headers = _collect_sources_and_headers(target)
                 for src in srcs:
                     args = target[CompileInfo].arguments[src]
                     outputs = _run_code_checker(
@@ -313,7 +314,6 @@ def _code_checker_impl(ctx):
                         options,
                         compile_commands_json,
                         compilation_context,
-                        sources_and_headers,
                     )
                     all_files += outputs
     ctx.actions.write(
