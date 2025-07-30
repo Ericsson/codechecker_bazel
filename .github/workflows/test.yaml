@@ -18,33 +18,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set bazel version to 6.5.0
+      - name: Set clang version
+        run: echo "/usr/lib/llvm-18/bin" >> $GITHUB_PATH
+
+      - name: Set bazel version
         run: echo "6.5.0" > .bazelversion
 
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
 
-      - name: Install python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install CodeChecker analyzers
-        run: |
-          sudo apt-get update --quiet
-          sudo apt-get install --no-install-recommends \
-            clang \
-            clang-tools \
-            clang-tidy
-
       - name: Install CodeChecker
         run: pip3 install codechecker
 
-      - name: Print versions
+      - name: Check tools
         run: |
+          echo "PATH=$PATH"
+          which clang
+          clang --version
+          which clang-tidy
+          clang-tidy --version
+          which clang-extdef-mapping
+          clang-extdef-mapping --version
+          which python3
+          python3  --version
+          which bazel
           bazel version
+          which CodeChecker
           CodeChecker version
-          echo "[NOTE]: If you are debugging, its possible that " \
-               "CodeChecker finds different analyzers when running in " \
-               "bazel's sandbox environment!"
-          CodeChecker analyzers
+
+      - name: Run Bazel test
+        run: bazel test ...
+
+      - name: Run unit tests
+        run: python3 test/test.py -vvv
