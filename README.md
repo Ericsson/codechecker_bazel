@@ -185,7 +185,7 @@ load(
 )
 ```
 
-Create a CodeChecker configuration file e.g. `config.json` (see example [here](https://github.com/Ericsson/codechecker_bazel/blob/readme_update/test/config.json)) and parse it using `codechecker_config()`.
+Create a CodeChecker configuration file e.g. `config.json` (see example [here](https://github.com/Ericsson/codechecker_bazel/blob/main/test/config.json)) and parse it using `codechecker_config()`.
 
 ```python
 codechecker_config(
