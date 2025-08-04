@@ -52,7 +52,7 @@ Prerequisites
 We need the following tools:
 
 - Git 2 or newer (we use 2.36)
-- Bazel in between version 4 and 6 (we recommend version 6.5.0)
+- Bazel 6, not yet bazel 7 (we recommend version 6.5.0)
 - Clang 16 or newer (we use 16), we use clang-tidy
 - Python 3.8 or newer (we use 3.11)
 - CodeChecker 6.23 or newer (we use 6.23.0)
@@ -148,7 +148,7 @@ CodeChecker parse bazel-bin/path/to/results
 
 ### Build-only CodeChecker analysis: `codechecker()`
 
-This rule is functionally equivalent to `codechecker_test` but omits the test phase where either PASS or FAIL is printed.
+This rule is functionally equivalent to `codechecker_test` but omits the test phase where either PASS or FAIL isc printed.
 You can include and use it similarly as well:
 
 ```python
@@ -185,7 +185,7 @@ load(
 )
 ```
 
-Create a CodeChecker configuration file e.g. `config.json` (see example [here](https://github.com/Ericsson/codechecker_bazel/blob/main/test/config.json)) and parse it using `codechecker_config()`.
+Create a CodeChecker configuration file e.g. `config.json` (see example [test/config.json](https://github.com/Ericsson/codechecker_bazel/blob/main/test/config.json)) and parse it using `codechecker_config()`.
 
 ```python
 codechecker_config(
@@ -222,7 +222,7 @@ codechecker_test(
 
 ### Per-file CodeChecker analysis: `code_checker_test()`
 > [!IMPORTANT]
-> The rule is still in prototype status and is subject to changes without notice. See [this issue](https://github.com/Ericsson/codechecker_bazel/issues/31).
+> The rule is still in prototype status and is subject to changes without notice. See https://github.com/Ericsson/codechecker_bazel/issues/31.
 > You are free to experiment and report issues however!
 
 Instead of a single CodeChecker call, the bazel rule `code_checker_test()` invokes
@@ -300,7 +300,7 @@ clang_analyze_test(
 ```
 
 > [!IMPORTANT]
-> The rule is still in prototype status and is subject to changes without notice. See [this issue](https://github.com/Ericsson/codechecker_bazel/issues/32).
+> The rule is still in prototype status and is subject to changes without notice. See https://github.com/Ericsson/codechecker_bazel/issues/32.
 > We are also actively pursuing better CTU support _using_ CodeChecker.
 
 The Bazel rule `clang_analyze_test` runs The Clang Static Analyzer with [cross translation unit analysis](https://clang.llvm.org/docs/analyzer/user-docs/CrossTranslationUnit.html) analysis without CodeChecker. To use it, add the following to your BUILD file:
