@@ -18,9 +18,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set bazel version to 6.5.0
-        run: echo "6.5.0" > .bazelversion
-
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
 
@@ -65,3 +62,52 @@ jobs:
         run: |
           cd test
           python3 test.py -vvv
+
+  # TODO: Move installation of tools to a composite action (or use a docker img)
+  # TODO: Generalize to handle multiple projects
+  # TODO: Add script to run tests locally
+  # TODO: Document how to add new project to the list.
+  foss_test:
+    name: "Test rules on FOSS project: yaml-cpp"
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set bazel version to 6.5.0
+        run: echo "6.5.0" > .bazelversion
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.15.0
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install CodeChecker analyzers
+        run: |
+          sudo apt-get update --quiet
+          sudo apt-get install --no-install-recommends \
+            clang \
+            clang-tools \
+            clang-tidy
+
+      - name: Install CodeChecker
+        run: pip3 install codechecker
+
+      - name: Setup yaml-cpp
+        run:  |
+          cd test/foss/yaml-cpp
+          sh init.sh
+
+      - name: Run Bazel CodeChecker
+        run: |
+          cd test/foss/yaml-cpp/test-proj
+          bazel build :codechecker_test
+
+      - name: Run Per-File Bazel CodeChecker
+        run: |
+          cd test/foss/yaml-cpp/test-proj
+          bazel build :code_checker_test
