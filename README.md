@@ -221,6 +221,77 @@ codechecker_test(
 )
 ```
 
+## CodeChecker independent rules
+
+The following rules are _not_ using CodeChecker.
+
+### Clang-tidy: `clang_tidy_aspect()` and `clang_tidy_test()`
+
+The Bazel rule `clang_tidy_test()` runs clang-tidy natively without CodeChecker. To use it, add the following to your BUILD file:
+
+```python
+load(
+    "@bazel_codechecker//src:clang.bzl",
+    "clang_tidy_test",
+)
+
+clang_tidy_test(
+    name = "your_rule_name",
+    targets = [
+        "your_target",
+    ],
+)
+```
+
+You can also run clang-tidy via the Bazel aspect `clang_tidy_aspect()` that can be invoked from the command line by passing the following parameter to Bazel build/test: `--aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect`:
+
+```bash
+bazel build ... --aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect --output_groups=report
+```
+
+### Clang Static Analyzer: `clang_analyze_test()`
+
+The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer natively without CodeChecker. To use it, add the following to your BUILD file:
+
+```python
+load(
+    "@bazel_codechecker//src:clang.bzl",
+    "clang_analyze_test",
+)
+
+clang_analyze_test(
+    name = "your_rule_name",
+    targets = [
+        "your_target",
+    ],
+)
+```
+
+### Generating a compilation database: `compile_commands()`
+
+As generating a compilation database for C/C++ is a known pain point for bazel, this repository defines the Bazel rule `compile_commands()` rule which can be used indendently of CodeChecker. The implementation is basen on https://github.com/grailbio/bazel-compilation-database with some fixes on some tricky edge cases. To use it, include the following in your BUILD file:
+
+```python
+load(
+    "@bazel_codechecker//src:compile_commands.bzl",
+    "compile_commands",
+)
+```
+
+Then use `compile_commands()` rule passing build targets:
+
+```python
+compile_commands(
+    name = "your_compile_commands_rule_name",
+    targets = [
+        "your_target",
+    ],
+)
+```
+You can find the generated `compile_commands.json` under `bazel-bin/`.
+
+## Experimental rules
+
 ### Per-file CodeChecker analysis: `code_checker_test()`
 > [!IMPORTANT]
 > The rule is still in prototype status and is subject to changes or removal without notice. See [#31](https://github.com/Ericsson/codechecker_bazel/issues/31).
@@ -260,52 +331,7 @@ CodeChecker parse bazel-bin/your_code_checker_rule_name/data
 CodeChecker store bazel-bin/your_code_checker_rule_name/data -n "Run name"
 ```
 
-## CodeChecker independent rules
-
-The following rules are _not_ using CodeChecker.
-
-### Clang-tidy: `clang_tidy_aspect()` and `clang_tidy_test()`
-
-The Bazel rule `clang_tidy_test()` runs clang-tidy natively without CodeChecker. To use it, add the following to your BUILD file:
-
-```python
-load(
-    "@bazel_codechecker//src:clang.bzl",
-    "clang_tidy_test",
-)
-
-clang_tidy_test(
-    name = "your_rule_name",
-    targets = [
-        "your_target",
-    ],
-)
-```
-
-You can also run clang-tidy via the Bazel aspect `clang_tidy_aspect()` that can be invoked from the command line by passing the following parameter to Bazel build/test: `--aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect`:
-
-```bash
-bazel build ... --aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect --output_groups=report
-```
-
-### Clang Static Analyzer: `clang_analyze_test()` and `clang_ctu_test()`
-
-The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer natively without CodeChecker. To use it, add the following to your BUILD file:
-
-```python
-load(
-    "@bazel_codechecker//src:clang.bzl",
-    "clang_analyze_test",
-)
-
-clang_analyze_test(
-    name = "your_rule_name",
-    targets = [
-        "your_target",
-    ],
-)
-```
-
+### Cross-translation unit analysis via the Clang Static Analyzer: `clang_ctu_test()`
 > [!IMPORTANT]
 > The rule is still in prototype status and is subject to changes or removal without notice. See [#32](https://github.com/Ericsson/codechecker_bazel/issues/32).
 > We are also actively pursuing better CTU support _using_ CodeChecker.
@@ -325,29 +351,6 @@ clang_ctu_test(
     ],
 )
 ```
-
-### Generating a compilation database: `compile_commands()`
-
-As generating a compilation database for C/C++ is a known pain point for bazel, this repository defines the Bazel rule `compile_commands()` rule which can be used indendently of CodeChecker. The implementation is basen on https://github.com/grailbio/bazel-compilation-database with some fixes on some tricky edge cases. To use it, include the following in your BUILD file:
-
-```python
-load(
-    "@bazel_codechecker//src:compile_commands.bzl",
-    "compile_commands",
-)
-```
-
-Then use `compile_commands()` rule passing build targets:
-
-```python
-compile_commands(
-    name = "your_compile_commands_rule_name",
-    targets = [
-        "your_target",
-    ],
-)
-```
-You can find the generated `compile_commands.json` under `bazel-bin/`.
 
 Examples
 --------
