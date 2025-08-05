@@ -223,7 +223,7 @@ codechecker_test(
 
 ### Per-file CodeChecker analysis: `code_checker_test()`
 > [!IMPORTANT]
-> The rule is still in prototype status and is subject to changes without notice. See [#31](https://github.com/Ericsson/codechecker_bazel/issues/31).
+> The rule is still in prototype status and is subject to changes or removal without notice. See [#31](https://github.com/Ericsson/codechecker_bazel/issues/31).
 > You are free to experiment and report issues however!
 
 Instead of a single CodeChecker call, the bazel rule `code_checker_test()` invokes
@@ -307,7 +307,7 @@ clang_analyze_test(
 ```
 
 > [!IMPORTANT]
-> The rule is still in prototype status and is subject to changes without notice. See [#32](https://github.com/Ericsson/codechecker_bazel/issues/32).
+> The rule is still in prototype status and is subject to changes or removal without notice. See [#32](https://github.com/Ericsson/codechecker_bazel/issues/32).
 > We are also actively pursuing better CTU support _using_ CodeChecker.
 
 The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer with [cross translation unit analysis](https://clang.llvm.org/docs/analyzer/user-docs/CrossTranslationUnit.html) analysis without CodeChecker. To use it, add the following to your BUILD file:
