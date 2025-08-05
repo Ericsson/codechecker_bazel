@@ -22,7 +22,7 @@ The main Bazel rule for CodeChecker is `codechecker_test()`.
 ### Clang-tidy
 
 Clang-tidy is a fast static analyzer/linter for the C family of languages. This
-repository provides Bazel aspect `clang_tidy_aspect` and rule `clang_tidy_test()`
+repository provides Bazel aspect `clang_tidy_aspect()` and rule `clang_tidy_test()`
 to run clang-tidy natively (without CodeChecker).
 
 Find more information about LLVM clang-tidy:
@@ -149,7 +149,7 @@ CodeChecker store bazel-bin/your_codechecker_rule_name/codechecker-files/data -n
 
 ### Build-only CodeChecker analysis: `codechecker()`
 
-This rule is functionally equivalent to `codechecker_test` but omits the test phase where either PASS or FAIL isc printed.
+This rule is functionally equivalent to `codechecker_test()` but omits the test phase where either PASS or FAIL isc printed.
 You can include and use it similarly as well:
 
 ```python
@@ -163,7 +163,7 @@ load(
 
 ### Multiplatform CodeChechecker analysis: `codechecker_suite()`
 
-This rule is functionally equivalent to `codechecker_test` but allows for running on multiple platforms via the `platforms` parameter.
+This rule is functionally equivalent to `codechecker_test()` but allows for running on multiple platforms via the `platforms` parameter.
 You can include and use it similarly as well:
 
 ```python
@@ -209,7 +209,7 @@ codechecker_config(
 )
 ```
 
-You can now configure your `codechecker`, `codechecker_suite`, `codechecker_test` and `code_checker_test` targets using the above configuration:
+You can now configure your `codechecker_suite()`, `codechecker_test()` and `code_checker_test()` targets using the above configuration:
 
 ```python
 codechecker_test(
@@ -241,7 +241,7 @@ load(
 )
 ```
 
-Create a `code_checker_test()` target by passing targets you'd like CodeChecker to analyze, similarly to `codechecker_test`:
+Create a `code_checker_test()` target by passing targets you'd like CodeChecker to analyze, similarly to `codechecker_test()`:
 
 ```python
 code_checker_test(
@@ -252,7 +252,7 @@ code_checker_test(
 )
 ```
 
-You can find the analysis results in the `bazel-bin/` folder similarly to [`codechecker_test`](README.md#standard-codechecker-invocation-codechecker_test),
+You can find the analysis results in the `bazel-bin/` folder similarly to [`codechecker_test()`](README.md#standard-codechecker-invocation-codechecker_test),
 only without the `codechecker-files` directory. You can also parse/store similarly:
 
 ```bash
@@ -264,9 +264,9 @@ CodeChecker store bazel-bin/your_code_checker_rule_name/data -n "Run name"
 
 The following rules are _not_ using CodeChecker.
 
-### Clang-tidy: `clang_tidy_aspect` and `clang_tidy_test()`
+### Clang-tidy: `clang_tidy_aspect()` and `clang_tidy_test()`
 
-The Bazel rule `clang_tidy_test` runs clang-tidy natively without CodeChecker. To use it, add the following to your BUILD file:
+The Bazel rule `clang_tidy_test()` runs clang-tidy natively without CodeChecker. To use it, add the following to your BUILD file:
 
 ```python
 load(
@@ -282,15 +282,15 @@ clang_tidy_test(
 )
 ```
 
-You can also run clang-tidy via the Bazel aspect `clang_tidy_aspect` that can be invoked from the command line by passing the following parameter to Bazel build/test: `--aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect`:
+You can also run clang-tidy via the Bazel aspect `clang_tidy_aspect()` that can be invoked from the command line by passing the following parameter to Bazel build/test: `--aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect`:
 
 ```bash
 bazel build ... --aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect --output_groups=report
 ```
 
-### Clang Static Analyzer: `clang_analyze_test()` and `clang_ctu_test`
+### Clang Static Analyzer: `clang_analyze_test()` and `clang_ctu_test()`
 
-The Bazel rule `clang_analyze_test` runs The Clang Static Analyzer natively without CodeChecker. To use it, add the following to your BUILD file:
+The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer natively without CodeChecker. To use it, add the following to your BUILD file:
 
 ```python
 load(
@@ -310,7 +310,7 @@ clang_analyze_test(
 > The rule is still in prototype status and is subject to changes without notice. See [#32](https://github.com/Ericsson/codechecker_bazel/issues/32).
 > We are also actively pursuing better CTU support _using_ CodeChecker.
 
-The Bazel rule `clang_analyze_test` runs The Clang Static Analyzer with [cross translation unit analysis](https://clang.llvm.org/docs/analyzer/user-docs/CrossTranslationUnit.html) analysis without CodeChecker. To use it, add the following to your BUILD file:
+The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer with [cross translation unit analysis](https://clang.llvm.org/docs/analyzer/user-docs/CrossTranslationUnit.html) analysis without CodeChecker. To use it, add the following to your BUILD file:
 
 ```python
 load(
@@ -355,7 +355,7 @@ Examples
 In [test/BUILD](test/BUILD) you can find examples for `codechecker_test()`
 and for `compile_commands()` rules.
 
-For instance see `codechecker_pass` and `compile_commands_pass`.
+For instance see targets `codechecker_pass` and `compile_commands_pass`.
 
 Run all test Bazel targets:
 
@@ -369,6 +369,6 @@ After that you can find all artifacts in `bazel-bin` directory:
     # compile_commands.json for compile_commands_pass
     cat bazel-bin/test/compile_commands_pass/compile_commands.json
 
-To run `clang_tidy_aspect` on all C/C++ code:
+To run `clang_tidy_aspect()` on all C/C++ code:
 
     bazel build ... --aspects @bazel_codechecker//src:clang.bzl%clang_tidy_aspect --output_groups=report
