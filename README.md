@@ -141,7 +141,8 @@ can run [`CodeChecker store`](https://github.com/Ericsson/codechecker/blob/maste
 or [`CodeChecker parse`](https://github.com/Ericsson/codechecker/blob/master/docs/analyzer/user_guide.md#parse):
 
 ```bash
-CodeChecker parse bazel-bin/path/to/results
+CodeChecker parse bazel-bin/your_codechecker_rule_name/codechecker-files/data
+CodeChecker store bazel-bin/your_codechecker_rule_name/codechecker-files/data -n "Run name"
 ```
 
 <!-- For now, we consider codechecker() to be an internal rule.
@@ -185,7 +186,7 @@ load(
 )
 ```
 
-Create a CodeChecker configuration file e.g. `config.json` (see example [test/config.json](https://github.com/Ericsson/codechecker_bazel/blob/main/test/config.json)) and parse it using `codechecker_config()`.
+Create a CodeChecker configuration file e.g. `config.json` (see example [test/config.json](test/config.json)) and parse it using `codechecker_config()`.
 
 ```python
 codechecker_config(
@@ -222,7 +223,7 @@ codechecker_test(
 
 ### Per-file CodeChecker analysis: `code_checker_test()`
 > [!IMPORTANT]
-> The rule is still in prototype status and is subject to changes without notice. See https://github.com/Ericsson/codechecker_bazel/issues/31.
+> The rule is still in prototype status and is subject to changes without notice. See [#31](https://github.com/Ericsson/codechecker_bazel/issues/31).
 > You are free to experiment and report issues however!
 
 Instead of a single CodeChecker call, the bazel rule `code_checker_test()` invokes
@@ -251,7 +252,13 @@ code_checker_test(
 )
 ```
 
-You can run the analysis and store/parse the results similarly to [`codechecker_test`](README.md#standard-codechecker-invocation-codechecker_test).
+You can find the analysis results in the `bazel-bin/` folder similarly to [`codechecker_test`](README.md#standard-codechecker-invocation-codechecker_test),
+only without the `codechecker-files` directory. You can also parse/store similarly:
+
+```bash
+CodeChecker parse bazel-bin/your_code_checker_rule_name/data
+CodeChecker store bazel-bin/your_code_checker_rule_name/data -n "Run name"
+```
 
 ## CodeChecker independent rules
 
@@ -300,7 +307,7 @@ clang_analyze_test(
 ```
 
 > [!IMPORTANT]
-> The rule is still in prototype status and is subject to changes without notice. See https://github.com/Ericsson/codechecker_bazel/issues/32.
+> The rule is still in prototype status and is subject to changes without notice. See [#32](https://github.com/Ericsson/codechecker_bazel/issues/32).
 > We are also actively pursuing better CTU support _using_ CodeChecker.
 
 The Bazel rule `clang_analyze_test` runs The Clang Static Analyzer with [cross translation unit analysis](https://clang.llvm.org/docs/analyzer/user-docs/CrossTranslationUnit.html) analysis without CodeChecker. To use it, add the following to your BUILD file:
