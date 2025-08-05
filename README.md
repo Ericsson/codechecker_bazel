@@ -162,7 +162,8 @@ load(
 -->
 
 ### Multiplatform CodeChechecker analysis: `codechecker_suite()`
-
+_TODO: Describe this rule: see issue [#44](https://github.com/Ericsson/codechecker_bazel/issues/44)._
+<!--
 This rule is functionally equivalent to `codechecker_test()` but allows for running on multiple platforms via the `platforms` parameter.
 You can include and use it similarly as well:
 
@@ -172,7 +173,7 @@ load(
     "codechecker_suite"
 )
 ```
-
+-->
 ### `codechecker_config()`
 
 Using the Bazel rule `codechecker_config()` you can utilize a CodeChecker [configuration file](https://github.com/Ericsson/codechecker/blob/master/docs/config_file.md).
