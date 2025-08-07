@@ -55,7 +55,7 @@ We need the following tools:
 - Bazel 6, not yet bazel 7 (we recommend version 6.5.0)
 - Clang 16 or newer (we use 16), we use clang-tidy
 - Python 3.8 or newer (we use 3.11)
-- CodeChecker 6.23 or newer (we use 6.23.0)
+- CodeChecker 6.26 or newer (we use 6.26.0)
 
 If, by chance, Environment Modules (https://modules.sourceforge.net/)
 are available in your system, you can just add the following modules:
@@ -64,7 +64,7 @@ are available in your system, you can just add the following modules:
     module add bazel/6
     module add clang/16
     module add python/3.11
-    module add codechecker/6.23
+    module add codechecker/6.26
 
 
 How to use

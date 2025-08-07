@@ -27,7 +27,7 @@ The following modules are needed for the development:
     module add bazel/6
     module add clang/16
     module add python/3.11
-    module add codechecker/6.23
+    module add codechecker/6.26
 
     # Optional modules
     module add buildifier/4

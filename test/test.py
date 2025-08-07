@@ -191,7 +191,6 @@ class TestBasic(TestBase):
         self.grep_file(logfile, r"deadcode.DeadStores\s+\|\s+LOW\s+\|\s+1")
         self.grep_file(logfile, r"lib.cc\s+\|\s+3")
 
-    @unittest.skip("CodeChecker analyze --file --ctu does not work")
     def test_bazel_test_code_checker_ctu(self):
         """Test: bazel test :code_checker_ctu"""
         self.check_command("bazel test :code_checker_ctu", exit_code=3)
