@@ -79,6 +79,15 @@ cc_binary(
     ],
 )
 
+# Test for resolving virtual include prefix
+cc_binary(
+    name = "virtual_include",
+    srcs = ["src/virtual_include.cc"],
+    deps = [":test_inc"],
+    includes = ["inc"],
+)
+
+
 # Generate compile_commands.json file for host test
 compile_commands(
     name = "compile_commands_pass",
@@ -128,6 +137,14 @@ codechecker(
     ],
 )
 
+# Simplest virtual include resolution test
+codechecker(
+    name = "codechecker_virtual_include",
+    targets = [
+        "virtual_include",
+    ],
+)
+
 # Simplest codechecker_test example
 # Runs CodeChecker on "test_pass" target
 codechecker_test(
@@ -150,6 +167,9 @@ codechecker_test(
     ],
     targets = [
         "test_fail",
+    ],
+    analyze = [
+        "--analyzers clangsa clang-tidy",
     ],
 )
 
