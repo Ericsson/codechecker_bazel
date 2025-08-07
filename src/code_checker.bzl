@@ -48,8 +48,7 @@ def _run_code_checker(
         label,
         options,
         compile_commands_json,
-        compilation_context,
-        sources_and_headers):
+        compilation_context):
     # Define Plist and log file names
     data_dir = ctx.attr.name + "/data"
     file_name_params = (data_dir, src.path.replace("/", "-"))
@@ -62,7 +61,9 @@ def _run_code_checker(
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
-    inputs = [compile_commands_json] + sources_and_headers
+    # NOTE: we collect only headers, so CTU may not work!
+    headers = depset([src], transitive = [compilation_context.headers])
+    inputs = depset([compile_commands_json, src], transitive = [headers])
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
     # Create CodeChecker wrapper script
@@ -274,6 +275,7 @@ def _compile_commands_impl(ctx):
     return compile_commands_json
 
 def _collect_all_sources_and_headers(ctx):
+    # NOTE: we are not using this function
     all_files = []
     headers = depset()
     for target in ctx.attr.targets:
@@ -292,7 +294,6 @@ def _collect_all_sources_and_headers(ctx):
 
 def _code_checker_impl(ctx):
     compile_commands_json = _compile_commands_impl(ctx)
-    sources_and_headers = _collect_all_sources_and_headers(ctx)
     options = ctx.attr.default_options + ctx.attr.options
     all_files = [compile_commands_json]
     for target in ctx.attr.targets:
@@ -313,7 +314,6 @@ def _code_checker_impl(ctx):
                         options,
                         compile_commands_json,
                         compilation_context,
-                        sources_and_headers,
                     )
                     all_files += outputs
     ctx.actions.write(
