@@ -125,7 +125,7 @@ class TestBasic(TestBase):
             self.BAZEL_BIN_DIR, "compile_commands_pass",
             "compile_commands.json")
         self.grep_file(compile_commands, r"pass\.cc")
-        self.grep_file(compile_commands, r"bin\/gcc")
+        self.grep_file(compile_commands, r"\/gcc")
 
     def test_bazel_aspect_clang_tidy_pass(self):
         """Test: bazel build :test_pass --aspects"""
