@@ -280,13 +280,12 @@ def resolve_symlinks():
     files_processed = 0
     for root, _, files in os.walk(analyze_outdir):
         for filename in files:
-            if re.search("clang-tidy", filename):
-                filepath = os.path.join(root, filename)
-                if os.path.splitext(filepath)[1] == ".plist":
-                    resolve_plist_symlinks(filepath)
-                elif os.path.splitext(filepath)[1] == ".yaml":
-                    resolve_yaml_symlinks(filepath)
-                files_processed += 1
+            filepath = os.path.join(root, filename)
+            if os.path.splitext(filepath)[1] == ".plist":
+                resolve_plist_symlinks(filepath)
+            elif os.path.splitext(filepath)[1] == ".yaml":
+                resolve_yaml_symlinks(filepath)
+            files_processed += 1
     logging.info("Processed file paths in %d files", files_processed)
 def update_file_paths():
     """ Fix bazel sandbox paths and resolve symbolic links in generated files to real paths """
