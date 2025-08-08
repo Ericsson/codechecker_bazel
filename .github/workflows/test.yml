@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   rules_test:
-    name: Unit tests
+    name: Unit tests on ubuntu
     runs-on: ubuntu-24.04
 
     steps:
@@ -47,7 +47,56 @@ jobs:
             /usr/bin/clang-extdef-mapping-$(clang --version | head -n 1 |
             sed -E 's/.*version ([0-9]+)\..*/\1/') \
             100
-          
+
+      - name: Install CodeChecker
+        run: pip3 install codechecker
+
+      - name: Print versions
+        run: |
+          bazel version
+          CodeChecker version
+          echo "[NOTE]: If you are debugging, its possible that " \
+               "CodeChecker finds different analyzers when running in " \
+               "bazel's sandbox environment!"
+          CodeChecker analyzers
+
+      - name: Run tests
+        run: |
+          cd test
+          python3 test.py -vvv
+
+  rhel9_test:
+    name: Unit tests on RHEL9
+    runs-on: redhat/ubi9
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set bazel version to 6.5.0
+        run: echo "6.5.0" > .bazelversion
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.15.0
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install CodeChecker analyzers
+        run: |
+          dnf update -y && \
+          dnf install -y \
+            llvm-toolset \
+            clang-tools-extra \
+            wget \
+            git \
+            python3 \
+            python3-pip \
+            gcc \
+            g++ \
+            scl-utils \
 
       - name: Install CodeChecker
         run: pip3 install codechecker
