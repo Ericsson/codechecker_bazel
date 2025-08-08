@@ -67,6 +67,41 @@ are available in your system, you can just add the following modules:
     module add codechecker/6.23
 
 
+Getting Started
+---------------
+
+Supported environments:
+- RHEL 9
+- Ubuntu 24.04 LTS
+
+Install dependencies:
+
+RHEL 9:
+```bash
+dnf update -y && dnf install -y llvm-toolset clang-tools-extra git python3 python3-pip gcc g++
+```
+
+Ubuntu:
+```bash
+sudo apt-get update --quiet && sudo apt-get install --no-install-recommends git python3 python3-pip python3-venv gcc g++ clang clang-tools clang-tidy
+```
+
+On ubuntu you have to make sure that `clang`, `clang-tidy` and `clang-ext-defmapping` commands are available! If they have version number appended to them use update-alternatives to get rid of the version number!
+```bash
+update-alternatives --install /usr/bin/clang-extdef-mapping clang-extdef-mapping /usr/bin/clang-extdef-mapping-18 100
+update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100
+```
+
+Install CodeChecker:
+```bash
+python3 -m venv ./codechecker_venv
+source ./codechecker_venv
+pip3 install codechecker
+```
+
+### WARNING! Remove ccache!
+The rules don't work with ccache present on the system!
+
 How to use
 ----------
 
