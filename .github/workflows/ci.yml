@@ -18,6 +18,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set bazel version to 6.5.0
+        run: cp test/foss/templates/.bazelversion ./
+
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
 
