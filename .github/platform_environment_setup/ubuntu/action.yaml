@@ -51,4 +51,4 @@ runs:
 
       - name: Install CodeChecker
         run: pip3 install codechecker
-        shell: bash
+
