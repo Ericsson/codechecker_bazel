@@ -10,7 +10,7 @@ CONFIG=$1
 shift
 
 # Make sure the output exists, and empty if there are no errors,
-# (clang-tidy doesn't create a patchfile if there are no errors).
+# (clang-tidy doesn't create a patch file if there are no errors).
 echo > $OUTPUT
 
 $CLANG_TIDY --config-file=$CONFIG --export-fixes=$OUTPUT $@ 2>&1
@@ -40,7 +40,7 @@ def _run_tidy(
         label + "." + infile.path + ".clang-tidy.yaml",
     )
 
-    # Difine which clang-tidy to run
+    # Define which clang-tidy to run
     if exe and exe.files.to_list():
         clang_tidy_bin = exe.files_to_run.executable
     else:
@@ -121,7 +121,7 @@ def _run_analyzer(
         label + "." + infile.path + ".clang-analyze.plist",
     )
 
-    # Difine which clang to run
+    # Define which clang to run
     if exe and exe.files.to_list():
         clang_bin = exe.files_to_run.executable
     else:

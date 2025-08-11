@@ -400,7 +400,7 @@ _compile_commands = rule(
     attrs = {
         "platform": attr.string(
             default = "",  #"@platforms//os:linux",
-            doc = "Plaform to build for",
+            doc = "Platform to build for",
         ),
         "targets": attr.label_list(
             aspects = [
