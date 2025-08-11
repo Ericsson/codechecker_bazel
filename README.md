@@ -163,7 +163,7 @@ load(
 
 -->
 
-### Multiplatform CodeChechecker analysis: `codechecker_suite()`
+### Multi-platform CodeChecker analysis: `codechecker_suite()`
 _TODO: Describe this rule: see issue [#44](https://github.com/Ericsson/codechecker_bazel/issues/44)._
 <!--
 This rule is functionally equivalent to `codechecker_test()` but allows for running on multiple platforms via the `platforms` parameter.
@@ -272,7 +272,7 @@ clang_analyze_test(
 
 ### Generating a compilation database: `compile_commands()`
 
-As generating a compilation database for C/C++ is a known pain point for bazel, this repository defines the Bazel rule `compile_commands()` rule which can be used indendently of CodeChecker. The implementation is basen on https://github.com/grailbio/bazel-compilation-database with some fixes on some tricky edge cases. To use it, include the following in your BUILD file:
+As generating a compilation database for C/C++ is a known pain point for bazel, this repository defines the Bazel rule `compile_commands()` rule which can be used independently of CodeChecker. The implementation is based on https://github.com/grailbio/bazel-compilation-database with some fixes on some tricky edge cases. To use it, include the following in your BUILD file:
 
 ```python
 load(

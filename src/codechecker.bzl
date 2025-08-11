@@ -245,7 +245,7 @@ codechecker = rule(
         ),
         "analyze": attr.string_list(
             default = [],
-            doc = "List of analyze command agruments, e.g.; --ctu.",
+            doc = "List of analyze command arguments, e.g.; --ctu.",
         ),
         "_compile_commands_filter": attr.label(
             allow_files = True,
@@ -321,7 +321,7 @@ _codechecker_test = rule(
     attrs = {
         "platform": attr.string(
             default = "",  #"@platforms//os:linux",
-            doc = "Plaform to build for",
+            doc = "Platform to build for",
         ),
         "targets": attr.label_list(
             aspects = [
@@ -363,7 +363,7 @@ _codechecker_test = rule(
         ),
         "analyze": attr.string_list(
             default = [],
-            doc = "List of analyze command agruments, e.g. --ctu",
+            doc = "List of analyze command arguments, e.g. --ctu",
         ),
     },
     outputs = {
