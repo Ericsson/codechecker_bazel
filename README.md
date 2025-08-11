@@ -86,21 +86,26 @@ Ubuntu:
 sudo apt-get update --quiet && sudo apt-get install --no-install-recommends git python3 python3-pip python3-venv gcc g++ clang clang-tools clang-tidy
 ```
 
-On ubuntu you have to make sure that `clang`, `clang-tidy` and `clang-ext-defmapping` commands are available! If they have version number appended to them use update-alternatives to get rid of the version number!
+On some distributions, `clang`, `clang-tidy` and `clang-extdef-mapping` may be installed with a trailing version number (e.g. clang-extdef-mapping-18). In case your package didn't install a non-versioned symlink as well, you will need to manually change it:
 ```bash
 update-alternatives --install /usr/bin/clang-extdef-mapping clang-extdef-mapping /usr/bin/clang-extdef-mapping-18 100
-update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100
+update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100 
+update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
 ```
 
 Install CodeChecker:
+> [!Note]
+> Currently this is the *only* way to get a working CodeChecker installation on your system.
+
 ```bash
 python3 -m venv ./codechecker_venv
 source ./codechecker_venv
 pip3 install codechecker
 ```
 
-### WARNING! Remove ccache!
-The rules don't work with ccache present on the system!
+> [!CAUTION]
+> Remove ccache!
+> The rules don't work with ccache present on the system!
 
 How to use
 ----------
