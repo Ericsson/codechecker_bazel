@@ -71,7 +71,7 @@ Getting Started
 ---------------
 
 Supported environments:
-- RHEL 9
+- RHEL 9 and 8
 - Ubuntu 24.04 LTS
 
 Install dependencies:
