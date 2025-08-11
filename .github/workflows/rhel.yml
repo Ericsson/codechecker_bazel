@@ -1,0 +1,62 @@
+name: codechecker-bazel-tests
+
+# Triggers the workflow on push or pull request events.
+on: [push, pull_request]
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rhel9_test:
+    name: Unit tests on RHEL9
+    runs-on: ubuntu-24.04
+    container: redhat/ubi9:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set bazel version to 6.5.0
+        run: echo "6.5.0" > .bazelversion
+
+      - name: Install CodeChecker analyzers
+        run: |
+          dnf update -y && \
+          dnf install -y \
+            llvm-toolset \
+            clang-tools-extra \
+            wget \
+            git \
+            python3 \
+            python3-pip \
+            gcc \
+            g++ \
+            scl-utils \
+
+      - name: Install CodeChecker
+        run: pip3 install codechecker
+
+      - name: Setup Bazel
+        run: |
+          VERSION=1.26.0; \
+          wget "https://github.com/bazelbuild/bazelisk/releases/download/v$VERSION/bazelisk-linux-amd64" && \
+          chmod +x bazelisk-linux-amd64 && \
+          mv bazelisk-linux-amd64 /usr/local/bin/bazel && \
+          USE_BAZEL_VERSION=6.5.0 bazel version
+
+      - name: Print versions
+        run: |
+          bazel version
+          CodeChecker version
+          echo "[NOTE]: If you are debugging, its possible that " \
+               "CodeChecker finds different analyzers when running in " \
+               "bazel's sandbox environment!"
+          CodeChecker analyzers
+
+      - name: Run tests
+        run: |
+          cd test
+          python3 test.py -vvv
