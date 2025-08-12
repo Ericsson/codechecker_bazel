@@ -95,7 +95,7 @@ update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
 
 Install CodeChecker:
 > [!Note]
-> Currently this is the *only* way to get a working CodeChecker installation on your system.
+> Currently the pip installed CodeChecker works best with these rules, which is our recommendation (as opposed to using acustom-built CodeChecker).
 
 ```bash
 python3 -m venv ./codechecker_venv
