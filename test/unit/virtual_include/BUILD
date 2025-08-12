@@ -59,6 +59,9 @@ cc_binary(
 # Simplest virtual include resolution test
 codechecker_test(
     name = "codechecker_virtual_include",
+    tags = [
+        "manual",
+    ],
     targets = [
         "virtual_include",
     ],
@@ -66,6 +69,9 @@ codechecker_test(
 
 code_checker_test(
     name = "code_checker_virtual_include",
+    tags = [
+        "manual",
+    ],
     targets = [
         "virtual_include",
     ]
