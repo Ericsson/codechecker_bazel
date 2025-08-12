@@ -70,10 +70,6 @@ are available in your system, you can just add the following modules:
 Getting Started
 ---------------
 
-Supported environments:
-- RHEL 9 and 8
-- Ubuntu 24.04 LTS
-
 Install dependencies:
 
 RHEL 9:
