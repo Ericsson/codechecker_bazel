@@ -104,8 +104,8 @@ pip3 install codechecker
 ```
 
 > [!CAUTION]
-> Remove ccache!
-> The rules don't work with ccache present on the system!
+> Don't use ccache! You should disable/remove/uninstall it, as the rules don't support it.
+<!-- TODO When we make a decision on how to handle ccache in #36, expand this section -->
 
 How to use
 ----------
