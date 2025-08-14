@@ -55,7 +55,7 @@ jobs:
         run: |
           bazel version
           CodeChecker version
-          echo "[NOTE]:CodeChecker analyzers may be different in bazel!"" 
+          echo "[NOTE]:CodeChecker analyzers may be different in bazel!"
           CodeChecker analyzers
 
       - name: Run tests
