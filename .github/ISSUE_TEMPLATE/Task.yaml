@@ -1,0 +1,27 @@
+name: Task
+description: Create a task that needs to be discussed, investigated, or implemented.
+type: task
+body:
+  - type: textarea
+    id: describe-task
+    attributes:
+      label: Describe the task
+      description: A clear and concise description of what the task is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List the points detailing the parts of this task that need to be discussed/investigated/implemented.
+    validations:
+      required: true
+
+  - type: textarea
+    id: definition-of-done
+    attributes:
+      label: Definition of Done
+      description: What criteria need to be met for this issue to be closed (e.g., which files to have updated, consensus reached, feature implemented)?
+    validations:
+      required: true
