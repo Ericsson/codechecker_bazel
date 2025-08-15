@@ -1,0 +1,40 @@
+name: 'Setup environment for Ubuntu'
+description: 'Sets up analyzers, CodeChecker and Bazel for ubuntu CI runner'
+runs:
+  using: "composite"
+  steps:
+      - name: Set bazel version to 6.5.0
+        run: echo "6.5.0" > .bazelversion
+        shell: bash
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.15.0
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install CodeChecker analyzers
+        run: |
+          sudo apt-get update --quiet
+          sudo apt-get install --no-install-recommends \
+            clang \
+            clang-tools \
+            clang-tidy
+          # The default naming of the clang-extdef-mapping, needed for CTU, is
+          # installed by clang-tools also contains the major version
+          # (e.g. clang-extdef-mapping-18), but the bazel rules reference it
+          # without the version number. To this end, we use update-alternatives
+          # to rename the binary to omit it.
+          sudo update-alternatives --install \
+            /usr/bin/clang-extdef-mapping \
+            clang-extdef-mapping \
+            /usr/bin/clang-extdef-mapping-$(clang --version | head -n 1 |
+            sed -E 's/.*version ([0-9]+)\..*/\1/') \
+            100
+        shell: bash
+
+      - name: Install CodeChecker
+        run: pip3 install codechecker
+        shell: bash
