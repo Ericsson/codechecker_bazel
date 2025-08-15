@@ -31,31 +31,41 @@ python3 -m unittest discover unit/my_test_dir -vvv
 1. **Create a Test Folder**  
    Inside the `unit` directory, create a folder for your new test. This folder should contain:
    - All source/header files needed for the test
-   - A `BUILD` file
+   - `BUILD`
    - A python test script
-   - An `__init__.py`
+   - `__init__.py`
+
+2. **Creating the BUILD File**
+    - Make sure that all failing test targets get the `"manual"` tag. For example:
+    ```
+    codechecker_test(
+        name = "codechecker_fail",
+        tags = [
+            "manual",
+        ],
+        targets = [
+            "test_fail",
+        ],
+    )
+    ```
 
 2. **Creating the Test File**  
-   Your test script must follow the naming convention:
-   ```text
-   test_*.py
-   ```
+    - Your test script must follow the naming convention:
+        ```text
+        test_*.py
+        ``` 
+    - At the top of your test file, include the following snippet to correctly handle module imports:
+        ```python
+        import os
+        import sys
 
-3. **Set Up Python Path**  
-   At the top of your test file, include the following snippet to correctly handle module imports:
-   ```python
-   import os
-   import sys
+        # Python path magic, necessary to avoid module errors
+        sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from common.base import TestBase
+        ```  
+    - Create your test class by extending `TestBase` and implement your test methods.
 
-   # Python path magic, necessary to avoid module errors
-   sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-   from common.base import TestBase
-   ```
-
-4. **Write the Test Class**  
-   Create your test class by extending `TestBase` and implement your test methods.
-
-**A simple test class would look like this:**
+**A simple test class example:**
 ```python
 """
 TODO: Describe what this file does
