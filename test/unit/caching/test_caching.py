@@ -34,33 +34,21 @@ class TestBasic(TestBase):
         """Tests whether bazel uses cached output for unchanged files"""
         modified_file = "secondary.cc"
         target = "//test/unit/caching:code_checker_caching"
-        self.check_command(f"cp {modified_file} {modified_file}.back", exit_code=0)
+        self.check_command(f"cp {modified_file} {modified_file}.back",
+                           exit_code=0)
         self.check_command(f"bazel build {target}", exit_code=0)
         try:
             with open(modified_file, 'a', encoding='utf-8') as f:
                 f.write("//test")
         except FileNotFoundError:
             self.fail(f"File not found: {modified_file}")
-        content = self.check_command(f"bazel build {target} --subcommands", exit_code=0)
-        self.check_command(f"mv {modified_file}.back {modified_file}", exit_code=0)
+        stdout, stderr = self.check_command(
+            f"bazel build {target} --subcommands", exit_code=0)
+        content = stdout + stderr
+        self.check_command(f"mv {modified_file}.back {modified_file}",
+                           exit_code=0)
         self.assertEqual(content.count("SUBCOMMAND"),1)
 
 
-def setup_logging():
-    """Setup logging level for test execution"""
-    # Enable debug logs for tests if "super verbose" flag is provided
-    if "-vvv" in sys.argv:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="[TEST] %(levelname)5s: %(message)s")
-
-
-def main():
-    """Run unittest"""
-    setup_logging()
-    logging.debug("Start testing...")
-    unittest.main(buffer=True)
-
-
 if __name__ == "__main__":
-    main()
+    unittest.main(buffer=True)
