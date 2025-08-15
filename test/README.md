@@ -2,9 +2,11 @@
 
 ## Running Tests
 
-Our projects use both **`pytest`** and **`unittest`** frameworks. You can run tests using either method. The **`-vvv`** flag is used for **verbosity**, which provides more detailed output and is very helpful for debugging.
+Our projects use both **`pytest`** and **`unittest`** frameworks.
+You can run tests using either method.
+The **`-vvv`** flag is used for **verbosity**, which provides more detailed output and is very helpful for debugging.
 
-#### To run all tests, use one of the following command:
+### To run all tests, use one of the following command:
 * **Using Pytest:**
     ```bash
     pytest unit -vvv
@@ -31,6 +33,7 @@ python3 -m unittest discover unit/my_test_dir -vvv
    - All source/header files needed for the test
    - A `BUILD` file
    - A python test script
+   - An `__init__.py`
 
 2. **Creating the Test File**  
    Your test script must follow the naming convention:
