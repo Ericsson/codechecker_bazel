@@ -67,6 +67,52 @@ are available in your system, you can just add the following modules:
     module add codechecker/6.26
 
 
+Getting Started
+---------------
+
+Install dependencies:
+
+RHEL 9:
+```bash
+dnf update -y && dnf install -y wget llvm-toolset clang-tools-extra git python3 python3-pip gcc g++
+```
+
+Ubuntu:
+```bash
+sudo apt-get update --quiet && sudo apt-get install --no-install-recommends wget git python3 python3-pip python3-venv gcc g++ clang clang-tools clang-tidy
+```
+
+On some distributions, `clang`, `clang-tidy` and `clang-extdef-mapping` may be installed with a trailing version number (e.g. clang-extdef-mapping-18). In case your package didn't install a non-versioned symlink as well, you will need to manually change it:
+```bash
+update-alternatives --install /usr/bin/clang-extdef-mapping clang-extdef-mapping /usr/bin/clang-extdef-mapping-18 100
+update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100 
+update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+```
+
+Install CodeChecker:
+> [!Note]
+> Currently the pip installed CodeChecker works best with these rules, which is our recommendation (as opposed to using acustom-built CodeChecker).
+
+```bash
+python3 -m venv ./codechecker_venv && \
+source ./codechecker_venv && \
+pip3 install codechecker
+```
+
+Install Bazel:
+We recommend bazel 6.5.0
+```bash
+wget https://github.com/bazelbuild/bazel/releases/download/6.5.0/bazel-6.5.0-linux-x86_64 && \
+chmod +x bazel-6.5.0-linux-x86_64 && \
+sudo mv bazel-6.5.0-linux-x86_64 /usr/local/bin/bazel
+```
+Or choose a suitable binary for your system from this list: https://github.com/bazelbuild/bazel/releases/tag/6.5.0
+Alternatively follow the official guide at: https://bazel.build/install
+
+> [!CAUTION]
+> Don't use ccache! You should disable/remove/uninstall it, as the rules don't support it.
+<!-- TODO When we make a decision on how to handle ccache in #36, expand this section -->
+
 How to use
 ----------
 
