@@ -37,7 +37,8 @@ class TestBase(unittest.TestCase):
         logging.debug("\n%s", "-" * 70)
 
     def check_command(self, cmd, exit_code=0):
-        """Run shell command and check status"""
+        """Run shell command and check status.
+        WARNING: Working directory will be in unit/common."""
         logging.debug("Running: %s", cmd)
         commands = shlex.split(cmd)
         with subprocess.Popen(commands,
@@ -55,7 +56,8 @@ class TestBase(unittest.TestCase):
                    f"stderr: {stderr.decode('utf-8')}"
 
     def grep_file(self, filename, regex):
-        """Grep given filename"""
+        """Grep given filename.
+        WARNING: Working directory will be in unit/common."""
         pattern = re.compile(regex)
         logging.debug("RegEx = r'%s'", regex)
         with open(filename, "r", encoding="utf-8") as fileobj:
