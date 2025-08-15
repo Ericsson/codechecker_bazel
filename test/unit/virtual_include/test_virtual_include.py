@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Unit and functional tests
+Unit test for resolving path in all plist files
 """
 import logging
 import os
@@ -30,8 +30,8 @@ BAZEL_BIN_DIR = os.path.join("../../..", "bazel-bin", "test",
 BAZEL_TESTLOGS_DIR = os.path.join("../../..", "bazel-testlogs", "test", 
                                     "unit", "virtual_include")
 
-class TestBasic(TestBase):
-    """Basic tests"""
+class TestVirtualInclude(TestBase):
+    """Tests checking virtual include path resolution"""
 
     def setUp(self):
         """Before every test: clean Bazel cache"""
