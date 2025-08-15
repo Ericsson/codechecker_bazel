@@ -13,17 +13,15 @@
 # limitations under the License.
 
 """
-Unit and functional tests
+Functional test, to check if caching is working correctly
 """
-import logging
-import sys
 from time import sleep
 import unittest
 from ..common.base import TestBase
 
 
-class TestBasic(TestBase):
-    """Basic tests"""
+class TestCaching(TestBase):
+    """Caching tests"""
 
     def setUp(self):
         """Before every test: clean Bazel cache"""
