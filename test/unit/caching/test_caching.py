@@ -17,7 +17,7 @@ Functional test, to check if caching is working correctly
 """
 from time import sleep
 import unittest
-from ..common.base import TestBase
+from common.base import TestBase
 
 
 class TestCaching(TestBase):
@@ -30,7 +30,7 @@ class TestCaching(TestBase):
 
     def test_bazel_test_code_checker_caching(self):
         """Tests whether bazel uses cached output for unchanged files"""
-        modified_file = "secondary.cc"
+        modified_file = "../caching/secondary.cc"
         target = "//test/unit/caching:code_checker_caching"
         self.check_command(f"cp {modified_file} {modified_file}.back",
                            exit_code=0)
