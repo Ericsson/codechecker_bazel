@@ -1,25 +1,11 @@
-name: codechecker-bazel-tests
-
-# Triggers the workflow on push or pull request events.
-on: [push, pull_request]
-
-permissions: read-all
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  rules_test:
-    name: Unit tests
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+name: 'Setup environment for Ubuntu'
+description: 'Sets up analyzers, CodeChecker and Bazel for ubuntu CI runner'
+runs:
+  using: "composite"
+  steps:
       - name: Set bazel version to 6.5.0
         run: echo "6.5.0" > .bazelversion
+        shell: bash
 
       - name: Setup Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
@@ -47,21 +33,8 @@ jobs:
             /usr/bin/clang-extdef-mapping-$(clang --version | head -n 1 |
             sed -E 's/.*version ([0-9]+)\..*/\1/') \
             100
-          
+        shell: bash
 
       - name: Install CodeChecker
         run: pip3 install codechecker
-
-      - name: Print versions
-        run: |
-          bazel version
-          CodeChecker version
-          echo "[NOTE]: If you are debugging, its possible that " \
-               "CodeChecker finds different analyzers when running in " \
-               "bazel's sandbox environment!"
-          CodeChecker analyzers
-
-      - name: Run tests
-        run: |
-          cd test
-          python3 test.py -vvv
+        shell: bash
