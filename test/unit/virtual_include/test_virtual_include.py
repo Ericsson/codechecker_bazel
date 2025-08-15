@@ -21,8 +21,6 @@ import re
 import sys
 import unittest
 import glob
-# Python path magic, necessary to avoid module errors
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.base import TestBase
 
 BAZEL_BIN_DIR = os.path.join("../../..", "bazel-bin", "test", 
