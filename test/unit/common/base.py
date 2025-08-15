@@ -1,5 +1,5 @@
 """
-Unit and functional tests
+Base for unit and functional tests
 """
 import logging
 import os
