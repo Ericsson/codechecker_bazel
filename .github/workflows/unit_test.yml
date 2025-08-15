@@ -106,9 +106,9 @@ jobs:
         run: |
           bazel version
           CodeChecker version
-          echo "[NOTE]: If you are debugging, its possible that " \
-               "CodeChecker finds different analyzers when running in " \
-               "bazel's sandbox environment!"
+          echo "[NOTE]: CodeChecker may find different analyzer binaries" \
+               "when invoking directly, or in bazel's sandbox environment!" \
+               "Be sure to double check during debugging."
           CodeChecker analyzers
 
       - name: Run tests
