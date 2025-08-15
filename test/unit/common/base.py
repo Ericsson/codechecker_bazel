@@ -36,15 +36,16 @@ class TestBase(unittest.TestCase):
         """Before every test"""
         logging.debug("\n%s", "-" * 70)
 
-    def check_command(self, cmd, exit_code=0):
+    def check_command(self, cmd, exit_code=0, working_dir=None):
         """Run shell command and check status.
-        WARNING: Working directory will be in unit/common."""
+        WARNING: Working directory by default will be in unit/common."""
         logging.debug("Running: %s", cmd)
         commands = shlex.split(cmd)
         with subprocess.Popen(commands,
                               stdin=subprocess.PIPE,
                               stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE) as process:
+                              stderr=subprocess.PIPE,
+                              cwd=working_dir) as process:
             stdout, stderr = process.communicate()
             self.assertEqual(
                 process.returncode,
