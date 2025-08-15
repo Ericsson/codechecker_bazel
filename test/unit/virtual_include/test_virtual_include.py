@@ -18,7 +18,6 @@ Unit test for resolving path in all plist files
 import logging
 import os
 import re
-import sys
 import unittest
 import glob
 from common.base import TestBase
