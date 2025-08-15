@@ -59,5 +59,7 @@ python3 -m unittest discover unit/my_test_dir -vvv
         from common.base import TestBase
         ```  
     - Create your test class by extending `TestBase` and implement your test methods.
+    > [!WARNING]
+    > Your current working directory will be `unit/common` for every action!
 
 **For a test template look into unit/template**
