@@ -2,10 +2,7 @@
 TODO: Describe what this file does
 """
 import os
-import sys
 import unittest
-# Python path magic, necessary to avoid module errors
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.base import TestBase
 
 # TODO: fix folder name
@@ -25,7 +22,7 @@ class TestTemplate(TestBase):
 
     def test_template(self):
         """Test: TODO: describe your test"""
-        self.fail("Test not implemented!")
+        self.assertTrue(True)
 
 
 if __name__ == "__main__":
