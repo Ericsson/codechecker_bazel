@@ -15,10 +15,11 @@
 """
 Functional test, to check if caching is working correctly
 """
-from time import sleep
 import unittest
+import os
 from common.base import TestBase
 
+WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 class TestCaching(TestBase):
     """Caching tests"""
@@ -30,13 +31,14 @@ class TestCaching(TestBase):
 
     def test_bazel_test_code_checker_caching(self):
         """Tests whether bazel uses cached output for unchanged files"""
-        modified_file = "../caching/secondary.cc"
+        modified_file = "secondary.cc"
         target = "//test/unit/caching:code_checker_caching"
         self.check_command(f"cp {modified_file} {modified_file}.back",
-                           exit_code=0)
+                           exit_code=0, working_dir=WORKING_DIRECTORY)
         self.check_command(f"bazel build {target}", exit_code=0)
         try:
-            with open(modified_file, 'a', encoding='utf-8') as f:
+            with open(f"{WORKING_DIRECTORY}/{modified_file}", 'a',
+                      encoding='utf-8') as f:
                 f.write("//test")
         except FileNotFoundError:
             self.fail(f"File not found: {modified_file}")
@@ -44,7 +46,7 @@ class TestCaching(TestBase):
             f"bazel build {target} --subcommands", exit_code=0)
         content = stdout + stderr
         self.check_command(f"mv {modified_file}.back {modified_file}",
-                           exit_code=0)
+                           exit_code=0, working_dir=WORKING_DIRECTORY)
         self.assertEqual(content.count("SUBCOMMAND"),1)
 
 
