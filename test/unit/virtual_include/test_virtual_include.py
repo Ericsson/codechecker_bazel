@@ -51,21 +51,5 @@ class TestBasic(TestBase):
                 if re.search(r"/_virtual_includes/", content):
                     self.fail(f"Found unresolved symlink within CodeChecker report: {plist_file}")
 
-def setup_logging():
-    """Setup logging level for test execution"""
-    # Enable debug logs for tests if "super verbose" flag is provided
-    if "-vvv" in sys.argv:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="[TEST] %(levelname)5s: %(message)s")
-
-
-def main():
-    """Run unittest"""
-    setup_logging()
-    logging.debug("Start testing...")
-    unittest.main(buffer=True)
-
-
 if __name__ == "__main__":
-    main()
+    unittest.main(buffer=True) 
