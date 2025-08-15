@@ -3,6 +3,7 @@ load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 CLANG_CTU_WRAPPER_SCRIPT = """#!/usr/bin/env bash
 #set -x
+export CCACHE_DISABLE=1
 REPORT_TYPE=$1
 shift
 REPORT_FILE=$1

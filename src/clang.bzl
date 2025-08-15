@@ -2,6 +2,7 @@ load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 CLANG_TIDY_WRAPPER_SCRIPT = """#!/usr/bin/env bash
+export CCACHE_DISABLE=1
 CLANG_TIDY=$1
 shift
 OUTPUT=$1
@@ -17,6 +18,7 @@ $CLANG_TIDY --config-file=$CONFIG --export-fixes=$OUTPUT $@ 2>&1
 """
 
 CLANG_ANALYZE_WRAPPER_SCRIPT = """#!/usr/bin/env bash
+export CCACHE_DISABLE=1
 CLANG=$1
 shift
 OUTPUT=$1

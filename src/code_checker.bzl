@@ -5,6 +5,7 @@ load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 CODE_CHECKER_WRAPPER_SCRIPT = """#!/usr/bin/env bash
+export CCACHE_DISABLE=1
 #set -x
 DATA_DIR=$1
 shift
