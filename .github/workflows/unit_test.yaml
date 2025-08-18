@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup environment
-        uses: ./.github/actions/ubuntu_setup
+        uses: ./.github/platform_environment_setup/ubuntu
 
       - name: Print versions
         run: |
@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup environment
-        uses: ./.github/actions/rhel9_setup
+        uses: ./.github/platform_environment_setup/rhel9
 
       - name: Print versions
         run: |
