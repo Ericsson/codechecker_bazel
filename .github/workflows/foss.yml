@@ -1,0 +1,71 @@
+name: codechecker-bazel-tests
+
+# Triggers the workflow on push or pull request events.
+on: [push, pull_request]
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # TODO: Move installation of tools to a composite action (or use a docker img)
+  # TODO: Generalize to handle multiple projects
+  # TODO: Add script to run tests locally
+  # TODO: Document how to add new project to the list.
+  foss_test:
+    name: "Test rules on FOSS project: yaml-cpp"
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set bazel version to 6.5.0
+        run: echo "6.5.0" > .bazelversion
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.15.0
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install CodeChecker analyzers
+        run: |
+          sudo apt-get update --quiet
+          sudo apt-get install --no-install-recommends \
+            clang \
+            clang-tools \
+            clang-tidy
+          # The default naming of the clang-extdef-mapping, needed for CTU, is
+          # installed by clang-tools also contains the major version
+          # (e.g. clang-extdef-mapping-18), but the bazel rules reference it
+          # without the version number. To this end, we use update-alternatives
+          # to rename the binary to omit it.
+          sudo update-alternatives --install \
+            /usr/bin/clang-extdef-mapping \
+            clang-extdef-mapping \
+            /usr/bin/clang-extdef-mapping-$(clang --version | head -n 1 |
+            sed -E 's/.*version ([0-9]+)\..*/\1/') \
+            100
+
+      - name: Install CodeChecker
+        run: pip3 install codechecker
+
+      - name: Setup yaml-cpp
+        run:  |
+          cd test/foss/yaml-cpp
+          sh init.sh
+
+      - name: Run Bazel CodeChecker
+        run: |
+          cd test/foss/yaml-cpp/test-proj
+          bazel build :codechecker_test
+
+      - name: Run Per-File Bazel CodeChecker
+        run: |
+          cd test/foss/yaml-cpp/test-proj
+          bazel build :code_checker_test
