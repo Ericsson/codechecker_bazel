@@ -34,7 +34,7 @@ class TestBase(unittest.TestCase):
     BAZEL_TESTLOGS_DIR: str = None
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, path : str = None):
         """Load module, save environment"""
         ErrorCollector: list[str] = []
         if cls.__test_path__ == None:
