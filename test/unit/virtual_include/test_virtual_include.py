@@ -36,6 +36,12 @@ class TestVirtualInclude(TestBase):
 
     # Set working directory
     __test_path__ = os.path.dirname(os.path.abspath(__file__))
+    BAZEL_BIN_DIR = os.path.join(
+        "../../..", "bazel-bin", "test", "unit", "virtual_include"
+    )
+    BAZEL_TESTLOGS_DIR = os.path.join(
+        "../../..", "bazel-testlogs", "test", "unit", "virtual_include"
+    )
 
     # Set working directory
     __test_path__ = os.path.dirname(os.path.abspath(__file__))
