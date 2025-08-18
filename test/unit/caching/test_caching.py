@@ -23,7 +23,7 @@ from common.base import TestBase
 class TestCaching(TestBase):
     """Caching tests"""
 
-    # This line is mandatory
+    # Set working directory
     __test_path__ = os.path.dirname(os.path.abspath(__file__))
 
     def setUp(self):
