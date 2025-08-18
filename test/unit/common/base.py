@@ -65,8 +65,8 @@ class TestBase(unittest.TestCase):
         # Enable debug logs for tests if "super verbose" flag is provided
         if "-vvv" in sys.argv:
             logging.basicConfig(
-                level=logging.DEBUG,
-                format="[TEST] %(levelname)5s: %(message)s")
+                level=logging.DEBUG, format="[TEST] %(levelname)5s: %(message)s"
+            )
         # Move to test dir
         cls.test_dir = cls.__test_path__
         os.chdir(cls.test_dir)
