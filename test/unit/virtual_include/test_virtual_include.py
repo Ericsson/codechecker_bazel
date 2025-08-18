@@ -34,7 +34,7 @@ from common.base import TestBase
 class TestVirtualInclude(TestBase):
     """Tests checking virtual include path resolution"""
 
-    # This line is mandatory
+    # Set working directory
     __test_path__ = os.path.dirname(os.path.abspath(__file__))
 
     # Set working directory
