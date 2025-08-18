@@ -34,7 +34,7 @@ class TestBase(unittest.TestCase):
     BAZEL_TESTLOGS_DIR: str = None
 
     @classmethod
-    def setUpClass(cls, path : str = None):
+    def setUpClass(cls):
         """Load module, save environment"""
         ErrorCollector: list[str] = []
         if cls.__test_path__ == None:
@@ -67,12 +67,12 @@ class TestBase(unittest.TestCase):
             logging.basicConfig(
                 level=logging.DEBUG,
                 format="[TEST] %(levelname)5s: %(message)s")
+        # Move to test dir
+        cls.test_dir = cls.__test_path__
+        os.chdir(cls.test_dir)
         # Save environment and location
         cls.save_env = os.environ
         cls.save_cwd = os.getcwd()
-        # Move to test dir
-        cls.test_dir = path
-        os.chdir(cls.test_dir)
 
     @classmethod
     def tearDownClass(cls):
