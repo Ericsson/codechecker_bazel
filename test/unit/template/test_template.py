@@ -52,6 +52,10 @@ class TestTemplate(TestBase):
         """TODO: Define clean up after every test"""
         return super().tearDown()
 
+    def tearDown(self):
+        """TODO: Define clean up after every test"""
+        return super().tearDown()
+
     def test_template(self):
         """Test: TODO: describe your test"""
         self.assertTrue(True)
