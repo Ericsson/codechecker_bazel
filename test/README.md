@@ -66,4 +66,4 @@ python3 -m unittest discover unit/my_test_dir -vvv
 > __test_path__ = os.path.dirname(os.path.abspath(__file__))
 > ```
 
-**A test template can be found in the root of the unit directory
+**For a test template look into unit/template**
