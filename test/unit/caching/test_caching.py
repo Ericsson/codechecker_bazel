@@ -60,8 +60,8 @@ class TestCaching(TestBase):
 
     def test_bazel_test_code_checker_caching(self):
         """
-        Test whether bazel correctly uses cached analysis results for unchanged input
-        files.
+        Test whether bazel correctly uses cached analysis
+        results for unchanged input files.
         """
         target = "//test/unit/caching/tmp:code_checker_caching"
         ret, _, _ = self.run_command(f"bazel build {target}")
@@ -71,12 +71,11 @@ class TestCaching(TestBase):
                 f.write("//test")
         except FileNotFoundError:
             self.fail(f"File not found!")
-        ret, _, stderr = self.run_command(
-            f"bazel build {target} --subcommands"
-        )
+        ret, _, stderr = self.run_command(f"bazel build {target} --subcommands")
         self.assertEqual(ret, 0)
         content = stderr
-        # FIXME: This should be 1; 2 means that both .cpp files were reanalyzed despite only one of them being changed.
+        # FIXME: This should be 1; 2 means that both .cpp files were reanalyzed
+        # despite only one of them being changed.
         self.assertEqual(
             content.count(f"SUBCOMMAND: # {target} [action 'CodeChecker"), 2
         )
