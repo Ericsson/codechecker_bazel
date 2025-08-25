@@ -32,11 +32,10 @@ BAZEL_PATHS = {
     r"\/sandbox\/processwrapper-sandbox\/\S*\/execroot\/": "/execroot/",
     START_PATH + r"\/worker\/build\/[0-9a-fA-F]{16}\/root\/": "",
     START_PATH + r"\/[0-9a-fA-F]{32}\/execroot\/": "",
-    # The path getting into the plist file on a docker img is:
-    # bazel_codechecker/bazel-out/k8-fastbuild/...
-    # But on regular other system its:
-    # /home/.../execroot/bazel_codechecker/bazel-out/k8-fastbuild/...
-    # This is because normally the runner is not the root user
+    # Running bazel with --spawn_strategy=processwrapper-sandbox
+    # results in its path being wrongly replaced!
+    # In that case the 1st then 3rd regex will match and leave the path in a
+    # half baked state, this regex just finishes the job
     r"<string>bazel_codechecker\/": "<string>",
 }
 
