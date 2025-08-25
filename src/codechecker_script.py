@@ -32,7 +32,7 @@ BAZEL_PATHS = {
     r"\/sandbox\/processwrapper-sandbox\/\S*\/execroot\/": "/execroot/",
     START_PATH + r"\/worker\/build\/[0-9a-fA-F]{16}\/root\/": "",
     START_PATH + r"\/[0-9a-fA-F]{32}\/execroot\/": "",
-    r"^bazel_codechecker\/": "",
+    r"<string>bazel_codechecker\/": "<string>",
 }
 
 
