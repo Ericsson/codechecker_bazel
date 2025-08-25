@@ -19,27 +19,22 @@ load(
     "cc_library",
 )
 
-# Prototype for CodeChecker analyze --file
-# NOTE: CodeChecker analyze --file --ctu does not work
 load(
     "@bazel_codechecker//src:code_checker.bzl",
     "code_checker_test",
 )
 
-# Test defect in CTU mode
 cc_library(
     name = "linking",
     hdrs = ["linking.h"],
 )
 
-# Test defect in CTU mode
 cc_library(
     name = "secondary",
     srcs = ["secondary.cc"],
     deps = ["linking"],
 )
 
-# Simplest C++ test which should PASS
 cc_binary(
     name = "primary",
     srcs = ["primary.cc"],
