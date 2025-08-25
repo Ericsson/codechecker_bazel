@@ -17,7 +17,7 @@ Functional test, to check if caching is working correctly
 """
 import unittest
 import os
-import re
+from typing import final
 from common.base import TestBase
 
 
@@ -33,12 +33,18 @@ class TestCaching(TestBase):
         "../../..", "bazel-testlogs", "test", "unit", "caching"
     )
 
+    @final
+    @classmethod
+    def setUpClass(cls):
+        """Clean up before the test suite"""
+        super().setUpClass()
+        cls.run_command("bazel clean")
+
     def setUp(self):
         """Before every test: clean Bazel cache"""
         super().setUp()
         self.run_command("mkdir tmp")
         self.run_command("cp primary.cc secondary.cc linking.h BUILD tmp/")
-        self.run_command("bazel clean")
 
     def tearDown(self):
         """Clean up working directory after every test"""
