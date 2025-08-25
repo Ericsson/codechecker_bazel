@@ -52,7 +52,10 @@ class TestCaching(TestBase):
         self.run_command("rm -rf tmp")
 
     def test_bazel_test_code_checker_caching(self):
-        """Tests whether bazel uses cached output for unchanged files"""
+        """
+        Test whether bazel correctly uses cached analysis results for unchanged input
+        files.
+        """
         target = "//test/unit/caching/tmp:code_checker_caching"
         ret, _, _ = self.run_command(f"bazel build {target}")
         self.assertEqual(ret, 0)
