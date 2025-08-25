@@ -17,6 +17,7 @@ Functional test, to check if caching is working correctly
 """
 import unittest
 import os
+import re
 from common.base import TestBase
 
 
@@ -43,6 +44,7 @@ class TestCaching(TestBase):
         """Clean up working directory after every test"""
         super().tearDown()
         self.run_command("rm -rf tmp")
+
     def test_bazel_test_code_checker_caching(self):
         """Tests whether bazel uses cached output for unchanged files"""
         target = "//test/unit/caching/tmp:code_checker_caching"
@@ -59,7 +61,14 @@ class TestCaching(TestBase):
         self.assertEqual(ret, 0)
         content = stdout + stderr
         # FIXME: This should be 1
-        self.assertEqual(content.count("SUBCOMMAND"), 2)
+        self.assertEqual(
+            len(
+                re.findall(
+                    f"SUBCOMMAND: # {target} \\[action \'CodeChecker", content
+                )
+            ),
+            2,
+        )
 
 
 if __name__ == "__main__":
