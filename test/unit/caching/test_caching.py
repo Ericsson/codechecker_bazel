@@ -62,12 +62,7 @@ class TestCaching(TestBase):
         content = stdout + stderr
         # FIXME: This should be 1
         self.assertEqual(
-            len(
-                re.findall(
-                    f"SUBCOMMAND: # {target} \\[action \'CodeChecker", content
-                )
-            ),
-            2,
+            content.count(f"SUBCOMMAND: # {target} [action 'CodeChecker"), 2
         )
 
 
