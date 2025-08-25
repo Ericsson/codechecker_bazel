@@ -71,11 +71,11 @@ class TestCaching(TestBase):
                 f.write("//test")
         except FileNotFoundError:
             self.fail(f"File not found!")
-        ret, stdout, stderr = self.run_command(
+        ret, _, stderr = self.run_command(
             f"bazel build {target} --subcommands"
         )
         self.assertEqual(ret, 0)
-        content = stdout + stderr
+        content = stderr
         # FIXME: This should be 1
         self.assertEqual(
             content.count(f"SUBCOMMAND: # {target} [action 'CodeChecker"), 2
