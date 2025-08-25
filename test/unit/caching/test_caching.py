@@ -35,28 +35,29 @@ class TestCaching(TestBase):
     def setUp(self):
         """Before every test: clean Bazel cache"""
         super().setUp()
+        self.run_command("mkdir tmp")
+        self.run_command("cp primary.cc secondary.cc linking.h BUILD tmp/")
         self.run_command("bazel clean")
 
+    def tearDown(self):
+        """Clean up working directory after every test"""
+        super().tearDown()
+        self.run_command("rm -rf tmp")
     def test_bazel_test_code_checker_caching(self):
         """Tests whether bazel uses cached output for unchanged files"""
-        modified_file = "secondary.cc"
-        target = "//test/unit/caching:code_checker_caching"
-        ret, _, _ = self.run_command(f"cp {modified_file} {modified_file}.back")
-        self.assertEqual(ret, 0)
+        target = "//test/unit/caching/tmp:code_checker_caching"
         ret, _, _ = self.run_command(f"bazel build {target}")
         self.assertEqual(ret, 0)
         try:
-            with open(f"{modified_file}", "a", encoding="utf-8") as f:
+            with open("tmp/secondary.cc", "a", encoding="utf-8") as f:
                 f.write("//test")
         except FileNotFoundError:
-            self.fail(f"File not found: {modified_file}")
+            self.fail(f"File not found!")
         ret, stdout, stderr = self.run_command(
             f"bazel build {target} --subcommands"
         )
         self.assertEqual(ret, 0)
         content = stdout + stderr
-        self.run_command(f"mv {modified_file}.back {modified_file}")
-        self.assertEqual(ret, 0)
         # FIXME: This should be 1
         self.assertEqual(content.count("SUBCOMMAND"), 2)
 
