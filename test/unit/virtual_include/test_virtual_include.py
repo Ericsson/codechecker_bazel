@@ -43,15 +43,6 @@ class TestVirtualInclude(TestBase):
         "../../..", "bazel-testlogs", "test", "unit", "virtual_include"
     )
 
-    # Set working directory
-    __test_path__ = os.path.dirname(os.path.abspath(__file__))
-    BAZEL_BIN_DIR = os.path.join(
-        "../../..", "bazel-bin", "test", "unit", "virtual_include"
-    )
-    BAZEL_TESTLOGS_DIR = os.path.join(
-        "../../..", "bazel-testlogs", "test", "unit", "virtual_include"
-    )
-
     @final
     @classmethod
     def setUpClass(cls):
@@ -59,11 +50,11 @@ class TestVirtualInclude(TestBase):
         super().setUpClass()
         cls.run_command("bazel clean")
 
-    def contains_in_files(self, regex, folder_path):
+    def contains_in_files(self, regex: str, file_list: list[str]) -> list[str]:
         result = []
-        for file in folder_path:
+        for file in file_list:
             logging.debug(f"Checking file: {file}")
-            if self.contains_regex_in_file:
+            if self.contains_regex_in_file(file, "/_virtual_includes/"):
                 result.append(file)
         return result
 
