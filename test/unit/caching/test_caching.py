@@ -17,6 +17,7 @@ Functional test, to check if caching is working correctly
 """
 import unittest
 import os
+import shutil
 from typing import final
 from common.base import TestBase
 
@@ -43,13 +44,19 @@ class TestCaching(TestBase):
     def setUp(self):
         """Before every test: clean Bazel cache"""
         super().setUp()
-        self.run_command("mkdir tmp")
-        self.run_command("cp primary.cc secondary.cc linking.h BUILD tmp/")
+        os.mkdir("tmp")
+        shutil.copy("primary.cc", "tmp")
+        shutil.copy("secondary.cc", "tmp")
+        shutil.copy("linking.h", "tmp")
+        shutil.copy("BUILD", "tmp")
 
     def tearDown(self):
         """Clean up working directory after every test"""
         super().tearDown()
-        self.run_command("rm -rf tmp")
+        try:
+            shutil.rmtree("tmp")
+        except FileNotFoundError:
+            self.fail("Temporary working directory does not exists!")
 
     def test_bazel_test_code_checker_caching(self):
         """
