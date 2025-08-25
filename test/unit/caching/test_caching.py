@@ -76,7 +76,7 @@ class TestCaching(TestBase):
         )
         self.assertEqual(ret, 0)
         content = stderr
-        # FIXME: This should be 1
+        # FIXME: This should be 1; 2 means that both .cpp files were reanalyzed despite only one of them being changed.
         self.assertEqual(
             content.count(f"SUBCOMMAND: # {target} [action 'CodeChecker"), 2
         )
