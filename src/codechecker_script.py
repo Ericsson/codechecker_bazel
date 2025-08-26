@@ -294,7 +294,7 @@ def resolve_symlinks():
     logging.info("Processed file paths in %d files", files_processed)
 def update_file_paths():
     """ Fix bazel sandbox paths and resolve symbolic links in generated files to real paths """
-    fix_bazel_paths()
+    #fix_bazel_paths() # this is unnecessary
     resolve_symlinks()
 
 
