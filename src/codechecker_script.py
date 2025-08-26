@@ -27,6 +27,7 @@ CODECHECKER_SEVERITIES = "{Severities}"
 CODECHECKER_ENV = "{codechecker_env}"
 COMPILE_COMMANDS = "{compile_commands}"
 
+# Note: unused
 START_PATH = r"\/(?:(?!\.\s+)\S)+"
 BAZEL_PATHS = {
     r"\/sandbox\/processwrapper-sandbox\/\S*\/execroot\/": "/execroot/",
@@ -200,6 +201,7 @@ def analyze():
 
 def fix_bazel_paths():
     """ Remove Bazel leading paths in all files """
+    # Note: unused
     stage("Fix CodeChecker output:")
     folder = CODECHECKER_FILES
     logging.info("Fixing Bazel paths in %s", folder)
