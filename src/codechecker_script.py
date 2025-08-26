@@ -27,11 +27,17 @@ CODECHECKER_SEVERITIES = "{Severities}"
 CODECHECKER_ENV = "{codechecker_env}"
 COMPILE_COMMANDS = "{compile_commands}"
 
+# Note: unused
 START_PATH = r"\/(?:(?!\.\s+)\S)+"
 BAZEL_PATHS = {
     r"\/sandbox\/processwrapper-sandbox\/\S*\/execroot\/": "/execroot/",
     START_PATH + r"\/worker\/build\/[0-9a-fA-F]{16}\/root\/": "",
     START_PATH + r"\/[0-9a-fA-F]{32}\/execroot\/": "",
+    # Running bazel with --spawn_strategy=processwrapper-sandbox
+    # results in its path being wrongly replaced!
+    # In that case the 1st then 3rd regex will match and leave the path in a
+    # half baked state, this regex just finishes the job
+    r"<string>bazel_codechecker\/": "<string>",
 }
 
 
@@ -195,6 +201,7 @@ def analyze():
 
 def fix_bazel_paths():
     """ Remove Bazel leading paths in all files """
+    # Note: unused
     stage("Fix CodeChecker output:")
     folder = CODECHECKER_FILES
     logging.info("Fixing Bazel paths in %s", folder)
@@ -280,17 +287,16 @@ def resolve_symlinks():
     files_processed = 0
     for root, _, files in os.walk(analyze_outdir):
         for filename in files:
-            if re.search("clang-tidy", filename):
-                filepath = os.path.join(root, filename)
-                if os.path.splitext(filepath)[1] == ".plist":
-                    resolve_plist_symlinks(filepath)
-                elif os.path.splitext(filepath)[1] == ".yaml":
-                    resolve_yaml_symlinks(filepath)
-                files_processed += 1
+            filepath = os.path.join(root, filename)
+            if os.path.splitext(filepath)[1] == ".plist":
+                resolve_plist_symlinks(filepath)
+            elif os.path.splitext(filepath)[1] == ".yaml":
+                resolve_yaml_symlinks(filepath)
+            files_processed += 1
     logging.info("Processed file paths in %d files", files_processed)
 def update_file_paths():
     """ Fix bazel sandbox paths and resolve symbolic links in generated files to real paths """
-    fix_bazel_paths()
+    #fix_bazel_paths() # this is unnecessary
     resolve_symlinks()
 
 

@@ -50,11 +50,11 @@ class TestVirtualInclude(TestBase):
         super().setUpClass()
         cls.run_command("bazel clean")
 
-    def contains_in_files(self, regex, folder_path):
+    def contains_in_files(self, regex: str, file_list: list[str]) -> list[str]:
         result = []
-        for file in folder_path:
+        for file in file_list:
             logging.debug(f"Checking file: {file}")
-            if self.contains_regex_in_file:
+            if self.contains_regex_in_file(file, "/_virtual_includes/"):
                 result.append(file)
         return result
 
@@ -102,9 +102,7 @@ class TestVirtualInclude(TestBase):
         self.assertTrue(
             os.path.isdir(f"{self.BAZEL_BIN_DIR}/_virtual_includes")
         )
-        # FIXME: In the postprocessed plists, all _virtual_include paths
-        # should've been removed. Possible fix is in the github PR #14.
-        self.assertNotEqual(
+        self.assertEqual(
             self.contains_in_files(r"/_virtual_includes/", plist_files), []
         )
 
