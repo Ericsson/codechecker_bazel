@@ -1,0 +1,20 @@
+#----------------------------------------------------
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+local_repository(
+    name = "bazel_codechecker",
+    path = "../../../../",
+)
+
+load(
+    "@bazel_codechecker//src:tools.bzl",
+    "register_default_codechecker",
+    "register_default_python_toolchain",
+)
+
+register_default_python_toolchain()
+
+register_default_codechecker()
+
+#----------------------------------------------------

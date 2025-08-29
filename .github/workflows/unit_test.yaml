@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: codechecker-bazel-tests
+name: codechecker-bazel-unit-tests
 
 # Triggers the workflow on push or pull request events.
 on: [push, pull_request]
