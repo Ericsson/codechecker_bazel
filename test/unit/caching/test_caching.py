@@ -73,10 +73,8 @@ class TestCaching(TestBase):
             self.fail(f"File not found!")
         ret, _, stderr = self.run_command(f"bazel build {target} --subcommands")
         self.assertEqual(ret, 0)
-        # FIXME: This should be 1; 2 means that both .cpp files were reanalyzed
-        # despite only one of them being changed.
         self.assertEqual(
-            stderr.count(f"SUBCOMMAND: # {target} [action 'CodeChecker"), 2
+            stderr.count(f"SUBCOMMAND: # {target} [action 'CodeChecker"), 1
         )
 
     def test_bazel_test_code_checker_ctu_caching(self):
