@@ -16,13 +16,24 @@ LOG_FILE=$1
 shift
 COMPILE_COMMANDS_JSON=$1
 shift
+STRACE="strace.tmp"
+IGNORE_FILE=$1
+shift
+DONT_IGNORE=$1
+shift
+touch $IGNORE_FILE
+touch temp
+while [ "$1" != "CodeChecker" ]; do
+        echo $1 >> temp
+    shift
+done
 COMPILE_COMMANDS_ABS=$COMPILE_COMMANDS_JSON.abs
 sed 's|"directory":"."|"directory":"'$(pwd)'"|g' $COMPILE_COMMANDS_JSON > $COMPILE_COMMANDS_ABS
 echo "CodeChecker command: $@" $COMPILE_COMMANDS_ABS > $LOG_FILE
 echo "===-----------------------------------------------------===" >> $LOG_FILE
 echo "                   CodeChecker error log                   " >> $LOG_FILE
 echo "===-----------------------------------------------------===" >> $LOG_FILE
-eval "$@" $COMPILE_COMMANDS_ABS >> $LOG_FILE 2>&1
+strace -f -e trace=file -o "$STRACE" sh -c 'eval "$@" ' _ $@ "$COMPILE_COMMANDS_ABS" >> "$LOG_FILE" 2>&1
 # ls -la $DATA_DIR
 # NOTE: the following we do to get rid of md5 hash in plist file names
 ret_code=$?
@@ -35,6 +46,17 @@ if [ $ret_code -eq 1 ] || [ $ret_code -ge 128 ]; then
 fi
 cp $DATA_DIR/*_clang-tidy_*.plist $CLANG_TIDY_PLIST
 cp $DATA_DIR/*_clangsa_*.plist    $CLANGSA_PLIST
+
+while read -r line
+do
+    base=$(basename "$line")
+    echo $base >> $LOG_FILE
+    if ! grep -Eq ".*(open|openat)\\(.*$base" $STRACE; then
+        echo $line >> $IGNORE_FILE
+    fi
+done < temp
+rm temp
+rm strace.tmp
 
 # sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANG_TIDY_PLIST
 # sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANGSA_PLIST
@@ -56,14 +78,16 @@ def _run_code_checker(
     clang_tidy_plist_file_name = "{}/{}_clang-tidy.plist".format(*file_name_params)
     clangsa_plist_file_name = "{}/{}_clangsa.plist".format(*file_name_params)
     codechecker_log_file_name = "{}/{}_codechecker.log".format(*file_name_params)
+    ignore_list_file_name = "{}/{}_ignore".format(*file_name_params)
 
     # Declare output files
     clang_tidy_plist = ctx.actions.declare_file(clang_tidy_plist_file_name)
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
+    ignore_list = ctx.actions.declare_file(ignore_list_file_name)
 
     inputs = [compile_commands_json] + sources_and_headers
-    outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
+    outputs = [clang_tidy_plist, clangsa_plist, codechecker_log, ignore_list]
 
     # Create CodeChecker wrapper script
     wrapper = ctx.actions.declare_file(ctx.attr.name + "/code_checker.sh")
@@ -82,16 +106,30 @@ def _run_code_checker(
     args.add(clangsa_plist.path)
     args.add(codechecker_log.path)
     args.add(compile_commands_json.path)
+    args.add(ignore_list.path)
+    args.add(src.path)
+    args.add_all([inp.path for inp in inputs])
     args.add("CodeChecker")
     args.add("analyze")
     args.add_all(options)
     args.add("--output=" + data_dir)
     args.add("--file=*/" + src.path)
 
+
+    #unused_content = [f.path for f in inputs if f != src]
+    #unused_content_string = "\n".join(unused_content) + "\n" if unused_content else ""
+    ## Add all files, except the one testing on to the ignore list
+    #ctx.actions.write(
+    #    output = ignore_list,
+    #    content = unused_content_string,
+    #    is_executable = True,
+    #)
+
     # Action to run CodeChecker for a file
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
+        unused_inputs_list = ignore_list,
         executable = wrapper,
         arguments = [args],
         mnemonic = "CodeChecker",
