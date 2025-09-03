@@ -24,9 +24,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Prepares matrix used to generate jobs in project_test_runner
-  # This job assumes that every project patch file is in the .github/workflows/patches directory
-  # and the name of these scripts follows this rule: patch-project_name.sh
+  # Prepares matrix used to generate jobs in foss_{$platform}_test
+  # This job assumes that every project initializer script is
+  # in `test/foss/project` and script name must be `init.sh`
   # patches must clone their repository into folder: test-proj
   prepare_project_matrix:
     runs-on: ubuntu-24.04
