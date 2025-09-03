@@ -62,7 +62,13 @@ def _run_code_checker(
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
-    inputs = [compile_commands_json] + sources_and_headers
+    if "--ctu" in options:
+        inputs = [compile_commands_json] + sources_and_headers
+    else:
+        # NOTE: we collect only headers, so CTU may not work!
+        headers = depset([src], transitive = [compilation_context.headers])
+        inputs = depset([compile_commands_json, src], transitive = [headers])
+
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
     # Create CodeChecker wrapper script
@@ -274,6 +280,7 @@ def _compile_commands_impl(ctx):
     return compile_commands_json
 
 def _collect_all_sources_and_headers(ctx):
+    # NOTE: we are only using this function for CTU
     all_files = []
     headers = depset()
     for target in ctx.attr.targets:
