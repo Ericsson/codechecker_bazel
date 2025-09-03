@@ -1,5 +1,9 @@
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load(
+    "@default_codechecker_tools//:defs.bzl",
+    "CCACHE_DISABLE"
+)
 
 CLANG_TIDY_WRAPPER_SCRIPT = """#!/usr/bin/env bash
 CLANG_TIDY=$1
@@ -176,12 +180,19 @@ def _run_analyzer(
         direct = input_files,
         transitive = [compilation_context.headers],
     )
+
+    # Have it None by default to avoid overwriting use_default_shell_env
+    env_var = {}
+    if CCACHE_DISABLE == "1":
+        env_var["CCACHE_DISABLE"] = CCACHE_DISABLE
+
     ctx.actions.run(
         inputs = inputs,
         outputs = [outfile],
         executable = wrapper,
         arguments = [args],
         mnemonic = "ClangAnalyzer",
+        env = env_var,
         use_default_shell_env = True,
         progress_message = "Run clang -analyze on {}".format(infile.short_path),
     )

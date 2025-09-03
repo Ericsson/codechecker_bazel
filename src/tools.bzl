@@ -82,7 +82,46 @@ def _codechecker_local_repository_impl(repository_ctx):
     if not codechecker_bin_path:
         fail("ERROR! CodeChecker is not detected")
 
-    defs = "CODECHECKER_BIN_PATH = '{}'\n".format(codechecker_bin_path)
+    # In future versions use repository_ctx.getenv()
+    ccache_disable = repository_ctx.os.environ.get("CCACHE_DISABLE", 0)
+
+    analyzers = repository_ctx.execute([codechecker_bin_path, "analyzers"])
+
+    parsed_analyzers = {}
+
+    lines = analyzers.stdout.strip().split('\n')
+    for line in lines:
+        parts_dirty = line.split(" ")
+        parts = []
+        for fragment in parts_dirty:
+            if fragment != "":
+                parts.append(fragment)
+        tool_name = parts[0]
+        if 'NOT' not in parts:
+            path = parts[1]
+            version = parts[2]
+            parsed_analyzers[tool_name] = {'path': path, 'version': version}
+    bash_bin = repository_ctx.which("bash")
+    clang_ccache = repository_ctx.execute(
+        [
+            bash_bin, "-c",
+            "{} -xc -c - --ccache-skip </dev/null".format(
+                parsed_analyzers["clangsa"]["path"])]
+    )
+    gcc_ccache = repository_ctx.execute(
+        [
+            bash_bin, "-c",
+            "{} -xc -c - --ccache-skip </dev/null".format(
+                    parsed_analyzers["gcc"]["path"]
+                )
+        ]
+    ) 
+    if (clang_ccache.return_code == 0 or gcc_ccache.return_code == 0) and \
+        ccache_disable != "1":
+        fail("ERROR! ccache detected")
+
+    defs = "CODECHECKER_BIN_PATH = '{}'\n".format(codechecker_bin_path) + \
+        "CCACHE_DISABLE = '{}'\n".format(ccache_disable)
     repository_ctx.file(
         repository_ctx.path("defs.bzl"),
         content = defs,
