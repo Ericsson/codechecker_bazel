@@ -320,7 +320,7 @@ def _code_checker_impl(ctx):
                         options,
                         compile_commands_json,
                         compilation_context,
-                        sources_and_headers
+                        sources_and_headers,
                     )
                     all_files += outputs
     ctx.actions.write(
