@@ -39,26 +39,10 @@ jobs:
 
       - name: Generate dynamic project matrix
         id: generate_matrix
+        env: 
+          PATCH_DIR: "./test/foss/"
         run: |
-          PATCH_DIR="./test/foss/"
-          TEMP_JSON_FILE=$(mktemp)
-          find "$PATCH_DIR" -maxdepth 1 -mindepth 1 -type d ! -name \
-            "templates" -print0 | while IFS= read -r -d $'\0' PROJECT_FOLDER; do
-            # Extract project name from folder name
-            PROJECT_NAME=$(basename "$PROJECT_FOLDER")
-            jq -n -c \
-              --arg name "$PROJECT_NAME" \
-              --arg folder "$PROJECT_FOLDER" \
-              '{ name: $name, folder: $folder }' >> "$TEMP_JSON_FILE"
-            echo "Added $PROJECT_NAME to matrix."
-          done
-          if [ -s "$TEMP_JSON_FILE" ]; then
-            FINAL_MATRIX_JSON="[$(paste -s -d ',' "$TEMP_JSON_FILE")]"
-          else
-            FINAL_MATRIX_JSON="[]"
-          fi
-          echo "Generated matrix: $FINAL_MATRIX_JSON"
-          echo "matrix_json=$FINAL_MATRIX_JSON" >> "$GITHUB_OUTPUT"
+          ./.github/foss_project_collector.sh >> "$GITHUB_OUTPUT"
         shell: bash
 
   # TODO: Add script to run tests locally
