@@ -15,13 +15,13 @@
 # limitations under the License.
 
 
-if [ -z "$PATCH_DIR" ]; then
-    # PATCH_DIR not set
+if [ -z "$PROJECTS_DIR" ]; then
+    # PROJECTS_DIR not set
     exit 1
 fi
 
 TEMP_JSON_FILE=$(mktemp)
-find "$PATCH_DIR" -maxdepth 1 -mindepth 1 -type d ! -name \
+find "$PROJECTS_DIR" -maxdepth 1 -mindepth 1 -type d ! -name \
     "templates" -print0 | while IFS= read -r -d $'\0' PROJECT_FOLDER; do
     
     # Extract project name from folder name
