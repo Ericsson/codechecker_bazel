@@ -17,6 +17,7 @@
 
 if [ -z "$PROJECTS_DIR" ]; then
     # PROJECTS_DIR not set
+    echo "[ERROR] PROJECTS_DIR not set!" 1>&2
     exit 1
 fi
 
