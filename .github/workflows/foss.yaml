@@ -24,11 +24,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # TODO: Generalize to handle multiple projects
+  # Prepares matrix used to generate jobs in foss_{$platform}_test
+  # This job assumes that every project initializer script is
+  # in `test/foss/project` and script name must be `init.sh`
+  # patches must clone their repository into folder: test-proj
+  prepare_project_matrix:
+    runs-on: ubuntu-24.04
+    name: Collecting Projects
+    outputs:
+      project_configurations: ${{ steps.generate_matrix.outputs.matrix_json }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate dynamic project matrix
+        id: generate_matrix
+        env: 
+          PATCH_DIR: "./test/foss/"
+        run: |
+          ./.github/foss_project_collector.sh >> "$GITHUB_OUTPUT"
+        shell: bash
+
   # TODO: Add script to run tests locally
   foss_ubuntu_test:
-    name: "Test rules on FOSS project: yaml-cpp"
+    name: "Test rules on FOSS project: ${{ matrix.project.name }}"
     runs-on: ubuntu-24.04
+    needs: prepare_project_matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 2 # limit number of concurrent jobs
+      matrix:
+        project: ${{ fromJson(needs.prepare_project_matrix.outputs.project_configurations) }}
 
     steps:
       - name: Checkout repository
@@ -37,25 +63,28 @@ jobs:
       - name: Setup environment
         uses: ./.github/platform_environment_setup/ubuntu
 
-      - name: Setup yaml-cpp
-        run:  |
-          cd test/foss/yaml-cpp
-          sh init.sh
-
+      - name: Setup project
+        working-directory: ${{ matrix.project.folder }}
+        run: sh init.sh
+        
       - name: Run Bazel CodeChecker
-        run: |
-          cd test/foss/yaml-cpp/test-proj
-          bazel build :codechecker_test
-
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :codechecker_test
+        
       - name: Run Per-File Bazel CodeChecker
-        run: |
-          cd test/foss/yaml-cpp/test-proj
-          bazel build :code_checker_test
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :code_checker_test
 
   foss_rhel_test:
-    name: "Test rules on FOSS project: yaml-cpp"
+    name: "Test rules on FOSS project: ${{ matrix.project.name }}"
     runs-on: ubuntu-24.04
     container: redhat/ubi9:latest
+    needs: prepare_project_matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 2 # limit number of concurrent jobs
+      matrix:
+        project: ${{ fromJson(needs.prepare_project_matrix.outputs.project_configurations) }}
 
     steps:
       - name: Checkout repository
@@ -64,17 +93,14 @@ jobs:
       - name: Setup environment
         uses: ./.github/platform_environment_setup/rhel9
 
-      - name: Setup yaml-cpp
-        run:  |
-          cd test/foss/yaml-cpp
-          sh init.sh
-
+      - name: Setup project
+        working-directory: ${{ matrix.project.folder }}
+        run: sh init.sh
+        
       - name: Run Bazel CodeChecker
-        run: |
-          cd test/foss/yaml-cpp/test-proj
-          bazel build :codechecker_test
-
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :codechecker_test
+        
       - name: Run Per-File Bazel CodeChecker
-        run: |
-          cd test/foss/yaml-cpp/test-proj
-          bazel build :code_checker_test
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :code_checker_test
