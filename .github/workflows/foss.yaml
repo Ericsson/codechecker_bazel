@@ -25,6 +25,8 @@ concurrency:
 
 jobs:
   # Prepares matrix used to generate jobs in foss_{$platform}_test
+  # This is a best-practice solution detailed in:
+  # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
   # This job assumes that every project initializer script is
   # in `test/foss/project` and script name must be `init.sh`
   # patches must clone their repository into folder: test-proj
