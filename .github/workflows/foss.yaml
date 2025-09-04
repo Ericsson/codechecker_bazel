@@ -25,7 +25,6 @@ concurrency:
 
 jobs:
   # TODO: Generalize to handle multiple projects
-  # TODO: Add script to run tests locally
   foss_ubuntu_test:
     name: "Test rules on FOSS project: yaml-cpp"
     runs-on: ubuntu-24.04

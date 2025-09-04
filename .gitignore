@@ -15,3 +15,6 @@ __pycache__
 
 # Ignore Python virtual environment
 venv
+
+# Ignore FOSS project clone dirs (all directories two layer deep in foss)
+/test/foss/*/*/
