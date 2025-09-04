@@ -44,7 +44,7 @@ jobs:
         env: 
           PROJECTS_DIR: "./test/foss/"
         run: |
-          ./.github/foss_project_collector.sh >> "$GITHUB_OUTPUT"
+          python3 ./.github/foss_project_collector.py >> "$GITHUB_OUTPUT"
         shell: bash
 
   # TODO: Add script to run tests locally
