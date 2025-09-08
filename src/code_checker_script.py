@@ -21,9 +21,12 @@ import shutil
 import subprocess
 import sys
 
-DATA_DIR: str = "{data_dir}"
-ANALYZER_PLIST_PATHS: list[tuple[str, str]] = {analyzer_output_list}
-LOG_FILE: str = "{log_file}"
+DATA_DIR: str = sys.argv[1]
+FILE_PATH: str = sys.argv[2]
+ANALYZER_PLIST_PATHS: list[list[str, str]] = [
+    item.split(",") for item in sys.argv[4].split(";")
+]
+LOG_FILE: str = sys.argv[3]
 COMPILE_COMMANDS_JSON: str = "{compile_commands_json}"
 COMPILE_COMMANDS_ABSOLUTE: str = f"{COMPILE_COMMANDS_JSON}.abs"
 CODECHECKER_ARGS: str = "{codechecker_args}"
@@ -72,6 +75,8 @@ log(result.stdout)
 codechecker_cmd: list[str] = (
     ["CodeChecker", "analyze"]
     + CODECHECKER_ARGS.split()
+    + ["--output=" + DATA_DIR]
+    + ["--file=*/" + FILE_PATH] 
     + [COMPILE_COMMANDS_ABSOLUTE]
 )
 
