@@ -28,31 +28,20 @@ def _run_code_checker(
     inputs = [compile_commands_json] + sources_and_headers
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
-    codechecker_options = ""
-    for item in options:
-        codechecker_options += item + " "
-    codechecker_options += "--output=" + data_dir + " "
-    codechecker_options += "--file=*/" + src.path
-
-    ctx.actions.expand_template(
-        template = ctx.file._code_checker_script_template,
-        output = ctx.outputs.code_checker_script,
-        is_executable = True,
-        substitutions = {
-            "{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
-            "{data_dir}": data_dir,
-            "{log_file}": codechecker_log.path,
-            "{compile_commands_json}": compile_commands_json.path,
-            "{codechecker_args}": codechecker_options,
-            "{analyzer_output_list}": str(analyzer_output_paths),
-        },
-    )
+    analyzer_output_paths = "clangsa," + clangsa_plist.path + \
+                        ";clang-tidy," + clang_tidy_plist.path
 
     # Action to run CodeChecker for a file
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
         executable = ctx.outputs.code_checker_script,
+        arguments = [
+            data_dir,
+            src.path,
+            codechecker_log.path,
+            analyzer_output_paths
+            ],
         mnemonic = "CodeChecker",
         use_default_shell_env = True,
         progress_message = "CodeChecker analyze {}".format(src.short_path),
@@ -248,11 +237,27 @@ def _collect_all_sources_and_headers(ctx):
     sources_and_headers = all_files + headers.to_list()
     return sources_and_headers
 
+def _create_wrapper_script(ctx, options, compile_commands_json):
+    options_str = ""
+    for item in options:
+        options_str += item + " "
+    ctx.actions.expand_template(
+        template = ctx.file._code_checker_script_template,
+        output = ctx.outputs.code_checker_script,
+        is_executable = True,
+        substitutions = {
+            "{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
+            "{compile_commands_json}": compile_commands_json.path,
+            "{codechecker_args}": options_str,
+        },
+    )
+
 def _code_checker_impl(ctx):
     compile_commands_json = _compile_commands_impl(ctx)
     sources_and_headers = _collect_all_sources_and_headers(ctx)
     options = ctx.attr.default_options + ctx.attr.options
     all_files = [compile_commands_json]
+    _create_wrapper_script(ctx, options, compile_commands_json)
     for target in ctx.attr.targets:
         if not CcInfo in target:
             continue
