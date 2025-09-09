@@ -329,6 +329,18 @@ def _code_checker_impl(ctx):
                         sources_and_headers,
                     )
                     all_files += outputs
+    # merge metadata
+    metadata = [file for file in all_files if file.path.endswith("metadata.json")]
+    metadata_json = ctx.actions.declare_file(ctx.attr.name + "/data/metadata.json")
+    ctx.actions.run(
+        inputs = metadata,
+        outputs = [metadata_json],
+        executable = ctx.executable._metadata_merge_script,
+        arguments = [metadata_json.path] + [file.path for file in metadata],
+        mnemonic = "Metadata",
+        progress_message = "Merging metadata.json"
+    )
+    all_files.append(metadata_json)
     ctx.actions.write(
         output = ctx.outputs.test_script,
         is_executable = True,
@@ -366,6 +378,14 @@ code_checker_test = rule(
                 "--clean",
             ],
             doc = "List of default CodeChecker analyze options",
+        ),
+        "_metadata_merge_script": attr.label(
+            default = ":metadata_merge",
+            executable = True,
+            cfg = 'exec',
+        ),
+        "_python_runtime": attr.label(
+            default = "@default_python_tools//:py3_runtime",
         ),
         "targets": attr.label_list(
             aspects = [
