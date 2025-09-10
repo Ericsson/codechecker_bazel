@@ -23,7 +23,7 @@ import sys
 
 DATA_DIR: str = sys.argv[1]
 FILE_PATH: str = sys.argv[2]
-ANALYZER_PLIST_PATHS: list[list[str, str]] = [
+ANALYZER_PLIST_PATHS: list[list[str]] = [
     item.split(",") for item in sys.argv[4].split(";")
 ]
 LOG_FILE: str = sys.argv[3]
