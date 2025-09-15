@@ -24,11 +24,6 @@ load(
     "codechecker_test",
 )
 
-load(
-    "@bazel_codechecker//src:per_file.bzl",
-    "code_checker_test",
-)
-
 # Test for strip_include_prefix
 cc_library(
     name = "test_inc",
@@ -53,12 +48,13 @@ codechecker_test(
     ],
 )
 
-code_checker_test(
+codechecker_test(
     name = "code_checker_virtual_include",
     tags = [
         "manual",
     ],
     targets = [
         "virtual_include",
-    ]
+    ],
+    per_file = True,
 )

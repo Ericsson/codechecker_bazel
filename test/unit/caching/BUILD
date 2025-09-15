@@ -20,8 +20,8 @@ load(
 )
 
 load(
-    "@bazel_codechecker//src:per_file.bzl",
-    "code_checker_test",
+    "@bazel_codechecker//src:codechecker.bzl",
+    "codechecker_test",
 )
 
 # We are not interested in finding bugs, we are only interested in whether the
@@ -48,17 +48,19 @@ cc_binary(
     ],
 )
 
-code_checker_test(
+codechecker_test(
     name = "code_checker_caching",
     targets = [
         "primary",
     ],
+    per_file = True,
 )
 
-code_checker_test(
+codechecker_test(
     name = "code_checker_caching_ctu",
     targets = [
         "primary",
     ],
-    options = ["--ctu"],
+    analyze = ["--ctu"],
+    per_file = True,
 )

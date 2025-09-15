@@ -33,13 +33,6 @@ load(
     "clang_ctu_test",
 )
 
-# Prototype for CodeChecker analyze --file
-# NOTE: CodeChecker analyze --file --ctu does not work
-load(
-    "@bazel_codechecker//src:per_file.bzl",
-    "code_checker_test",
-)
-
 # Test for strip_include_prefix
 cc_library(
     name = "test_inc",
@@ -255,17 +248,18 @@ clang_ctu_test(
     ],
 )
 
-code_checker_test(
+codechecker_test(
     name = "code_checker_pass",
-    options = [
+    analyze = [
         "--ctu",
     ],
     targets = [
         "test_pass",
     ],
+    per_file = True,
 )
 
-code_checker_test(
+codechecker_test(
     name = "code_checker_fail",
     tags = [
         "manual",
@@ -274,13 +268,14 @@ code_checker_test(
         "test_pass",
         "test_fail",
     ],
+    per_file = True,
 )
 
 # FIXME: The following test does not detect CTU problem
 # CodeChecker analyze --file --ctu does not work
-code_checker_test(
+codechecker_test(
     name = "code_checker_ctu",
-    options = [
+    analyze = [
         "--ctu",
     ],
     tags = [
@@ -290,4 +285,5 @@ code_checker_test(
         "test_pass",
         "test_fail",
     ],
+    per_file = True,
 )
