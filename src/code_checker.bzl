@@ -74,7 +74,12 @@ def _run_code_checker(
         headers = depset([src], transitive = [compilation_context.headers])
         inputs = depset([compile_commands_json, src], transitive = [headers])
 
-    outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
+    outputs = [
+        clang_tidy_plist,
+        clangsa_plist,
+        codechecker_log,
+        codechecker_metadata,
+        ]
 
     # Create CodeChecker wrapper script
     wrapper = ctx.actions.declare_file(ctx.attr.name + "/code_checker.sh")
@@ -131,7 +136,6 @@ def check_valid_file_type(src):
     return False
 
 def _rule_sources(ctx):
-
     srcs = []
     if hasattr(ctx.rule.attr, "srcs"):
         for src in ctx.rule.attr.srcs:
@@ -329,6 +333,7 @@ def _code_checker_impl(ctx):
                         sources_and_headers,
                     )
                     all_files += outputs
+
     # merge metadata
     metadata = [file for file in all_files if file.path.endswith("metadata.json")]
     metadata_json = ctx.actions.declare_file(ctx.attr.name + "/data/metadata.json")
@@ -338,7 +343,7 @@ def _code_checker_impl(ctx):
         executable = ctx.executable._metadata_merge_script,
         arguments = [metadata_json.path] + [file.path for file in metadata],
         mnemonic = "Metadata",
-        progress_message = "Merging metadata.json"
+        progress_message = "Merging metadata.json",
     )
     all_files.append(metadata_json)
     ctx.actions.write(
@@ -382,7 +387,7 @@ code_checker_test = rule(
         "_metadata_merge_script": attr.label(
             default = ":metadata_merge",
             executable = True,
-            cfg = 'exec',
+            cfg = "exec",
         ),
         "_python_runtime": attr.label(
             default = "@default_python_tools//:py3_runtime",
