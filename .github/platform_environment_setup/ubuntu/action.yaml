@@ -29,8 +29,20 @@ runs:
         with:
           python-version: '3.12'
 
+      # https://stackoverflow.com/questions/59127258/how-can-i-use-pip-cache-in-github-actions
+      - name: Cache pip
+        id: cache-pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-codechecker
+
       - name: Install CodeChecker analyzers
         run: |
+          # Disable updating man-db, which is a long process 
+          # https://askubuntu.com/a/1476024/589803
+          sudo echo "set man-db/auto-update false" | \
+          sudo debconf-communicate; sudo dpkg-reconfigure man-db
           sudo apt-get update --quiet
           sudo apt-get install --no-install-recommends \
             clang \
