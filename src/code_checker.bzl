@@ -4,42 +4,19 @@
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
-CODE_CHECKER_WRAPPER_SCRIPT = """#!/usr/bin/env bash
-#set -x
-DATA_DIR=$1
-shift
-CLANG_TIDY_PLIST=$1
-shift
-CLANGSA_PLIST=$1
-shift
-LOG_FILE=$1
-shift
-COMPILE_COMMANDS_JSON=$1
-shift
-COMPILE_COMMANDS_ABS=$COMPILE_COMMANDS_JSON.abs
-sed 's|"directory":"."|"directory":"'$(pwd)'"|g' $COMPILE_COMMANDS_JSON > $COMPILE_COMMANDS_ABS
-echo "CodeChecker command: $@" $COMPILE_COMMANDS_ABS > $LOG_FILE
-echo "===-----------------------------------------------------===" >> $LOG_FILE
-echo "                   CodeChecker error log                   " >> $LOG_FILE
-echo "===-----------------------------------------------------===" >> $LOG_FILE
-eval "$@" $COMPILE_COMMANDS_ABS >> $LOG_FILE 2>&1
-# ls -la $DATA_DIR
-# NOTE: the following we do to get rid of md5 hash in plist file names
-ret_code=$?
-echo "===-----------------------------------------------------===" >> $LOG_FILE
-if [ $ret_code -eq 1 ] || [ $ret_code -ge 128 ]; then
-    echo "===-----------------------------------------------------==="
-    echo "[ERROR]: CodeChecker returned with $ret_code!"
-    cat $LOG_FILE
-    exit 1
-fi
-cp $DATA_DIR/*_clang-tidy_*.plist $CLANG_TIDY_PLIST
-cp $DATA_DIR/*_clangsa_*.plist    $CLANGSA_PLIST
-
-# sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANG_TIDY_PLIST
-# sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANGSA_PLIST
-
-"""
+def _get_analyzers(options):
+    pattern = r"--analyzers"
+    analyzers_raw_string = ""
+    for s in options:
+        if s.startswith(pattern):
+            analyzers_raw_string = s
+            break
+    if analyzers_raw_string == "":
+        return []
+    analyzers = []
+    analyzers_raw_string = analyzers_raw_string.removeprefix("--analyzers")
+    analyzers = analyzers_raw_string.strip("= ").split(" ")
+    return analyzers
 
 def _run_code_checker(
         ctx,
@@ -53,47 +30,53 @@ def _run_code_checker(
     # Define Plist and log file names
     data_dir = ctx.attr.name + "/data"
     file_name_params = (data_dir, src.path.replace("/", "-"))
-    clang_tidy_plist_file_name = "{}/{}_clang-tidy.plist".format(*file_name_params)
-    clangsa_plist_file_name = "{}/{}_clangsa.plist".format(*file_name_params)
     codechecker_log_file_name = "{}/{}_codechecker.log".format(*file_name_params)
 
     # Declare output files
-    clang_tidy_plist = ctx.actions.declare_file(clang_tidy_plist_file_name)
-    clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
     inputs = [compile_commands_json] + sources_and_headers
-    outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
+    outputs = [codechecker_log]
 
-    # Create CodeChecker wrapper script
-    wrapper = ctx.actions.declare_file(ctx.attr.name + "/code_checker.sh")
-    ctx.actions.write(
-        output = wrapper,
-        is_executable = True,
-        content = CODE_CHECKER_WRAPPER_SCRIPT,
-    )
-
-    # Prepare arguments
-    args = ctx.actions.args()
-
-    # NOTE: we pass: data dir, PList and log file names as first 4 arguments
-    args.add(data_dir)
-    args.add(clang_tidy_plist.path)
-    args.add(clangsa_plist.path)
-    args.add(codechecker_log.path)
-    args.add(compile_commands_json.path)
-    args.add("CodeChecker")
-    args.add("analyze")
-    args.add_all(options)
-    args.add("--output=" + data_dir)
-    args.add("--file=*/" + src.path)
+    analyzers = _get_analyzers(options)
+    analyzer_output_paths = ""  # List of tuples (analyzer_name, plist_path)
+    if "clangsa" in analyzers:
+        clangsa_plist_file_name = "{}/{}_clangsa.plist".format(*file_name_params)
+        clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
+        analyzer_output_paths += "clangsa," + clangsa_plist.path + ";"
+        outputs.append(clangsa_plist)
+    if "clang-tidy" in analyzers:
+        clang_tidy_plist_file_name = "{}/{}_clang-tidy.plist".format(*file_name_params)
+        clang_tidy_plist = ctx.actions.declare_file(clang_tidy_plist_file_name)
+        analyzer_output_paths += "clang-tidy," + clang_tidy_plist.path + ";"
+        outputs.append(clang_tidy_plist)
+    if "cppcheck" in analyzers:
+        cppcheck_plist_file_name = "{}/{}_cppcheck.plist".format(*file_name_params)
+        cppcheck_plist = ctx.actions.declare_file(cppcheck_plist_file_name)
+        analyzer_output_paths += "cppcheck," + cppcheck_plist.path + ";"
+        outputs.append(cppcheck_plist)
+    if "gcc" in analyzers:
+        gcc_plist_file_name = "{}/{}_gcc.plist".format(*file_name_params)
+        gcc_plist = ctx.actions.declare_file(gcc_plist_file_name)
+        analyzer_output_paths += "gcc," + gcc_plist.path + ";"
+        outputs.append(gcc_plist)
+    if "infer" in analyzers:
+        infer_plist_file_name = "{}/{}_infer.plist".format(*file_name_params)
+        infer_plist = ctx.actions.declare_file(infer_plist_file_name)
+        analyzer_output_paths += "infer," + infer_plist.path + ";"
+        outputs.append(infer_plist)
 
     # Action to run CodeChecker for a file
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
-        executable = wrapper,
-        arguments = [args],
+        executable = ctx.outputs.code_checker_script,
+        arguments = [
+            data_dir,
+            src.path,
+            codechecker_log.path,
+            analyzer_output_paths
+            ],
         mnemonic = "CodeChecker",
         use_default_shell_env = True,
         progress_message = "CodeChecker analyze {}".format(src.short_path),
@@ -119,7 +102,6 @@ def check_valid_file_type(src):
     return False
 
 def _rule_sources(ctx):
-
     srcs = []
     if hasattr(ctx.rule.attr, "srcs"):
         for src in ctx.rule.attr.srcs:
@@ -290,11 +272,41 @@ def _collect_all_sources_and_headers(ctx):
     sources_and_headers = all_files + headers.to_list()
     return sources_and_headers
 
+def _merge_options(default, custom):
+    """
+    Merge command line arguments so that default options can be overridden
+    """
+    final = []
+    args_set = []
+    for item in custom:
+        args_set.append(item.split(" ")[0].split("=")[0])
+        final.append(item)
+    for option in default:
+        if option.split(" ")[0].split("=")[0] not in args_set:
+            final.append(option)
+    return final
+
+def _create_wrapper_script(ctx, options, compile_commands_json):
+    options_str = ""
+    for item in options:
+        options_str += item + " "
+    ctx.actions.expand_template(
+        template = ctx.file._code_checker_script_template,
+        output = ctx.outputs.code_checker_script,
+        is_executable = True,
+        substitutions = {
+            "{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
+            "{compile_commands_json}": compile_commands_json.path,
+            "{codechecker_args}": options_str,
+        },
+    )
+
 def _code_checker_impl(ctx):
     compile_commands_json = _compile_commands_impl(ctx)
     sources_and_headers = _collect_all_sources_and_headers(ctx)
-    options = ctx.attr.default_options + ctx.attr.options
+    options = _merge_options(ctx.attr.default_options, ctx.attr.options)
     all_files = [compile_commands_json]
+    _create_wrapper_script(ctx, options, compile_commands_json)
     for target in ctx.attr.targets:
         if not CcInfo in target:
             continue
@@ -360,9 +372,17 @@ code_checker_test = rule(
             ],
             doc = "List of compilable targets which should be checked.",
         ),
+        "_code_checker_script_template": attr.label(
+            default = ":code_checker_script.py",
+            allow_single_file = True,
+        ),
+        "_python_runtime": attr.label(
+            default = "@default_python_tools//:py3_runtime",
+        ),
     },
     outputs = {
         "test_script": "%{name}/test_script.sh",
+        "code_checker_script": "%{name}/code_checker_script.py",
     },
     test = True,
 )
