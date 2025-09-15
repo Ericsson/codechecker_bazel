@@ -36,7 +36,7 @@ load(
 # Prototype for CodeChecker analyze --file
 # NOTE: CodeChecker analyze --file --ctu does not work
 load(
-    "@bazel_codechecker//src:code_checker.bzl",
+    "@bazel_codechecker//src:per_file.bzl",
     "code_checker_test",
 )
 

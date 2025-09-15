@@ -25,7 +25,7 @@ load(
 )
 
 load(
-    "@bazel_codechecker//src:code_checker.bzl",
+    "@bazel_codechecker//src:per_file.bzl",
     "code_checker_test",
 )
 
