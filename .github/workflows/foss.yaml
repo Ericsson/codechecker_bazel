@@ -49,7 +49,7 @@ jobs:
 
   # TODO: Add script to run tests locally
   foss_ubuntu_test:
-    name: "Test rules on FOSS project: ${{ matrix.project.name }}"
+    name: "Test rules on FOSS project: ${{ matrix.project.name }} (Ubuntu)"
     runs-on: ubuntu-24.04
     needs: prepare_project_matrix
     strategy:
@@ -78,7 +78,7 @@ jobs:
         run: bazel build :code_checker_test
 
   foss_rhel_test:
-    name: "Test rules on FOSS project: ${{ matrix.project.name }}"
+    name: "Test rules on FOSS project: ${{ matrix.project.name }} (RHEL)"
     runs-on: ubuntu-24.04
     container: redhat/ubi9:latest
     needs: prepare_project_matrix
