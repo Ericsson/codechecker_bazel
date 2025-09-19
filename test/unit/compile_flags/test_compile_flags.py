@@ -97,14 +97,10 @@ class TestBasic(TestBase):
             json_content = json.load(f)
             for source in json_content:
                 if source["file"].endswith(".c"):
-                    # FIXME: Change to assertNotIn
-                    # Should fail if __CXX__ is present
-                    self.assertIn(
+                    self.assertNotIn(
                         "__CXX__", source["command"], "C++ flag on C file!"
                     )
-                    # FIXME: Change to assertIn
-                    # Should fail if __CONLY__ is not present
-                    self.assertNotIn(
+                    self.assertIn(
                         "__CONLY__",
                         source["command"],
                         "C only flag not on C file!",

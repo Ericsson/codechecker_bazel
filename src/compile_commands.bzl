@@ -140,6 +140,8 @@ def _cc_compiler_info(ctx, target, srcs, feature_configuration, cc_toolchain):
     compile_flags = None
     force_language_mode_option = ""
 
+    # This is the issue, if one C++ file is present all C files will be
+    # regarded as a C++ file. # FIXME
     # This is useful for compiling .h headers as C++ code.
     if _is_cpp_target(srcs):
         compile_variables = cc_common.create_compile_variables(
@@ -159,7 +161,8 @@ def _cc_compiler_info(ctx, target, srcs, feature_configuration, cc_toolchain):
         compile_variables = cc_common.create_compile_variables(
             feature_configuration = feature_configuration,
             cc_toolchain = cc_toolchain,
-            user_compile_flags = ctx.fragments.cpp.copts,
+            user_compile_flags = ctx.fragments.cpp.copts +
+                                 ctx.fragments.cpp.conlyopts,
         )
         compiler_options = cc_common.get_memory_inefficient_command_line(
             feature_configuration = feature_configuration,
