@@ -10,6 +10,10 @@ load(
     "@default_codechecker_tools//:defs.bzl",
     "CODECHECKER_BIN_PATH",
 )
+load(
+    "code_checker.bzl",
+    "per_file_test",
+)
 
 def get_platform_alias(platform):
     """
@@ -387,21 +391,30 @@ def codechecker_test(
         config = None,
         analyze = [],
         tags = [],
+        per_file = False,
         **kwargs):
     """ Bazel test to run CodeChecker """
     codechecker_tags = [] + tags
     if "codechecker" not in tags:
         codechecker_tags.append("codechecker")
-    _codechecker_test(
-        name = name,
-        platform = platform,
-        targets = targets,
-        severities = severities,
-        skip = skip,
-        config = config,
-        analyze = analyze,
-        tags = codechecker_tags,
-    )
+    if per_file:
+        per_file_test(
+            name = name,
+            targets = targets,
+            options = analyze,
+            tags = tags,
+        )
+    else:
+        _codechecker_test(
+            name = name,
+            platform = platform,
+            targets = targets,
+            severities = severities,
+            skip = skip,
+            config = config,
+            analyze = analyze,
+            tags = codechecker_tags,
+        )
 
 def codechecker_suite(
         name,

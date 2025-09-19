@@ -297,7 +297,7 @@ def _collect_all_sources_and_headers(ctx):
     sources_and_headers = all_files + headers.to_list()
     return sources_and_headers
 
-def _code_checker_impl(ctx):
+def _per_file_impl(ctx):
     compile_commands_json = _compile_commands_impl(ctx)
     sources_and_headers = _collect_all_sources_and_headers(ctx)
     options = ctx.attr.default_options + ctx.attr.options
@@ -347,8 +347,8 @@ def _code_checker_impl(ctx):
         ),
     ]
 
-code_checker_test = rule(
-    implementation = _code_checker_impl,
+per_file_test = rule(
+    implementation = _per_file_impl,
     attrs = {
         "options": attr.string_list(
             default = [],
@@ -373,3 +373,17 @@ code_checker_test = rule(
     },
     test = True,
 )
+
+# This interface is deprecated and will be removed
+def code_checker_test(
+    name,
+    targets,
+    options = [],
+    tags = [],
+):
+    per_file_test(
+        name = name,
+        options = options,
+        targets = targets,
+        tags = tags,
+    )
