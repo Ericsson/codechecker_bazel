@@ -41,7 +41,7 @@ def _run_code_checker(
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
-        executable = ctx.outputs.code_checker_script,
+        executable = ctx.outputs.per_file_script,
         arguments = [
             data_dir,
             src.path,
@@ -249,8 +249,8 @@ def _create_wrapper_script(ctx, options, compile_commands_json):
     for item in options:
         options_str += item + " "
     ctx.actions.expand_template(
-        template = ctx.file._code_checker_script_template,
-        output = ctx.outputs.code_checker_script,
+        template = ctx.file._per_file_script_template,
+        output = ctx.outputs.per_file_script,
         is_executable = True,
         substitutions = {
             "{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
@@ -330,8 +330,8 @@ per_file_test = rule(
             ],
             doc = "List of compilable targets which should be checked.",
         ),
-        "_code_checker_script_template": attr.label(
-            default = ":code_checker_script.py",
+        "_per_file_script_template": attr.label(
+            default = ":per_file_script.py",
             allow_single_file = True,
         ),
         "_python_runtime": attr.label(
@@ -340,7 +340,7 @@ per_file_test = rule(
     },
     outputs = {
         "test_script": "%{name}/test_script.sh",
-        "code_checker_script": "%{name}/code_checker_script.py",
+        "per_file_script": "%{name}/per_file_script.py",
     },
     test = True,
 )

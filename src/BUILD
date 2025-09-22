@@ -9,7 +9,7 @@ py_binary(
 exports_files(
     [
         "codechecker_script.py",
-        "code_checker_script.py",
+        "per_file_script.py",
     ],
 )
 
