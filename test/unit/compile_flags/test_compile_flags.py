@@ -81,7 +81,7 @@ class TestBasic(TestBase):
             + "--cxxopt=__CXX__ --conlyopt=__CONLY__"
         )
         exit_code, _, _ = self.run_command(build_cmd)
-        self.assertEqual(1, exit_code)
+        self.assertEqual(0, exit_code)
         compile_commands = os.path.join(
             self.BAZEL_BIN_DIR,
             "code_checker_filter",
