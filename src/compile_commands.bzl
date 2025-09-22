@@ -140,8 +140,6 @@ def _cc_compiler_info(ctx, target, src, feature_configuration, cc_toolchain):
     compile_flags = None
     force_language_mode_option = ""
 
-    # This is the issue, if one C++ file is present all C files will be
-    # regarded as a C++ file. # FIXME
     # This is useful for compiling .h headers as C++ code.
     if _is_cpp_target(src):
         compile_variables = cc_common.create_compile_variables(
