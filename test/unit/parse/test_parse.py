@@ -82,8 +82,12 @@ class TestTemplate(TestBase):
 
     def test_store(self):
         """Test: Storing to CodeChecker server"""
+        # FIXME: CodeChecker store wants to create a temporary folder inside
+        # the report folder. Bazel's output folder however is readonly.
+        # Adding the flag: "--experimental_writable_outputs"
+        # makes the directory writeable
         ret, _, _ = self.run_command(
-            "bazel build //test/unit/parse:codechecker"
+            "bazel build //test/unit/parse:codechecker --experimental_writable_outputs"
         )
         self.assertEqual(ret, 0)
         # Spin up a Codechecker server
