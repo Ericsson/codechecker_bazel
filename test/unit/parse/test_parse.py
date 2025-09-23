@@ -24,7 +24,7 @@ import subprocess
 import tempfile
 import time
 import unittest
-from typing import Optional
+from typing import Optional, final
 from common.base import TestBase
 
 
@@ -68,13 +68,46 @@ class TestTemplate(TestBase):
         "../../..", "bazel-testlogs", "test", "unit", "parse"
     )
 
+    @final
+    @classmethod
+    def setUpClass(cls):
+        """Start CodeChecker server"""
+        super().setUpClass()
+        cls.temp_workspace = tempfile.mkdtemp()
+        server_command = [
+            "CodeChecker",
+            "server",
+            "--workspace",
+            cls.temp_workspace,
+            "--port",
+            "8001",  # user running unittest must make this port free!
+        ]
+        cls.devnull = open(os.devnull, "w")
+        cls.server_process = subprocess.Popen(
+            server_command, stdout=cls.devnull
+        )
+        # https://stackoverflow.com/a/71996706
+        cls.assertTrue(
+            cls, wait_port(port=8001), "Failed to start CodeChecker server"
+        )
+
+    @final
+    @classmethod
+    def tearDownClass(cls):
+        """Stop CodeChecker server"""
+        super().tearDownClass()
+        os.kill(cls.server_process.pid, signal.SIGTERM)
+        cls.server_process.wait()
+        cls.devnull.close()
+        shutil.rmtree(cls.temp_workspace)
+
     def test_parse_html(self):
         """Test: Parse results into html"""
         ret, _, _ = self.run_command(
             "bazel build //test/unit/parse:codechecker"
         )
         self.assertEqual(ret, 0)
-        ret, out, _ = self.run_command(
+        ret, _, _ = self.run_command(
             f"CodeChecker parse -e html {self.BAZEL_BIN_DIR}/codechecker/codechecker-files/data -o codecheckerHtml/"
         )
         self.assertEqual(ret, 2)  # Will exit with 2 because of bug being found
@@ -91,26 +124,11 @@ class TestTemplate(TestBase):
         )
         self.assertEqual(ret, 0)
         # Spin up a Codechecker server
-        temp_workspace = tempfile.mkdtemp()
-        server_command = [
-            "CodeChecker",
-            "server",
-            "--workspace",
-            temp_workspace,
-            "--port",
-            "8001",  # user running unittest must make this port free!
-        ]
-        devnull = open(os.devnull, "w")
-        server_process = subprocess.Popen(server_command, stdout=devnull)
-        self.assertTrue(wait_port(port=8001))
-        ret, out, _ = self.run_command(
+
+        ret, _, _ = self.run_command(
             f'CodeChecker store {self.BAZEL_BIN_DIR}/codechecker/codechecker-files/data -n "unit_test_bazel" --url=http://localhost:8001/Default'
         )
-        os.kill(server_process.pid, signal.SIGTERM)
-        server_process.wait()
-        devnull.close()
         self.assertEqual(ret, 0)
-        shutil.rmtree(temp_workspace)
 
 
 if __name__ == "__main__":
