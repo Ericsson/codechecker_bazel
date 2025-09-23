@@ -108,10 +108,9 @@ class TestTemplate(TestBase):
         )
         self.assertEqual(ret, 0)
         ret, _, _ = self.run_command(
-            f"CodeChecker parse -e html {self.BAZEL_BIN_DIR}/codechecker/codechecker-files/data -o codecheckerHtml/"
+            f"CodeChecker parse {self.BAZEL_BIN_DIR}/codechecker/codechecker-files/data"
         )
         self.assertEqual(ret, 2)  # Will exit with 2 because of bug being found
-        shutil.rmtree("codecheckerHtml/")
 
     def test_store(self):
         """Test: Storing to CodeChecker server"""
