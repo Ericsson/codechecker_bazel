@@ -141,7 +141,7 @@ def _toolchain_flags(ctx, action_name = ACTION_NAMES.cpp_compile):
     user_comp_flag_builder = ctx.fragments.cpp.copts
     if action_name == ACTION_NAMES.cpp_compile:
         user_comp_flag_builder += ctx.fragments.cpp.cxxopts
-    else:
+    elif action_name == ACTION_NAMES.c_compile:
         user_comp_flag_builder += ctx.fragments.cpp.conlyopts
     compile_variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
