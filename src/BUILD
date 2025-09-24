@@ -5,6 +5,12 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
+py_binary(
+    name = "metadata_merge",
+    srcs = ["metadata_merge.py"],
+    visibility = ["//visibility:public"],
+)
+
 # Build & Test script template
 exports_files(
     ["codechecker_script.py"],
