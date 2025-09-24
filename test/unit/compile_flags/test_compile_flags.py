@@ -55,14 +55,10 @@ class TestBasic(TestBase):
             json_content = json.load(f)
             for source in json_content:
                 if source["file"].endswith(".c"):
-                    # FIXME: Change to assertNotIn
-                    # Should fail if __CXX__ is present
-                    self.assertIn(
+                    self.assertNotIn(
                         "__CXX__", source["command"], "C++ flag on C file!"
                     )
-                    # FIXME: Change to assertIn
-                    # Should fail if __CONLY__ is not present
-                    self.assertNotIn(
+                    self.assertIn(
                         "__CONLY__",
                         source["command"],
                         "C only flag not on C file!",
@@ -85,7 +81,7 @@ class TestBasic(TestBase):
             + "--cxxopt=__CXX__ --conlyopt=__CONLY__"
         )
         exit_code, _, _ = self.run_command(build_cmd)
-        self.assertEqual(1, exit_code)
+        self.assertEqual(0, exit_code)
         compile_commands = os.path.join(
             self.BAZEL_BIN_DIR,
             "code_checker_filter",
@@ -97,14 +93,10 @@ class TestBasic(TestBase):
             json_content = json.load(f)
             for source in json_content:
                 if source["file"].endswith(".c"):
-                    # FIXME: Change to assertNotIn
-                    # Should fail if __CXX__ is present
-                    self.assertIn(
+                    self.assertNotIn(
                         "__CXX__", source["command"], "C++ flag on C file!"
                     )
-                    # FIXME: Change to assertIn
-                    # Should fail if __CONLY__ is not present
-                    self.assertNotIn(
+                    self.assertIn(
                         "__CONLY__",
                         source["command"],
                         "C only flag not on C file!",

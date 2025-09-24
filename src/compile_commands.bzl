@@ -129,11 +129,11 @@ def get_sources(ctx):
             srcs += src.files.to_list()
     return srcs
 
-def _is_cpp_target(srcs):
-    return any([src.extension in _cpp_extensions for src in srcs])
+def _is_cpp_target(src):
+    return src.extension in _cpp_extensions
 
 # Function copied from https://github.com/grailbio/bazel-compilation-database/blob/master/aspects.bzl
-def _cc_compiler_info(ctx, target, srcs, feature_configuration, cc_toolchain):
+def _cc_compiler_info(ctx, target, src, feature_configuration, cc_toolchain):
     compile_variables = None
     compiler_options = None
     compiler = None
@@ -141,7 +141,7 @@ def _cc_compiler_info(ctx, target, srcs, feature_configuration, cc_toolchain):
     force_language_mode_option = ""
 
     # This is useful for compiling .h headers as C++ code.
-    if _is_cpp_target(srcs):
+    if _is_cpp_target(src):
         compile_variables = cc_common.create_compile_variables(
             feature_configuration = feature_configuration,
             cc_toolchain = cc_toolchain,
@@ -159,7 +159,8 @@ def _cc_compiler_info(ctx, target, srcs, feature_configuration, cc_toolchain):
         compile_variables = cc_common.create_compile_variables(
             feature_configuration = feature_configuration,
             cc_toolchain = cc_toolchain,
-            user_compile_flags = ctx.fragments.cpp.copts,
+            user_compile_flags = ctx.fragments.cpp.copts +
+                                 ctx.fragments.cpp.conlyopts,
         )
         compiler_options = cc_common.get_memory_inefficient_command_line(
             feature_configuration = feature_configuration,
@@ -205,22 +206,23 @@ def get_compilation_database(target, ctx):
 
     srcs = get_sources(ctx)
 
-    compiler_info = _cc_compiler_info(ctx, target, srcs, feature_configuration, cc_toolchain)
-
-    compile_flags = compiler_info.compile_flags
-    compile_flags += [
-        # Use -I to indicate that we want to keep the normal position in the system include chain.
-        # See https://github.com/grailbio/bazel-compilation-database/issues/36#issuecomment-531971361.
-        "-I " + str(d)
-        for d in cc_toolchain.built_in_include_directories
-    ]
-    compile_command = compiler_info.compiler + " " + " ".join(compile_flags) + compiler_info.force_language_mode_option
-
     directory = "."
     compilation_db = []
     for src in srcs:
         if src.extension not in _c_and_cpp_extensions:
             continue
+        compiler_info = _cc_compiler_info(
+            ctx, target, src, feature_configuration, cc_toolchain
+            )
+        compile_flags = compiler_info.compile_flags
+        compile_flags += [
+            # Use -I to indicate that we want to keep the normal position in the system include chain.
+            # See https://github.com/grailbio/bazel-compilation-database/issues/36#issuecomment-531971361.
+            "-I " + str(d)
+            for d in cc_toolchain.built_in_include_directories
+        ]
+        compile_command = compiler_info.compiler + " " + \
+            " ".join(compile_flags) + compiler_info.force_language_mode_option
         command = compile_command + " -c " + src.path
         compilation_db.append(
             struct(
