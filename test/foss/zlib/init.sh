@@ -30,10 +30,6 @@ load(
     "@bazel_codechecker//src:codechecker.bzl",
     "codechecker_test",
 )
-load(
-    "@bazel_codechecker//src:code_checker.bzl",
-    "code_checker_test",
-)
 
 
 codechecker_test(
@@ -43,11 +39,12 @@ codechecker_test(
     ],
 )
 
-code_checker_test(
-    name = "code_checker_test",
+codechecker_test(
+    name = "per_file_test",
     targets = [
         ":z",
     ],
+    per_file = True,
 )
 
 #-------------------------------------------------------
