@@ -11,7 +11,7 @@ load(
     "CODECHECKER_BIN_PATH",
 )
 load(
-    "code_checker.bzl",
+    "per_file.bzl",
     "per_file_test",
 )
 
