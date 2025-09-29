@@ -14,6 +14,10 @@ load(
     "code_checker.bzl",
     "per_file_test",
 )
+load(
+    "tools.bzl",
+    "warning"
+)
 
 def get_platform_alias(platform):
     """
