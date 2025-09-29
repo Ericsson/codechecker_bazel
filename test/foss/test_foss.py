@@ -67,7 +67,7 @@ def create_test_method(directory_name: str) -> FunctionType:
         )
         self.assertEqual(ret, 0)
         ret, _, _ = self.run_command(
-            "bazel build :code_checker_test", project_working_dir
+            "bazel build :per_file_test", project_working_dir
         )
         self.assertEqual(ret, 0)
 

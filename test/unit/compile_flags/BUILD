@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# cc_binary for simple C++ tests
 load(
-    "@rules_cc//cc:defs.bzl",
-    "cc_library",
+    "@bazel_codechecker//src:codechecker.bzl",
+    "codechecker_test",
 )
 
 # compile_commands rule
@@ -24,9 +23,10 @@ load(
     "compile_commands",
 )
 
+# cc_binary for simple C++ tests
 load(
-    "@bazel_codechecker//src:code_checker.bzl",
-    "code_checker_test",
+    "@rules_cc//cc:defs.bzl",
+    "cc_library",
 )
 
 cc_library(
@@ -42,10 +42,13 @@ compile_commands(
     ],
 )
 
-code_checker_test(
+# The distributed rule uses a different
+# method for generating compile_commands.json
+codechecker_test(
     name = "code_checker_filter",
     targets = [
         "target_with_both_extension",
     ],
-    tags = ["manual"]
+    tags = ["manual"],
+    per_file = True,
 )
