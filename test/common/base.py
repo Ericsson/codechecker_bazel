@@ -20,18 +20,52 @@ import logging
 import os
 import re
 import shlex
+import shutil
+import signal
+import socket
 import subprocess
+import tempfile
+import time
 import unittest
 import sys
+from typing import Optional
+
+
+# Based on:
+# https://dev.to/farcellier/wait-for-a-server-to-respond-in-python-488e
+def wait_port(
+    port: int,
+    host: str = "localhost",
+    timeout: Optional[int] = 3000,
+    attempt_every: int = 100,
+) -> bool:
+    """
+    Wait until a port would be open,
+    for example the port 8001 for CodeChecker server
+    """
+    start = time.monotonic()
+    while True:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.connect((host, port))
+                s.close()
+                return True
+            except ConnectionRefusedError:
+                if timeout is not None and time.monotonic() - start > (
+                    timeout / 1000
+                ):
+                    return False
+
+        time.sleep(attempt_every / 1000)
 
 
 class TestBase(unittest.TestCase):
     """Unittest base abstract class"""
 
     # This variable must be overwritten in each subclass!
-    __test_path__: str = None
-    BAZEL_BIN_DIR: str = None
-    BAZEL_TESTLOGS_DIR: str = None
+    __test_path__: Optional[str] = None
+    BAZEL_BIN_DIR: Optional[str] = None
+    BAZEL_TESTLOGS_DIR: Optional[str] = None
 
     @classmethod
     def setUpClass(cls):
@@ -71,13 +105,19 @@ class TestBase(unittest.TestCase):
         """Restore environment"""
         os.chdir(cls.save_cwd)
         os.environ = cls.save_env
+        try:
+            assert cls.server_process.poll() != None, "Server not stopped"
+        except AttributeError:
+            pass  # if server_process is not set, everything is fine
 
     def setUp(self):
         """Before every test"""
         logging.debug("\n%s", "-" * 70)
 
     @classmethod
-    def run_command(self, cmd: str, working_dir:str=None) -> tuple[int, str, str]:
+    def run_command(
+        self, cmd: str, working_dir: Optional[str] = None
+    ) -> tuple[int, str, str]:
         """
         Run shell command.
         returns:
@@ -102,13 +142,13 @@ class TestBase(unittest.TestCase):
             )
 
     @classmethod
-    def grep_file(self, filename, regex):
+    def grep_file(cls, filename: str, regex: str):
         """
         Grep given filename.
         Returns list of matched lines.
         Returns empty list if no match is found
         """
-        results : list[str] = []
+        results: list[str] = []
         pattern = re.compile(regex)
         logging.debug("RegEx = r'%s'", regex)
         with open(filename, "r", encoding="utf-8") as fileobj:
@@ -117,10 +157,40 @@ class TestBase(unittest.TestCase):
                     logging.debug(line)
                     results.append(line)
         return results
-    
+
     @classmethod
-    def contains_regex_in_file(self, file_path: str, regex: str) -> bool:
+    def contains_regex_in_file(cls, file_path: str, regex: str) -> bool:
         """
         Returns a boolean, whether the specified file contains the regex or not.
         """
-        return self.grep_file(file_path, regex) != []
+        return cls.grep_file(file_path, regex) != []
+
+    @classmethod
+    def start_codechecker_server(cls):
+        cls.temp_workspace = tempfile.mkdtemp()
+        server_command = [
+            "CodeChecker",
+            "server",
+            "--workspace",
+            cls.temp_workspace,
+            "--port",
+            "8001",  # user running unittest must make this port free!
+        ]
+        cls.devnull = open(os.devnull, "w")
+        cls.server_process: subprocess.Popen = subprocess.Popen(
+            server_command, stdout=cls.devnull
+        )
+        assert wait_port(
+            port=8001, timeout=10000
+        ), "Failed to start CodeChecker server"
+
+    @classmethod
+    def stop_codechecker_server(cls):
+        os.kill(cls.server_process.pid, signal.SIGTERM)
+        cls.server_process.wait()
+        cls.devnull.close()
+        shutil.rmtree(cls.temp_workspace)
+
+    def check_parsing(self, path, will_find_bug=True):
+        ret, _, _ = self.run_command(f"CodeChecker parse {path}")
+        self.assertEqual(ret, 2 if will_find_bug else 0)
