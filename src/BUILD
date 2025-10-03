@@ -7,7 +7,10 @@ py_binary(
 
 # Build & Test script template
 exports_files(
-    ["codechecker_script.py"],
+    [
+        "codechecker_script.py",
+        "per_file_script.py",
+    ],
 )
 
 # The following are flags and default values for clang_tidy_aspect
