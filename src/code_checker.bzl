@@ -314,10 +314,24 @@ def _collect_all_sources_and_headers(ctx):
     sources_and_headers = all_files + headers.to_list()
     return sources_and_headers
 
+def _merge_options(default, custom):
+    """
+    Merge command line arguments so that default options can be overridden
+    """
+    final = []
+    args_set = []
+    for item in custom:
+        args_set.append(item.split(" ")[0].split("=")[0])
+        final.append(item)
+    for option in default:
+        if option.split(" ")[0].split("=")[0] not in args_set:
+            final.append(option)
+    return final
+
 def _per_file_impl(ctx):
     compile_commands_json = _compile_commands_impl(ctx)
     sources_and_headers = _collect_all_sources_and_headers(ctx)
-    options = ctx.attr.default_options + ctx.attr.options
+    options = _merge_options(ctx.attr.default_options, ctx.attr.options)
     all_files = [compile_commands_json]
     for target in ctx.attr.targets:
         if not CcInfo in target:
