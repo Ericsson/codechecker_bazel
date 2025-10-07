@@ -9,6 +9,7 @@ load(
 load(
     "@default_codechecker_tools//:defs.bzl",
     "CODECHECKER_BIN_PATH",
+    "CCACHE_DISABLE"
 )
 load(
     "per_file.bzl",
@@ -102,6 +103,11 @@ def _codechecker_impl(ctx):
     if compile_commands != ctx.outputs.compile_commands:
         fail("Seems compile_commands.json file is incorrect!")
 
+    # Have it None by default to avoid overwriting use_default_shell_env
+    env_var = {}
+    if CCACHE_DISABLE == "1":
+        env_var["CCACHE_DISABLE"] = CCACHE_DISABLE
+
     # Convert flacc calls to clang in compile_commands.json
     # and save to codechecker_commands.json
     ctx.actions.run(
@@ -115,6 +121,7 @@ def _codechecker_impl(ctx):
         ],
         mnemonic = "CodeCheckerConvertFlaccToClang",
         progress_message = "Filtering %s" % str(ctx.label),
+        env = env_var,
         # use_default_shell_env = True,
     )
 
@@ -199,6 +206,7 @@ def _codechecker_impl(ctx):
         arguments = [],
         mnemonic = "CodeChecker",
         progress_message = "CodeChecker %s" % str(ctx.label),
+        env = env_var,
         # use_default_shell_env = True,
     )
 
