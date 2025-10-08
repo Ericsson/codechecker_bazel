@@ -14,6 +14,8 @@ CLANGSA_PLIST=$1
 shift
 LOG_FILE=$1
 shift
+METADATA=$1
+shift
 COMPILE_COMMANDS_JSON=$1
 shift
 COMPILE_COMMANDS_ABS=$COMPILE_COMMANDS_JSON.abs
@@ -35,6 +37,7 @@ if [ $ret_code -eq 1 ] || [ $ret_code -ge 128 ]; then
 fi
 cp $DATA_DIR/*_clang-tidy_*.plist $CLANG_TIDY_PLIST
 cp $DATA_DIR/*_clangsa_*.plist    $CLANGSA_PLIST
+cp $DATA_DIR/metadata.json        $METADATA
 
 # sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANG_TIDY_PLIST
 # sed -i -e "s|<string>.*execroot/bazel_codechecker/|<string>|g" $CLANGSA_PLIST
@@ -56,11 +59,13 @@ def _run_code_checker(
     clang_tidy_plist_file_name = "{}/{}_clang-tidy.plist".format(*file_name_params)
     clangsa_plist_file_name = "{}/{}_clangsa.plist".format(*file_name_params)
     codechecker_log_file_name = "{}/{}_codechecker.log".format(*file_name_params)
+    codechecker_metadata_file_name = "{}/{}_metadata.json".format(*file_name_params)
 
     # Declare output files
     clang_tidy_plist = ctx.actions.declare_file(clang_tidy_plist_file_name)
     clangsa_plist = ctx.actions.declare_file(clangsa_plist_file_name)
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
+    codechecker_metadata = ctx.actions.declare_file(codechecker_metadata_file_name)
 
     if "--ctu" in options:
         inputs = [compile_commands_json] + sources_and_headers
@@ -69,7 +74,12 @@ def _run_code_checker(
         headers = depset([src], transitive = [compilation_context.headers])
         inputs = depset([compile_commands_json, src], transitive = [headers])
 
-    outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
+    outputs = [
+        clang_tidy_plist,
+        clangsa_plist,
+        codechecker_log,
+        codechecker_metadata,
+        ]
 
     # Create CodeChecker wrapper script
     wrapper = ctx.actions.declare_file(ctx.attr.name + "/code_checker.sh")
@@ -87,6 +97,7 @@ def _run_code_checker(
     args.add(clang_tidy_plist.path)
     args.add(clangsa_plist.path)
     args.add(codechecker_log.path)
+    args.add(codechecker_metadata.path)
     args.add(compile_commands_json.path)
     args.add("CodeChecker")
     args.add("analyze")
@@ -125,7 +136,6 @@ def check_valid_file_type(src):
     return False
 
 def _rule_sources(ctx):
-
     srcs = []
     if hasattr(ctx.rule.attr, "srcs"):
         for src in ctx.rule.attr.srcs:
@@ -340,6 +350,27 @@ def _per_file_impl(ctx):
                         sources_and_headers,
                     )
                     all_files += outputs
+
+    # merge metadata
+    ctx.actions.expand_template(
+        template = ctx.file._metadata_merge_template,
+        output = ctx.outputs._metadata_merge_script,
+        is_executable = True,
+        substitutions = {
+            "{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
+        },
+    )
+    metadata = [file for file in all_files if file.path.endswith("metadata.json")]
+    metadata_json = ctx.actions.declare_file(ctx.attr.name + "/data/metadata.json")
+    ctx.actions.run(
+        inputs = metadata,
+        outputs = [metadata_json],
+        executable = ctx.outputs._metadata_merge_script,
+        arguments = [metadata_json.path] + [file.path for file in metadata],
+        mnemonic = "Metadata",
+        progress_message = "Merging metadata.json",
+    )
+    all_files.append(metadata_json)
     ctx.actions.write(
         output = ctx.outputs.test_script,
         is_executable = True,
@@ -378,6 +409,13 @@ per_file_test = rule(
             ],
             doc = "List of default CodeChecker analyze options",
         ),
+        "_metadata_merge_template": attr.label(
+            default = ":metadata_merge.py",
+            allow_single_file = True,
+        ),
+        "_python_runtime": attr.label(
+            default = "@default_python_tools//:py3_runtime",
+        ),
         "targets": attr.label_list(
             aspects = [
                 compile_info_aspect,
@@ -387,6 +425,7 @@ per_file_test = rule(
     },
     outputs = {
         "test_script": "%{name}/test_script.sh",
+        "_metadata_merge_script": "%{name}/_metadata_merge_script.py"
     },
     test = True,
 )
