@@ -98,3 +98,10 @@ default_codechecker_tools = repository_rule(
 
 def register_default_codechecker():
     default_codechecker_tools(name = "default_codechecker_tools")
+
+def warning(ctx, msg):
+    """
+    Prints message if the debug tag is enabled.
+    """
+    if "debug" in ctx.attr.tags:
+        print(msg)
