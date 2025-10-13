@@ -46,9 +46,7 @@ class TestTemplate(TestBase):
             + "test-unit-argument_merge-main.cc_codechecker.log",
             r"--analyzers",
         )
-        # FIXME: Change to '1'
-        # Should only have this argument set once
-        self.assertEqual(len(re.findall("--analyzers", matched_lines[0])), 2)
+        self.assertEqual(len(re.findall("--analyzers", matched_lines[0])), 1)
 
 
 if __name__ == "__main__":
