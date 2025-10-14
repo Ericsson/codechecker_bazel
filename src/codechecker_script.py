@@ -193,6 +193,15 @@ def analyze():
         fail("Make sure that the target can be built first")
 
 
+def fix_path_with_regex(data:str) -> str:
+    """
+    Try resolving Bazel paths using regexes.
+    Returns the resulting string.
+    """
+    for pattern, replace in BAZEL_PATHS.items():
+        data = re.sub(pattern, replace, data)
+    return data
+
 def fix_bazel_paths():
     """ Remove Bazel leading paths in all files """
     stage("Fix CodeChecker output:")
@@ -203,9 +212,7 @@ def fix_bazel_paths():
         for filename in files:
             fullpath = os.path.join(root, filename)
             with open(fullpath, "rt") as data_file:
-                data = data_file.read()
-                for pattern, replace in BAZEL_PATHS.items():
-                    data = re.sub(pattern, replace, data)
+                data = fix_path_with_regex(data_file.read())
             with open(fullpath, "w") as data_file:
                 data_file.write(data)
             counter += 1
