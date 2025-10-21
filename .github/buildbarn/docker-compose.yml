@@ -1,0 +1,113 @@
+version: '3'
+services:
+  frontend:
+    image: ghcr.io/buildbarn/bb-storage:20250819T193852Z-fd11d3e
+    command:
+    - /config/frontend.jsonnet
+    expose:
+    - 9980
+    ports:
+    - 8980:8980
+    volumes:
+    - ./config:/config
+
+  storage-0:
+    image: ghcr.io/buildbarn/bb-storage:20250819T193852Z-fd11d3e
+    command:
+    - /config/storage.jsonnet
+    expose:
+    - 8981
+    - 9980
+    volumes:
+    - ./config:/config
+    - ./volumes/storage-ac-0:/storage-ac
+    - ./volumes/storage-cas-0:/storage-cas
+
+  scheduler:
+    image: ghcr.io/buildbarn/bb-scheduler:20250820T081613Z-efef252
+    command:
+    - /config/scheduler.jsonnet
+    expose:
+    - 8982
+    - 8983
+    - 8984
+    - 9980
+    ports:
+    - 7982:7982
+    - 8983:8983
+    - 8984:8984
+    volumes:
+    - ./config:/config
+
+  runner-installer:
+    image: ghcr.io/buildbarn/bb-runner-installer:20250820T081613Z-efef252
+    volumes:
+    - ./volumes/bb:/bb
+
+  # The FUSE worker is the most efficient configuration.
+  worker-fuse-ubuntu22-04:
+    image: ghcr.io/buildbarn/bb-worker:20250820T081613Z-efef252
+    command:
+    - /config/worker-fuse-ubuntu22-04.jsonnet
+    # Need to be privileged for the FUSE mounting to work.
+    privileged: true
+    volumes:
+    - ./config:/config
+    - type: bind
+      source: ./volumes/worker-fuse-ubuntu22-04
+      target: /worker
+      bind:
+        # Bidirectional mount to expose the FUSE mount.
+        propagation: shared
+
+  runner-fuse-ubuntu22-04:
+    image: metalg091/bb-codechecker-runner:1.0
+    command:
+    - sh
+    - -c
+    - |
+      while ! test -f /bb/installed; do
+        sleep 1;
+        done;
+        exec /bb/tini -v -- /bb/bb_runner /config/runner-ubuntu22-04.jsonnet
+    network_mode: none
+    volumes:
+    - ./config:/config
+    - ./volumes/bb:/bb
+    - type: bind
+      source: ./volumes/worker-fuse-ubuntu22-04
+      target: /worker
+      bind:
+        # HostToContainer mount to use the FUSE mount.
+        propagation: slave
+    depends_on:
+    - runner-installer
+
+  # For situations where the more efficient FUSE worker is not supported,
+  # the classic hardlinking example is shown here.
+  #worker-hardlinking-ubuntu22-04:
+  #  image: ghcr.io/buildbarn/bb-worker:20250820T081613Z-efef252
+  #  command:
+  #  - /config/worker-hardlinking-ubuntu22-04.jsonnet
+  #  privileged: false
+  #  volumes:
+  #  - ./config:/config
+  #  - ./volumes/worker-hardlinking-ubuntu22-04:/worker
+
+  #runner-hardlinking-ubuntu22-04:
+  #  image: metalg091/bb-codechecker-runner:1.0
+  #  command:
+  #  - sh
+  #  - -c
+  #  - |
+  #    while ! test -f /bb/installed; do
+  #      sleep 1;
+  #    done;
+  #    exec /bb/tini -v -- /bb/bb_runner /config/runner-ubuntu22-04.jsonnet
+  #  network_mode: none
+  #  volumes:
+  #  - ./config:/config
+  #  - ./volumes/bb:/bb
+  #  - ./volumes/worker-hardlinking-ubuntu22-04:/worker
+  #  depends_on:
+  #  - runner-installer

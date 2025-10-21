@@ -77,7 +77,7 @@ def _copy_config_to_default(config_file, ctx):
         outputs = [ctx.outputs.codechecker_config],
         mnemonic = "CopyFile",
         progress_message = "Copying CodeChecker config file",
-        executable = "cp",
+        executable = "/usr/bin/cp",
         arguments = [
             config_file.path,
             ctx.outputs.codechecker_config.path,
@@ -105,7 +105,8 @@ def _codechecker_impl(ctx):
     # Convert flacc calls to clang in compile_commands.json
     # and save to codechecker_commands.json
     ctx.actions.run(
-        inputs = [ctx.outputs.compile_commands],
+        inputs = [ctx.outputs.compile_commands,
+        ctx.executable._compile_commands_filter],
         outputs = [ctx.outputs.codechecker_commands],
         executable = ctx.executable._compile_commands_filter,
         arguments = [
@@ -115,7 +116,7 @@ def _codechecker_impl(ctx):
         ],
         mnemonic = "CodeCheckerConvertFlaccToClang",
         progress_message = "Filtering %s" % str(ctx.label),
-        # use_default_shell_env = True,
+        #use_default_shell_env = True,
     )
 
     # Create CodeChecker skip (ignore) file
@@ -199,7 +200,7 @@ def _codechecker_impl(ctx):
         arguments = [],
         mnemonic = "CodeChecker",
         progress_message = "CodeChecker %s" % str(ctx.label),
-        # use_default_shell_env = True,
+        use_default_shell_env = True,
     )
 
     # List all files required at build and run (test) time
@@ -254,7 +255,7 @@ codechecker = rule(
         "_compile_commands_filter": attr.label(
             allow_files = True,
             executable = True,
-            cfg = "host",
+            cfg = "exec",
             default = ":compile_commands_filter",
         ),
         "_codechecker_script_template": attr.label(
@@ -341,7 +342,7 @@ _codechecker_test = rule(
         "_compile_commands_filter": attr.label(
             allow_files = True,
             executable = True,
-            cfg = "host",
+            cfg = "exec",
             default = ":compile_commands_filter",
         ),
         "_codechecker_script_template": attr.label(
