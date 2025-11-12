@@ -3,6 +3,10 @@
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load(
+    "@default_codechecker_tools//:defs.bzl",
+    "CCACHE_DISABLE"
+)
 
 def _run_code_checker(
         ctx,
@@ -37,6 +41,11 @@ def _run_code_checker(
     analyzer_output_paths = "clangsa," + clangsa_plist.path + \
                         ";clang-tidy," + clang_tidy_plist.path
 
+    # Have it None by default to avoid overwriting use_default_shell_env
+    env_var = {}
+    if CCACHE_DISABLE == "1":
+        env_var["CCACHE_DISABLE"] = CCACHE_DISABLE
+
     # Action to run CodeChecker for a file
     ctx.actions.run(
         inputs = inputs,
@@ -49,6 +58,7 @@ def _run_code_checker(
             analyzer_output_paths
             ],
         mnemonic = "CodeChecker",
+        env = env_var,
         use_default_shell_env = True,
         progress_message = "CodeChecker analyze {}".format(src.short_path),
     )

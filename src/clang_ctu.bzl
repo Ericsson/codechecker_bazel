@@ -1,5 +1,9 @@
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load(
+    "@default_codechecker_tools//:defs.bzl",
+    "CCACHE_DISABLE"
+)
 
 CLANG_CTU_WRAPPER_SCRIPT = """#!/usr/bin/env bash
 #set -x
@@ -99,6 +103,11 @@ def _run_clang_ctu(
     args.add(src.path)
     args.add_all(arguments)
 
+    # Have it None by default to avoid overwriting use_default_shell_env
+    env_var = None
+    if CCACHE_DISABLE == 1:
+        env_var = {"CCACHE_DISABLE": CCACHE_DISABLE}
+
     # Action to run CodeChecker for a file
     ctx.actions.run(
         inputs = inputs,
@@ -106,6 +115,7 @@ def _run_clang_ctu(
         executable = wrapper,
         arguments = [args],
         mnemonic = "ClangCTU",
+        env = env_var,
         use_default_shell_env = True,
         progress_message = "clang -analyze +CTU {}".format(src.short_path),
     )
