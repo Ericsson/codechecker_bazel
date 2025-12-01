@@ -32,6 +32,7 @@ LOG_FILE: Optional[str] = None
 COMPILE_COMMANDS_JSON: str = "{compile_commands_json}"
 COMPILE_COMMANDS_ABSOLUTE: str = f"{COMPILE_COMMANDS_JSON}.abs"
 CODECHECKER_ARGS: str = "{codechecker_args}"
+CONFIG_FILE: str = "{config_file}"
 
 
 def parse_args():
@@ -82,10 +83,15 @@ def _run_codechecker() -> None:
     """
     Runs CodeChecker analyze
     """
-    log(
-        f"CodeChecker command: CodeChecker analyze {CODECHECKER_ARGS} \
-{COMPILE_COMMANDS_ABSOLUTE} --output={DATA_DIR} --file=*/{FILE_PATH}\n"
+    codechecker_cmd: list[str] = (
+        ["CodeChecker", "analyze"]
+        + CODECHECKER_ARGS.split()
+        + ["--output=" + DATA_DIR]  # type: ignore
+        + ["--file=*/" + FILE_PATH]  # type: ignore
+        + ["--config=" + CONFIG_FILE]
+        + [COMPILE_COMMANDS_ABSOLUTE]
     )
+    log(f"CodeChecker command: {' '.join(codechecker_cmd)}\n")
     log("===-----------------------------------------------------===\n")
     log("                   CodeChecker error log                   \n")
     log("===-----------------------------------------------------===\n")
@@ -99,13 +105,6 @@ def _run_codechecker() -> None:
     )
     log(result.stdout)
 
-    codechecker_cmd: list[str] = (
-        ["CodeChecker", "analyze"]
-        + CODECHECKER_ARGS.split()
-        + ["--output=" + DATA_DIR]  # type: ignore
-        + ["--file=*/" + FILE_PATH]  # type: ignore
-        + [COMPILE_COMMANDS_ABSOLUTE]
-    )
 
     try:
         with open(LOG_FILE, "a") as log_file:  # type: ignore

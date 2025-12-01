@@ -4,6 +4,14 @@
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 load("@bazel_codechecker//src:tools.bzl", "warning")
+load(
+    "compile_commands.bzl",
+    "platforms_transition",
+)
+load(
+    "@bazel_codechecker//src:codechecker_config.bzl",
+    "get_config_file"
+)
 
 def _run_code_checker(
         ctx,
@@ -11,6 +19,8 @@ def _run_code_checker(
         arguments,
         label,
         options,
+        config_file,
+        env_vars,
         compile_commands_json,
         compilation_context,
         sources_and_headers):
@@ -27,11 +37,11 @@ def _run_code_checker(
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
     if "--ctu" in options:
-        inputs = [compile_commands_json] + sources_and_headers
+        inputs = [compile_commands_json, config_file] + sources_and_headers
     else:
         # NOTE: we collect only headers, so CTU may not work!
         headers = depset([src], transitive = [compilation_context.headers])
-        inputs = depset([compile_commands_json, src], transitive = [headers])
+        inputs = depset([compile_commands_json, config_file, src], transitive = [headers])
 
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
@@ -261,7 +271,7 @@ def _collect_all_sources_and_headers(ctx):
     sources_and_headers = all_files + headers.to_list()
     return sources_and_headers
 
-def _create_wrapper_script(ctx, options, compile_commands_json):
+def _create_wrapper_script(ctx, options, compile_commands_json, config_file):
     options_str = ""
     for item in options:
         options_str += item + " "
@@ -273,6 +283,7 @@ def _create_wrapper_script(ctx, options, compile_commands_json):
             "{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
             "{compile_commands_json}": compile_commands_json.path,
             "{codechecker_args}": options_str,
+            "{config_file}": config_file.path,
         },
     )
 
@@ -281,7 +292,8 @@ def _per_file_impl(ctx):
     sources_and_headers = _collect_all_sources_and_headers(ctx)
     options = ctx.attr.default_options + ctx.attr.options
     all_files = [compile_commands_json]
-    _create_wrapper_script(ctx, options, compile_commands_json)
+    config_file, env_vars = get_config_file(ctx)
+    _create_wrapper_script(ctx, options, compile_commands_json, config_file)
     for target in ctx.attr.targets:
         if not CcInfo in target:
             continue
@@ -298,6 +310,8 @@ def _per_file_impl(ctx):
                         args,
                         ctx.attr.name,
                         options,
+                        config_file,
+                        env_vars,
                         compile_commands_json,
                         compilation_context,
                         sources_and_headers,
@@ -347,12 +361,25 @@ per_file_test = rule(
             ],
             doc = "List of compilable targets which should be checked.",
         ),
+        "config": attr.label(
+            default = None,
+            cfg = platforms_transition,
+            doc = "CodeChecker configuration",
+        ),
+        "platform": attr.string(
+            default = "",  #"@platforms//os:linux",
+            doc = "Platform to build for",
+        ),
         "_per_file_script_template": attr.label(
             default = ":per_file_script.py",
             allow_single_file = True,
         ),
         "_python_runtime": attr.label(
             default = "@default_python_tools//:py3_runtime",
+        ),
+        "_whitelist_function_transition": attr.label(
+            default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
+            doc = "needed for transitions",
         ),
     },
     outputs = {
@@ -366,12 +393,16 @@ per_file_test = rule(
 def code_checker_test(
     name,
     targets,
+    config = None,
     options = [],
     tags = [],
+    **kwargs
 ):
     per_file_test(
         name = name,
         options = options,
         targets = targets,
+        config = config,
         tags = tags,
+        **kwargs
     )
