@@ -25,12 +25,21 @@ concurrency:
 
 jobs:
   ubuntu_test:
-    name: Unit tests on ubuntu
+    name: "Unit tests: Bazel ${{ matrix.bazel_version }} (Ubuntu)"
     runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        bazel_version: ["6.5.0"]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set bazel version to ${{ matrix.bazel_version }}
+        run: echo "${{ matrix.bazel_version }}" > .bazelversion
+        shell: bash
 
       - name: Setup environment
         uses: ./.github/platform_environment_setup/ubuntu
@@ -50,13 +59,22 @@ jobs:
           python3 -m unittest discover unit -vvv
 
   rhel9_test:
-    name: Unit tests on RHEL9
+    name: "Unit tests: Bazel ${{ matrix.bazel_version }} (RHEL9)"
     runs-on: ubuntu-24.04
     container: redhat/ubi9:latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        bazel_version: ["6.5.0"]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set bazel version to ${{ matrix.bazel_version }}
+        run: echo "${{ matrix.bazel_version }}" > .bazelversion
+        shell: bash
 
       - name: Setup environment
         uses: ./.github/platform_environment_setup/rhel9
