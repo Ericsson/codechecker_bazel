@@ -104,6 +104,54 @@ class TestGeneratedFiles(TestBase):
             )
         )
 
+    def test_genrule_source_compile_commands(self):
+        """
+        Test:
+        bazel build //test/unit/generated_files:compile_commands_genrule_source
+        """
+        target = "genrule_source"
+        ret, _, _ = self.run_command(
+            "bazel build " +
+            f"//test/unit/generated_files:compile_commands_{target}"
+        )
+        self.assertEqual(ret, 0)
+        compile_commands = os.path.join(
+            self.BAZEL_BIN_DIR, # type: ignore
+            f"compile_commands_{target}",
+            "compile_commands.json"
+        )
+        print(compile_commands)
+        self.assertTrue(os.path.exists(compile_commands))
+        self.assertTrue(
+            self.contains_regex_in_file(
+                compile_commands, fr"\"file\":.*{target}.cc"
+            )
+        )
+
+    def test_genrule_header_compile_commands(self):
+        """
+        Test:
+        bazel build //test/unit/generated_files:compile_commands_genrule_header
+        """
+        target = "genrule_header"
+        ret, _, _ = self.run_command(
+            "bazel build " +
+            f"//test/unit/generated_files:compile_commands_{target}"
+        )
+        self.assertEqual(ret, 0)
+        compile_commands = os.path.join(
+            self.BAZEL_BIN_DIR, # type: ignore
+            f"compile_commands_{target}",
+            "compile_commands.json"
+        )
+        print(compile_commands)
+        self.assertTrue(os.path.exists(compile_commands))
+        self.assertTrue(
+            self.contains_regex_in_file(
+                compile_commands, fr"\"file\":.*{target}_consumer.cc"
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main(buffer=True)

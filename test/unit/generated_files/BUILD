@@ -23,6 +23,11 @@ load(
     "codechecker_test",
 )
 
+load(
+    "@bazel_codechecker//src:compile_commands.bzl",
+    "compile_commands",
+)
+
 # First, define the rule that generates our file.
 genrule(
     name = "generate_header",
@@ -94,5 +99,19 @@ codechecker_test(
     per_file = True,
     tags = [
         "manual",
+    ],
+)
+
+compile_commands(
+    name = "compile_commands_genrule_header",
+    targets = [
+        ":genrule_header_cpp",
+    ],
+)
+
+compile_commands(
+    name = "compile_commands_genrule_source",
+    targets = [
+        ":genrule_source_cpp",
     ],
 )
