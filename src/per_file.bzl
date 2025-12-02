@@ -1,6 +1,12 @@
 # This is bazel rule early prototype for CodeChecker analyze --file
 # FIXME: CodeChecker analyze --file --ctu does not currently work
 
+load(
+    "compile_commands.bzl",
+    "compile_commands_aspect",
+    "compile_commands_impl",
+    "platforms_transition",
+)
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 load("@bazel_codechecker//src:tools.bzl", "warning")
@@ -277,7 +283,20 @@ def _create_wrapper_script(ctx, options, compile_commands_json):
     )
 
 def _per_file_impl(ctx):
-    compile_commands_json = _compile_commands_impl(ctx)
+    #compile_commands_json = _compile_commands_impl(ctx)
+    compile_commands = None
+    source_files = None
+    for output in compile_commands_impl(ctx):
+        if type(output) == "DefaultInfo":
+            compile_commands = output.files.to_list()[0]
+            source_files = output.default_runfiles.files.to_list()
+    if not compile_commands:
+        fail("Failed to generate compile_commands.json file!")
+    if not source_files:
+        fail("Failed to collect source files!")
+    if compile_commands != ctx.outputs.compile_commands:
+        fail("Seems compile_commands.json file is incorrect!")
+    compile_commands_json = compile_commands
     sources_and_headers = _collect_all_sources_and_headers(ctx)
     options = ctx.attr.default_options + ctx.attr.options
     all_files = [compile_commands_json]
@@ -344,6 +363,7 @@ per_file_test = rule(
         "targets": attr.label_list(
             aspects = [
                 compile_info_aspect,
+                compile_commands_aspect,
             ],
             doc = "List of compilable targets which should be checked.",
         ),
@@ -356,6 +376,7 @@ per_file_test = rule(
         ),
     },
     outputs = {
+        "compile_commands": "%{name}/compile_commands.json",
         "test_script": "%{name}/test_script.sh",
         "per_file_script": "%{name}/per_file_script.py",
     },
