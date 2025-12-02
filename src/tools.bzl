@@ -67,9 +67,14 @@ default_python_tools = repository_rule(
     implementation = _python_local_repository_impl,
 )
 
-def register_default_python_toolchain():
+def register_default_python_toolchain(ctx = None):
     default_python_tools(name = "default_python_tools")
-    native.register_toolchains("@default_python_tools//:python_toolchain")
+    #native.register_toolchains("@default_python_tools//:python_toolchain")
+
+# Define the extension here
+module_register_default_python_toolchain = module_extension(
+    implementation = register_default_python_toolchain,
+)
 
 def _codechecker_local_repository_impl(repository_ctx):
     repository_ctx.file(
@@ -96,8 +101,13 @@ default_codechecker_tools = repository_rule(
     implementation = _codechecker_local_repository_impl,
 )
 
-def register_default_codechecker():
+def register_default_codechecker(ctx = None):
     default_codechecker_tools(name = "default_codechecker_tools")
+
+# Define the extension here
+module_register_default_codechecker = module_extension(
+    implementation = register_default_codechecker,
+)
 
 def warning(ctx, msg):
     """
