@@ -83,6 +83,7 @@ def _codechecker_local_repository_impl(repository_ctx):
         fail("ERROR! CodeChecker is not detected")
 
     defs = "CODECHECKER_BIN_PATH = '{}'\n".format(codechecker_bin_path)
+    defs += "BAZEL_VERSION = '{}'\n".format(native.bazel_version)
     repository_ctx.file(
         repository_ctx.path("defs.bzl"),
         content = defs,

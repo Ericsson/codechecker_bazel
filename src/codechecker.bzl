@@ -9,6 +9,7 @@ load(
 load(
     "@default_codechecker_tools//:defs.bzl",
     "CODECHECKER_BIN_PATH",
+    "BAZEL_VERSION"
 )
 load(
     "per_file.bzl",
@@ -252,10 +253,6 @@ _codechecker_test = rule(
             cfg = platforms_transition,
             doc = "List of compilable targets which should be checked.",
         ),
-        "_whitelist_function_transition": attr.label(
-            default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
-            doc = "needed for transitions",
-        ),
         "_compile_commands_filter": attr.label(
             allow_files = True,
             executable = True,
@@ -287,7 +284,10 @@ _codechecker_test = rule(
             default = [],
             doc = "List of analyze command arguments, e.g. --ctu",
         ),
-    },
+    } | ({"_whitelist_function_transition": attr.label(
+        default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
+        doc = "needed for transitions",
+    )} if BAZEL_VERSION.split(".")[0] in "0123456" else {}),
     outputs = {
         "compile_commands": "%{name}/compile_commands.json",
         "codechecker_commands": "%{name}/codechecker_commands.json",
