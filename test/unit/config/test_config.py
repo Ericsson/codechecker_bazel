@@ -109,15 +109,13 @@ class TestConfig(TestBase):
             "bazel test //test/unit/config:per_file_test_yaml"
         )
         # Should not find the division by zero bug
-        self.assertEqual(ret, 3) # TODO: Change to 0
-        # since CodeChecker won't find the division by zero bug
+        self.assertEqual(ret, 0)
         copied_config = os.path.join(
             self.BAZEL_BIN_DIR, # type: ignore
             "per_file_test_yaml",
             "config.yaml"
         )
-        self.assertFalse(os.path.exists(copied_config)) # TODO: Set to True
-        # Before the patch config files aren't supported in per_file
+        self.assertTrue(os.path.exists(copied_config))
 
 
 if __name__ == "__main__":
