@@ -88,7 +88,7 @@ def _run_codechecker() -> None:
         + CODECHECKER_ARGS.split()
         + ["--output=" + DATA_DIR]  # type: ignore
         + ["--file=*/" + FILE_PATH]  # type: ignore
-        + ["--config=" + CONFIG_FILE]
+        + ["--config", CONFIG_FILE]
         + [COMPILE_COMMANDS_ABSOLUTE]
     )
     log(f"CodeChecker command: {' '.join(codechecker_cmd)}\n")
