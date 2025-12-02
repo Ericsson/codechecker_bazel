@@ -24,10 +24,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # TODO: Parallelize the running of projects
-  foss_ubuntu_test:
-    name: "Test rules on FOSS projects (ubuntu)"
+  # Prepares matrix used to generate jobs in foss_{$platform}_test
+  # This is a best-practice solution detailed in:
+  # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
+  # This job assumes that every project initializer script is
+  # in `test/foss/project` and script name must be `init.sh`
+  # patches must clone their repository into folder: test-proj
+  prepare_project_matrix:
     runs-on: ubuntu-24.04
+    name: Collecting Projects
+    outputs:
+      project_configurations: ${{ steps.generate_matrix.outputs.matrix_json }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate dynamic project matrix
+        id: generate_matrix
+        env: 
+          PROJECTS_DIR: "./test/foss/"
+        run: |
+          python3 ./.github/foss_project_collector.py >> "$GITHUB_OUTPUT"
+        shell: bash
+
+  foss_ubuntu_test:
+    name: "Test rules on FOSS project: ${{ matrix.project.name }} (Ubuntu)"
+    runs-on: ubuntu-24.04
+    needs: prepare_project_matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 2 # limit number of concurrent jobs
+      matrix:
+        project: ${{ fromJson(needs.prepare_project_matrix.outputs.project_configurations) }}
 
     steps:
       - name: Checkout repository
@@ -36,14 +64,28 @@ jobs:
       - name: Setup environment
         uses: ./.github/platform_environment_setup/ubuntu
 
-      - name: Run Test On Opensource Projects
-        working-directory: test
-        run: python3 -m unittest foss/test_foss.py -vvv
+      - name: Setup project
+        working-directory: ${{ matrix.project.folder }}
+        run: sh init.sh
+        
+      - name: Run Bazel CodeChecker
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :codechecker_test
+        
+      - name: Run Per-File Bazel CodeChecker
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :per_file_test
 
   foss_rhel_test:
-    name: "Test rules on FOSS projects (RHEL)"
+    name: "Test rules on FOSS project: ${{ matrix.project.name }} (RHEL)"
     runs-on: ubuntu-24.04
     container: redhat/ubi9:latest
+    needs: prepare_project_matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 2 # limit number of concurrent jobs
+      matrix:
+        project: ${{ fromJson(needs.prepare_project_matrix.outputs.project_configurations) }}
 
     steps:
       - name: Checkout repository
@@ -52,6 +94,14 @@ jobs:
       - name: Setup environment
         uses: ./.github/platform_environment_setup/rhel9
 
-      - name: Run Test On Opensource Projects
-        working-directory: test
-        run: python3 -m unittest foss/test_foss.py -vvv
+      - name: Setup project
+        working-directory: ${{ matrix.project.folder }}
+        run: sh init.sh
+        
+      - name: Run Bazel CodeChecker
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :codechecker_test
+        
+      - name: Run Per-File Bazel CodeChecker
+        working-directory: ${{ matrix.project.folder }}/test-proj
+        run: bazel build :per_file_test
