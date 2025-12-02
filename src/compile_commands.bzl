@@ -39,6 +39,10 @@ load(
     "CPP_COMPILE_ACTION_NAME",
     "C_COMPILE_ACTION_NAME",
 )
+load(
+    "@default_codechecker_tools//:defs.bzl",
+    "BAZEL_VERSION"
+)
 
 SourceFilesInfo = provider(
     doc = "Source files and corresponding compilation database (or compile commands)",
@@ -341,11 +345,11 @@ def _check_source_files(source_files, compilation_db):
             fail("File: %s\nNot available in collected source files" % src)
 
 def _compile_commands_json(compilation_db):
-    json = "[\n"
-    entries = [entry.to_json() for entry in compilation_db]
-    json += ",\n".join(entries)
-    json += "]\n"
-    return json
+    json_cont = "[\n"
+    entries = [json.encode(entry) for entry in compilation_db]
+    json_cont += ",\n".join(entries)
+    json_cont += "]\n"
+    return json_cont
 
 def compile_commands_impl(ctx):
     """ Creates compile_commands.json file for given targets and platform
@@ -411,11 +415,10 @@ _compile_commands = rule(
             cfg = platforms_transition,
             doc = "List of compilable targets which should be checked.",
         ),
-        "_whitelist_function_transition": attr.label(
-            default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
-            doc = "needed for transitions",
-        ),
-    },
+    } | ({"_whitelist_function_transition": attr.label(
+        default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
+        doc = "needed for transitions",
+    )} if BAZEL_VERSION.split(".")[0] in "0123456" else {}),
     outputs = {
         "compile_commands": "%{name}/compile_commands.json",
     },

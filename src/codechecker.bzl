@@ -9,6 +9,7 @@ load(
 load(
     "@default_codechecker_tools//:defs.bzl",
     "CODECHECKER_BIN_PATH",
+    "BAZEL_VERSION"
 )
 load(
     "per_file.bzl",
@@ -39,8 +40,15 @@ def get_platform_alias(platform):
     return platform
 
 def _codechecker_impl(ctx):
-    py_runtime_info = ctx.attr._python_runtime[PyRuntimeInfo]
-    python_path = py_runtime_info.interpreter_path
+    py_toolchain = ctx.toolchains["@rules_python//python:toolchain_type"]
+    py_runtime_info = py_toolchain.py3_runtime
+    if py_runtime_info.interpreter:
+        python_path = py_runtime_info.interpreter.path
+    else:
+        python_path = py_runtime_info.interpreter_path
+    #py_runtime_info = ctx.attr._python_runtime[PyRuntimeInfo]
+    #python_path = py_runtime_info.interpreter_path
+    print(python_path)
 
     # Get compile_commands.json file and source files
     compile_commands = None
@@ -114,8 +122,8 @@ def _codechecker_impl(ctx):
             codechecker_files,
             ctx.outputs.codechecker_log,
         ],
-        executable = ctx.outputs.codechecker_script,
-        arguments = [],
+        executable = py_runtime_info.interpreter,
+        arguments = [ctx.outputs.codechecker_script.path],
         mnemonic = "CodeChecker",
         progress_message = "CodeChecker %s" % str(ctx.label),
         # use_default_shell_env = True,
@@ -194,8 +202,15 @@ codechecker = rule(
 )
 
 def _codechecker_test_impl(ctx):
-    py_runtime_info = ctx.attr._python_runtime[PyRuntimeInfo]
-    python_path = py_runtime_info.interpreter_path
+    py_toolchain = ctx.toolchains["@rules_python//python:toolchain_type"]
+    py_runtime_info = py_toolchain.py3_runtime
+    if py_runtime_info.interpreter:
+        python_path = py_runtime_info.interpreter.path
+    else:
+        python_path = py_runtime_info.interpreter_path
+    #py_runtime_info = ctx.attr._python_runtime[PyRuntimeInfo]
+    #python_path = py_runtime_info.interpreter_path
+    print(python_path)
 
     # Run CodeChecker at build step
     info = _codechecker_impl(ctx)
@@ -240,6 +255,7 @@ def _codechecker_test_impl(ctx):
 
 _codechecker_test = rule(
     implementation = _codechecker_test_impl,
+    toolchains = ["@rules_python//python:toolchain_type"],
     attrs = {
         "platform": attr.string(
             default = "",  #"@platforms//os:linux",
@@ -252,10 +268,6 @@ _codechecker_test = rule(
             cfg = platforms_transition,
             doc = "List of compilable targets which should be checked.",
         ),
-        "_whitelist_function_transition": attr.label(
-            default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
-            doc = "needed for transitions",
-        ),
         "_compile_commands_filter": attr.label(
             allow_files = True,
             executable = True,
@@ -266,9 +278,9 @@ _codechecker_test = rule(
             default = ":codechecker_script.py",
             allow_single_file = True,
         ),
-        "_python_runtime": attr.label(
-            default = "@default_python_tools//:py3_runtime",
-        ),
+        #"_python_runtime": attr.label(
+        #    default = "@default_python_tools//:py3_runtime",
+        #),
         "severities": attr.string_list(
             default = ["HIGH"],
             doc = "List of defect severities: HIGH, MEDIUM, LOW, STYLE etc",
@@ -287,7 +299,14 @@ _codechecker_test = rule(
             default = [],
             doc = "List of analyze command arguments, e.g. --ctu",
         ),
-    },
+        #"_python_runtime": attr.label(
+        #    default = Label("@rules_python//python:current_py_toolchain"),
+        #    providers = [PyRuntimeInfo],
+        #),
+    } | ({"_whitelist_function_transition": attr.label(
+        default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
+        doc = "needed for transitions",
+    )} if BAZEL_VERSION.split(".")[0] in "0123456" else {}),
     outputs = {
         "compile_commands": "%{name}/compile_commands.json",
         "codechecker_commands": "%{name}/codechecker_commands.json",
