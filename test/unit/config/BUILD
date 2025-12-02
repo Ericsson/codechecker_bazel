@@ -90,8 +90,7 @@ codechecker_test(
 
 codechecker_test(
     name = "per_file_test_json",
-    #config = "config_json", #TODO: uncomment
-    # complains that per_file doesn't have a config attribute
+    config = "config_json",
     targets = [
         "test_zero",
     ],
@@ -101,8 +100,7 @@ codechecker_test(
 
 codechecker_test(
     name = "per_file_test_yaml",
-    #config = "config_yaml", #TODO: uncomment
-    # complains that per_file doesn't have a config attribute
+    config = "config_yaml",
     targets = [
         "test_zero",
     ],
