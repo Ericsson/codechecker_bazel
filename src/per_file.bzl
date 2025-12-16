@@ -155,7 +155,7 @@ def _compile_info_sources(deps):
 
 def _collect_all_sources(ctx):
     sources = _rule_sources(ctx)
-    for attr in ["srcs", "deps", "data", "exports"]:
+    for attr in ["srcs", "deps", "data", "exports", "implementation_deps"]:
         if hasattr(ctx.rule.attr, attr):
             deps = getattr(ctx.rule.attr, attr)
             sources += _compile_info_sources(deps)
@@ -201,7 +201,7 @@ compile_info_aspect = aspect(
     attrs = {
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
     },
-    attr_aspects = ["srcs", "deps", "data", "exports"],
+    attr_aspects = ["srcs", "deps", "data", "exports", "implementation_deps"],
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
 )
 

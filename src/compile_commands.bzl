@@ -54,6 +54,7 @@ _source_attr = [
     "deps",
     "data",
     "exports",
+    "implementation_deps",
 ]
 
 _cpp_extensions = [
