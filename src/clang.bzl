@@ -18,6 +18,7 @@ Rulesets for running clang-tidy and the clang static analyzer.
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@default_codechecker_tools//:defs.bzl", "BAZEL_VERSION")
 load("compile_commands.bzl", "platforms_transition")
 
 CLANG_TIDY_WRAPPER_SCRIPT = """#!/usr/bin/env bash
@@ -382,6 +383,9 @@ compile_info_aspect = aspect(
     fragments = ["cpp"],
     attr_aspects = ["srcs", "deps", "data", "exports"],
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
+    attrs = {
+        "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
+    },
 )
 
 def _clang_test(ctx, tool):
@@ -427,6 +431,16 @@ def _clang_test(ctx, tool):
         ),
     ]
 
+def _extra_attributes():
+    if BAZEL_VERSION.startswith("6."):
+        return {
+            "_whitelist_function_transition": attr.label(
+                default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
+                doc = "needed for transitions",
+            ),
+        }
+    return {}
+
 def _clang_tidy_test_impl(ctx):
     return _clang_test(ctx, _run_tidy)
 
@@ -470,7 +484,7 @@ clang_tidy_test = rule(
             cfg = "exec",
             doc = "Clang-tidy executable",
         ),
-    },
+    } | _extra_attributes(),
     outputs = {
         "test_script": "%{name}.test_script.sh",
     },
@@ -525,7 +539,7 @@ clang_analyze_test = rule(
             cfg = "exec",
             doc = "Clang executable",
         ),
-    },
+    } | _extra_attributes(),
     outputs = {
         "test_script": "%{name}.test_script.sh",
     },
