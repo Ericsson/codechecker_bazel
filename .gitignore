@@ -3,7 +3,7 @@
 
 # Ignore all bazel-* symlinks. There is no full list since this can change
 # based on the name of the directory bazel is cloned into.
-/bazel-*
+**/bazel-*
 
 # Ignore Vim swap files.
 .*.swp
@@ -18,3 +18,7 @@ venv
 
 # Ignore FOSS project clone dirs
 /test/foss/*/test-proj/
+
+# Ignore test specific bazelversion files
+test/unit/external_repository/.bazelversion
+test/unit/external_repository/third_party/my_lib/.bazelversion

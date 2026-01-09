@@ -31,6 +31,35 @@ class TestImplDepExternalDep(TestBase):
     BAZEL_BIN_DIR = os.path.join("bazel-bin")
     BAZEL_TESTLOGS_DIR = os.path.join("bazel-testlogs")
 
+    @final
+    @classmethod
+    def setUpClass(cls):
+        """
+        Copy bazelversion from main, otherwise bazelisk will download the latest
+        bazel version.
+        """
+        super().setUpClass()
+        try:
+            shutil.copy("../../../.bazelversion", ".bazelversion")
+            shutil.copy(
+                "../../../.bazelversion", "third_party/my_lib/.bazelversion")
+        except:
+            logging.debug("No bazel version set, using system default")
+
+    @final
+    @classmethod
+    def tearDownClass(cls):
+        """Remove bazelversion from this test"""
+        super().tearDownClass()
+        try:
+            os.remove(".bazelversion")
+        except:
+            pass
+        try:
+            os.remove("third_party/my_lib/.bazelversion")
+        except:
+            pass
+
     def test_compile_commands_external_lib(self):
         """Test: bazel build :compile_commands_isystem"""
         ret, _, _ = self.run_command(
