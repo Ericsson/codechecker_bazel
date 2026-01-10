@@ -233,44 +233,6 @@ compile_info_aspect = aspect(
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
 )
 
-def _compile_commands_json(compile_commands):
-    json = "[\n"
-    entries = [entry.to_json() for entry in compile_commands]
-    json += ",\n".join(entries)
-    json += "]\n"
-    return json
-
-def _compile_commands_data(ctx):
-    compile_commands = []
-    for target in ctx.attr.targets:
-        if not CcInfo in target:
-            continue
-        if CompileInfo in target:
-            if hasattr(target[CompileInfo], "arguments"):
-                srcs = target[CompileInfo].arguments.keys()
-                for src in srcs:
-                    args = target[CompileInfo].arguments[src]
-
-                    # print("args =", str(args))
-                    record = struct(
-                        file = src.path,
-                        command = " ".join(args),
-                        directory = ".",
-                    )
-                    compile_commands.append(record)
-    return compile_commands
-
-def _compile_commands_impl(ctx):
-    compile_commands = _compile_commands_data(ctx)
-    content = _compile_commands_json(compile_commands)
-    file_name = ctx.attr.name + "/data/compile_commands.json"
-    compile_commands_json = ctx.actions.declare_file(file_name)
-    ctx.actions.write(
-        output = compile_commands_json,
-        content = content,
-    )
-    return compile_commands_json
-
 def _collect_all_sources_and_headers(ctx):
     # NOTE: we are only using this function for CTU
     all_files = []
@@ -306,7 +268,6 @@ def _create_wrapper_script(ctx, options, compile_commands_json, config_file):
     )
 
 def _per_file_impl(ctx):
-    #compile_commands_json = _compile_commands_impl(ctx)
     compile_commands = None
     source_files = None
     for output in compile_commands_impl(ctx):
