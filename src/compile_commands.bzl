@@ -127,6 +127,11 @@ def get_compile_flags(ctx, dep):
                     include = "."
                 options.append("-I{}".format(include))
 
+            for system_include in compilation_context.system_includes.to_list():
+                if len(system_include) == 0:
+                    system_include = "."
+                options.append(SYSTEM_INCLUDE + system_include)
+
     return options
 
 def get_sources(ctx):

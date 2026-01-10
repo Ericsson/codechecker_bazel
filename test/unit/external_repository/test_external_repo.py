@@ -70,21 +70,20 @@ class TestImplDepExternalDep(TestBase):
             "compile_commands_isystem",
             "compile_commands.json")
 
-        # TODO: Set to True, should find external lib as an -isystem include
-        self.assertFalse(self.contains_regex_in_file(
+        # The ~override part is a consquence of using Bzlmod.
+        self.assertTrue(self.contains_regex_in_file(
             comp_json_file,
-            "-isystem external/external_lib/include"))
-        self.assertFalse(self.contains_regex_in_file(
+            "-isystem external/external_lib~override/include"))
+        self.assertTrue(self.contains_regex_in_file(
             comp_json_file,
             "-isystem " +
-            "bazel-out/k8-fastbuild/bin/external/external_lib/include"))
+            "bazel-out/k8-fastbuild/bin/external/external_lib~override/include"))
 
     def test_codechecker_external_lib(self):
         """Test: bazel build :odechecker_external_deps"""
         ret, _, _ = self.run_command(
             "bazel build :codechecker_external_deps")
-        # TODO: set to 1, the nothing header should be found
-        self.assertEqual(ret, 1)
+        self.assertEqual(ret, 0)
 
     def test_per_file_external_lib(self):
         """Test: bazel build :per_file_external_deps"""
