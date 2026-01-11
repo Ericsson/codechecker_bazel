@@ -22,6 +22,7 @@ load(
     "compile_commands_aspect",
     "compile_commands_impl",
     "platforms_transition",
+    "SourceFilesInfo",
 )
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
@@ -35,6 +36,7 @@ def _run_code_checker(
         ctx,
         src,
         arguments,
+        target,
         label,
         options,
         config_file,
@@ -58,7 +60,11 @@ def _run_code_checker(
         inputs = [compile_commands_json, config_file] + sources_and_headers
     else:
         # NOTE: we collect only headers, so CTU may not work!
-        headers = depset([src], transitive = [compilation_context.headers])
+        trans_depsets = [compilation_context.headers]
+        for dset in target[SourceFilesInfo].headers.to_list():
+            trans_depsets.append(dset)
+        headers = depset(direct = [src],
+            transitive = trans_depsets)
         inputs = depset([compile_commands_json, config_file, src], transitive = [headers])
 
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
@@ -101,155 +107,26 @@ def check_valid_file_type(src):
             return True
     return False
 
-def _rule_sources(ctx):
-    srcs = []
-    if hasattr(ctx.rule.attr, "srcs"):
-        for src in ctx.rule.attr.srcs:
-            srcs += [src for src in src.files.to_list() if check_valid_file_type(src)]
-    return srcs
-
-def _toolchain_flags(ctx, action_name = ACTION_NAMES.cpp_compile):
-    cc_toolchain = find_cpp_toolchain(ctx)
-    feature_configuration = cc_common.configure_features(
-        ctx = ctx,
-        cc_toolchain = cc_toolchain,
-    )
-    user_comp_flag_builder = ctx.fragments.cpp.copts
-    if action_name == ACTION_NAMES.cpp_compile:
-        user_comp_flag_builder += ctx.fragments.cpp.cxxopts
-    elif action_name == ACTION_NAMES.c_compile:
-        user_comp_flag_builder += ctx.fragments.cpp.conlyopts
-    else:
-        fail("Unhandled action name!")
-    compile_variables = cc_common.create_compile_variables(
-        feature_configuration = feature_configuration,
-        cc_toolchain = cc_toolchain,
-        user_compile_flags = user_comp_flag_builder,
-    )
-    flags = cc_common.get_memory_inefficient_command_line(
-        feature_configuration = feature_configuration,
-        action_name = action_name,
-        variables = compile_variables,
-    )
-    compiler = cc_common.get_tool_for_action(
-        feature_configuration = feature_configuration,
-        action_name = action_name,
-    )
-    return [compiler] + flags
-
-def _compile_args(compilation_context):
-    compile_args = []
-    for define in compilation_context.defines.to_list():
-        compile_args.append("-D" + define)
-    for define in compilation_context.local_defines.to_list():
-        compile_args.append("-D" + define)
-    for include in compilation_context.framework_includes.to_list():
-        compile_args.append("-F" + include)
-    for include in compilation_context.includes.to_list():
-        compile_args.append("-I" + include)
-    for include in compilation_context.quote_includes.to_list():
-        compile_args.append("-iquote " + include)
-    for include in compilation_context.system_includes.to_list():
-        compile_args.append("-isystem " + include)
-    return compile_args
-
-def _safe_flags(flags):
-    # Some flags might be used by GCC, but not understood by Clang.
-    # Remove them here, to allow users to run clang-tidy, without having
-    # a clang toolchain configured (that would produce a good command line with --compiler clang)
-    unsupported_flags = [
-        "-fno-canonical-system-headers",
-        "-fstack-usage",
-    ]
-
-    return [flag for flag in flags if flag not in unsupported_flags]
-
-CompileInfo = provider(
-    doc = "Source files and corresponding compilation arguments",
-    fields = {
-        "arguments": "dict: file -> list of arguments",
-    },
-)
-
-def _compile_info_sources(deps):
-    sources = []
-    if type(deps) == "list":
-        for dep in deps:
-            if CompileInfo in dep:
-                if hasattr(dep[CompileInfo], "arguments"):
-                    srcs = dep[CompileInfo].arguments.keys()
-                    sources += srcs
-    return sources
-
-def _collect_all_sources(ctx):
-    sources = _rule_sources(ctx)
-    for attr in source_attr:
-        if hasattr(ctx.rule.attr, attr):
-            deps = getattr(ctx.rule.attr, attr)
-            sources += _compile_info_sources(deps)
-
-    # Remove duplicates
-    sources = depset(sources).to_list()
-    return sources
-
-def _compile_info_aspect_impl(target, ctx):
-    if not CcInfo in target:
-        return []
-    compilation_context = target[CcInfo].compilation_context
-
-    rule_flags = ctx.rule.attr.copts if hasattr(ctx.rule.attr, "copts") else []
-    c_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.c_compile) + rule_flags)  # + ["-xc"]
-    cxx_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.cpp_compile) + rule_flags)  # + ["-xc++"]
-
-    srcs = _collect_all_sources(ctx)
-
-    compile_args = _compile_args(compilation_context)
-    arguments = {}
-    for src in srcs:
-        if src.extension.lower() in ["c"]:
-            flags = c_flags
-        elif src.extension.lower() in ["cc", "cpp", "cxx", "c++"]:
-            flags = cxx_flags
-        else:
-            warning(
-                "Unknown file extension for {} defaulting to c++ compile flags".
-                format(src.short_path)
-                )
-            flags = cxx_flags
-        arguments[src] = flags + compile_args + [src.path]
-    return [
-        CompileInfo(
-            arguments = arguments,
-        ),
-    ]
-
-compile_info_aspect = aspect(
-    implementation = _compile_info_aspect_impl,
-    fragments = ["cpp"],
-    attrs = {
-        "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
-    },
-    attr_aspects = source_attr,
-    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
-)
-
 def _collect_all_sources_and_headers(ctx):
     # NOTE: we are only using this function for CTU
     all_files = []
-    headers = depset()
     for target in ctx.attr.targets:
         if not CcInfo in target:
             continue
-        if CompileInfo in target:
-            if hasattr(target[CompileInfo], "arguments"):
-                srcs = target[CompileInfo].arguments.keys()
+        if SourceFilesInfo in target:
+            if (hasattr(target[SourceFilesInfo], "transitive_source_files")
+            and hasattr(target[SourceFilesInfo], "headers")):
+                srcs = target[SourceFilesInfo].transitive_source_files.to_list()
+                headers_mid = target[SourceFilesInfo].headers.to_list()
+                headers = []
+                for elem in headers_mid:
+                    if type(elem) == "depset":
+                        headers.extend(elem.to_list())
+                    else:
+                        headers.append(elem)
                 all_files += srcs
-                compilation_context = target[CcInfo].compilation_context
-                headers = depset(
-                    transitive = [headers, compilation_context.headers],
-                )
-    sources_and_headers = all_files + headers.to_list()
-    return sources_and_headers
+                all_files += headers
+    return all_files
 
 def _create_wrapper_script(ctx, options, compile_commands_json, config_file):
     options_str = ""
@@ -289,17 +166,20 @@ def _per_file_impl(ctx):
     for target in ctx.attr.targets:
         if not CcInfo in target:
             continue
-        if CompileInfo in target:
-            if hasattr(target[CompileInfo], "arguments"):
-                srcs = target[CompileInfo].arguments.keys()
+        if SourceFilesInfo in target:
+            if hasattr(target[SourceFilesInfo], "transitive_source_files"):
+                srcs = target[SourceFilesInfo].transitive_source_files.to_list()
                 all_files += srcs
                 compilation_context = target[CcInfo].compilation_context
                 for src in srcs:
-                    args = target[CompileInfo].arguments[src]
+                    if not check_valid_file_type(src):
+                        continue
+                    args = target[SourceFilesInfo].compilation_db.to_list()
                     outputs = _run_code_checker(
                         ctx,
                         src,
                         args,
+                        target,
                         ctx.attr.name,
                         options,
                         config_file,
@@ -349,7 +229,6 @@ per_file_test = rule(
         ),
         "targets": attr.label_list(
             aspects = [
-                compile_info_aspect,
                 compile_commands_aspect,
             ],
             doc = "List of compilable targets which should be checked.",
