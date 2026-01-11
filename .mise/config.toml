@@ -1,0 +1,92 @@
+[tools]
+# Environment tools:
+"python" = "3.11"
+"bazel" = "6"
+"pipx:codechecker" = "6.26"
+
+# Clang tools:
+# "conda:clang" = "latest"   # FIXME: tests fail with clang 21
+# "vfox:mise-plugins/vfox-clang" = "latest"
+"pipx:clang-tidy" = "latest"
+# NOTE: clang-extdef-mapping cannot be installed via mise
+
+# Dev tools:
+"pipx:pycodestyle" = "latest"
+"pipx:pylint" = "latest"
+"pipx:pytest" = "latest"
+"buildifier" = "latest"
+
+
+[vars]
+run = ".mise/print-env.sh && pytest"
+
+
+[tasks."test"]
+run = [
+    { task = "test:7-26" },
+    { task = "test:7-27" },
+]
+
+[tasks."test:all"]
+run = [
+    { task = "test:6" },
+    { task = "test:7" },
+    { task = "test:8" },
+]
+
+[tasks."test:6"]
+run = [
+    { task = "test:6-25" },
+    { task = "test:6-26" },
+    { task = "test:6-27" },
+]
+
+[tasks."test:7"]
+run = [
+    { task = "test:7-25" },
+    { task = "test:7-26" },
+    { task = "test:7-27" },
+]
+
+[tasks."test:8"]
+run = [
+    { task = "test:8-25" },
+    { task = "test:8-26" },
+    { task = "test:8-27" },
+]
+
+[tasks."test:6-25"]
+run = "{{vars.run}}"
+tools = { bazel = "6", "pipx:codechecker" = "6.25" }
+
+[tasks."test:6-26"]
+run = "{{vars.run}}"
+tools = { bazel = "6", "pipx:codechecker" = "6.26" }
+
+[tasks."test:6-27"]
+run = "{{vars.run}}"
+tools = { bazel = "6", "pipx:codechecker" = "6.27" }
+
+[tasks."test:7-25"]
+run = "{{vars.run}}"
+tools = { bazel = "7", "pipx:codechecker" = "6.25" }
+
+[tasks."test:7-26"]
+run = "{{vars.run}}"
+tools = { bazel = "7", "pipx:codechecker" = "6.26" }
+
+[tasks."test:7-27"]
+run = "{{vars.run}}"
+tools = { bazel = "7", "pipx:codechecker" = "6.27" }
+
+[tasks."test:8-25"]
+run = "{{vars.run}}"
+tools = { bazel = "8", "pipx:codechecker" = "6.25" }
+
+[tasks."test:8-26"]
+run = "{{vars.run}}"
+tools = { bazel = "8", "pipx:codechecker" = "6.26" }
+
+[tasks."test:8-27"]
+run = "{{vars.run}}"
+tools = { bazel = "8", "pipx:codechecker" = "6.27" }
