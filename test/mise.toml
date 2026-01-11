@@ -1,18 +1,26 @@
 [tools]
-python = "3.11"
+# "conda:clang" = "latest"   # FIXME: tests fail with clang 21
+"pipx:clang-tidy" = "latest"
+"pipx:pylint" = "latest"
+"pipx:pycodestyle" = "latest"
+"buildifier" = "latest"
 
 [tasks."test:6"]
 description = "Run test with Bazel 6 / CodeChecker 6.25"
 run = "./test.sh"
-tools = { bazel = "6", "pipx:codechecker" = "6.25" }
+tools = { python = "3.11", bazel = "6", "pipx:codechecker" = "6.25" }
 
 [tasks."test:7"]
 description = "Run test with Bazel 7 / CodeChecker 6.26"
 run = "./test.sh"
-tools = { bazel = "7", "pipx:codechecker" = "6.26" }
+tools = { python = "3.11", bazel = "7", "pipx:codechecker" = "6.26" }
 
 [tasks."test:8"]
 description = "Run test with Bazel 8 / CodeChecker 6.27"
 run = "./test.sh"
-tools = { bazel = "8", "pipx:codechecker" = "6.27" }
+tools = { python = "3.11", bazel = "8", "pipx:codechecker" = "6.27" }
 
+[tasks."test:latest"]
+description = "Run test with the latest versions"
+run = "./test.sh"
+tools = { python = "latest", bazel = "latest", "pipx:codechecker" = "latest" }

@@ -3,7 +3,7 @@
 # FIXME: We need MISE_GITHUB_TOKEN to download from GitHub
 #        since URLs are not supported in lock files for pipx
 #        See https://mise.jdx.dev/dev-tools/mise-lock.html#backend-support
-# export MISE_GITHUB_TOKEN="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# export MISE_GITHUB_TOKEN="XxXx..."
 
 if ! command -v mise >/dev/null 2>&1; then
     echo ">>> Install Mise:"
@@ -18,4 +18,4 @@ echo ">>> Run Test:"
 mise run test:6
 mise run test:7
 mise run test:8
-
+mise run test:latest
