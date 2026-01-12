@@ -85,7 +85,6 @@ class TestBasic(TestBase):
         compile_commands = os.path.join(
             self.BAZEL_BIN_DIR,
             "per_file_filter",
-            "data",
             "compile_commands.json",
         )
         self.assertTrue(os.path.exists(compile_commands))

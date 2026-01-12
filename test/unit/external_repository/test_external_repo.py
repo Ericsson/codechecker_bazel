@@ -110,8 +110,7 @@ class TestImplDepExternalDep(TestBase):
         """Test: bazel build :per_file_external_deps"""
         ret, _, _ = self.run_command(
             "bazel build :per_file_external_deps")
-        # TODO: set to 1, the nothing header should be found
-        self.assertEqual(ret, 1)
+        self.assertEqual(ret, 0)
 
 
 if __name__ == "__main__":
