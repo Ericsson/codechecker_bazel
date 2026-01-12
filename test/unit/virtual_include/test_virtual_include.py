@@ -120,8 +120,7 @@ class TestVirtualInclude(TestBase):
         ret, _, _ = self.run_command(
             "bazel build --experimental_cc_implementation_deps //test/unit/virtual_include:per_file_impl_deps_include"
         )
-        # TODO: change to 0, CodeChecker should finish analysis successfully
-        self.assertEqual(ret, 1)
+        self.assertEqual(ret, 0)
 
 
 if __name__ == "__main__":
