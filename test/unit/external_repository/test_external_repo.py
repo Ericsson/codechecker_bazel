@@ -80,7 +80,7 @@ class TestImplDepExternalDep(TestBase):
             "bazel-out/k8-fastbuild/bin/external/external_lib~override/include"))
 
     def test_codechecker_external_lib(self):
-        """Test: bazel build :odechecker_external_deps"""
+        """Test: bazel build :codechecker_external_deps"""
         ret, _, _ = self.run_command(
             "bazel build :codechecker_external_deps")
         self.assertEqual(ret, 0)
