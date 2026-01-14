@@ -130,22 +130,6 @@ class TestBasic(TestBase):
         self.grep_file(compile_commands, r"pass\.cc")
         self.grep_file(compile_commands, r"\/gcc")
 
-    def test_bazel_aspect_clang_tidy_pass(self):
-        """Test: bazel build :test_pass --aspects"""
-        command = "bazel build :test_pass " + \
-            "--aspects @codechecker_bazel//src:clang.bzl%clang_tidy_aspect" + \
-            " --output_groups=report"
-        self.check_command(command, exit_code=0)
-
-    def test_bazel_aspect_clang_tidy_fail(self):
-        """Test: bazel build :test_lib --aspects"""
-        # NOTE: we should use :test_fail but transitive dependencies do not
-        # work
-        command = "bazel build :test_lib " + \
-            "--aspects @codechecker_bazel//src:clang.bzl%clang_tidy_aspect" + \
-            " --output_groups=report"
-        self.check_command(command, exit_code=1)
-
     def test_bazel_build_clang_tidy_pass(self):
         """Test: bazel build :clang_tidy_pass"""
         self.check_command("bazel build :clang_tidy_pass", exit_code=0)

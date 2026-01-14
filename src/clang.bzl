@@ -18,33 +18,24 @@ Rulesets for running clang-tidy and the clang static analyzer.
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
-load(
-    "@codechecker_bazel//src:tools.bzl",
-    "source_attr"
-)
+load("@default_codechecker_tools//:defs.bzl", "BAZEL_VERSION")
+load("compile_commands.bzl", "platforms_transition")
 
 CLANG_TIDY_WRAPPER_SCRIPT = """#!/usr/bin/env bash
-CLANG_TIDY=$1
-shift
 OUTPUT=$1
-shift
-CONFIG=$1
 shift
 
 # Make sure the output exists, and empty if there are no errors,
 # (clang-tidy doesn't create a patch file if there are no errors).
-echo > $OUTPUT
+touch $OUTPUT
 
-$CLANG_TIDY --config-file=$CONFIG --export-fixes=$OUTPUT $@ 2>&1
+# echo "$@"
+$@
 """
 
 CLANG_ANALYZE_WRAPPER_SCRIPT = """#!/usr/bin/env bash
-CLANG=$1
-shift
-OUTPUT=$1
-shift
-
-$CLANG --analyze -o $OUTPUT $@ 2>&1
+# echo "$@"
+$@
 """
 
 def _run_tidy(
@@ -52,7 +43,7 @@ def _run_tidy(
         exe,
         config,
         options,
-        compilation_context,
+        headers,
         infile,
         arguments,
         label,
@@ -68,6 +59,9 @@ def _run_tidy(
     else:
         clang_tidy_bin = "clang-tidy"
 
+    # If config file is from a filegroup
+    if config and hasattr(config, "files"):
+        config = config.files.to_list()[0]
     # Create clang-tidy config file
     if not config:
         config = ctx.actions.declare_file(label + ".clang_tidy_config.yaml")
@@ -84,14 +78,17 @@ def _run_tidy(
     # Prepare arguments
     args = ctx.actions.args()
 
+    # NOTE: we pass output file first and also as an argument below
+    args.add(outfile.path)
+
     # Add clang-tidy binary
     args.add(clang_tidy_bin)
 
-    # Add output file
-    args.add(outfile.path)
-
     # Add config file
-    args.add(config.path)
+    args.add("--config-file=" + config.path)
+
+    # Add output file
+    args.add("--export-fixes=" + outfile.path)
 
     # Add clang-tidy options
     if options:
@@ -115,7 +112,7 @@ def _run_tidy(
         input_files.extend(additional_deps.files.to_list())
     inputs = depset(
         direct = input_files,
-        transitive = [compilation_context.headers],
+        transitive = [headers],
     )
     ctx.actions.run(
         inputs = inputs,
@@ -133,7 +130,7 @@ def _run_analyzer(
         exe,
         config,
         options,
-        compilation_context,
+        headers,
         infile,
         arguments,
         label,
@@ -171,11 +168,13 @@ def _run_analyzer(
     # Add clang binary
     args.add(clang_bin)
 
-    # Add output file
-    args.add(outfile.path)
-
     # # Add config file
     # args.add(config.path)
+
+    # Mandatory Clang Analyze options
+    args.add("--analyze")
+    args.add("-Xclang")
+    args.add("-analyzer-output=plist-multi-file")
 
     # Add clang options
     if options:
@@ -187,6 +186,10 @@ def _run_analyzer(
     # Add compiler flags -I -D etc
     args.add_all(arguments)
 
+    # Add output file
+    args.add("-o")
+    args.add(outfile.path)
+
     input_files = [infile]
     if config:
         input_files.append(config)
@@ -196,7 +199,7 @@ def _run_analyzer(
         input_files.extend(additional_deps.files.to_list())
     inputs = depset(
         direct = input_files,
-        transitive = [compilation_context.headers],
+        transitive = [headers],
     )
     ctx.actions.run(
         inputs = inputs,
@@ -205,7 +208,7 @@ def _run_analyzer(
         arguments = [args],
         mnemonic = "ClangAnalyzer",
         use_default_shell_env = True,
-        progress_message = "Run clang -analyze on {}".format(infile.short_path),
+        progress_message = "Run clang --analyze on {}".format(infile.short_path),
     )
     return outfile
 
@@ -235,11 +238,12 @@ def check_valid_file_type(src):
     return False
 
 def _rule_sources(ctx):
-
     srcs = []
     if hasattr(ctx.rule.attr, "srcs"):
         for src in ctx.rule.attr.srcs:
-            srcs += [src for src in src.files.to_list() if src.is_source and check_valid_file_type(src)]
+            for file in src.files.to_list():
+                if file.is_source and check_valid_file_type(file):
+                    srcs.append(file)
     return srcs
 
 def _toolchain_flags(ctx, action_name = ACTION_NAMES.cpp_compile):
@@ -258,7 +262,11 @@ def _toolchain_flags(ctx, action_name = ACTION_NAMES.cpp_compile):
         action_name = action_name,
         variables = compile_variables,
     )
-    return flags
+    compiler = cc_common.get_tool_for_action(
+        feature_configuration = feature_configuration,
+        action_name = action_name,
+    ).split("/")[-1]
+    return flags + ["--driver-mode=" + compiler]
 
 def _compile_args(compilation_context):
     compile_args = []
@@ -283,6 +291,9 @@ def _safe_flags(flags):
     unsupported_flags = [
         "-fno-canonical-system-headers",
         "-fstack-usage",
+        "-analyze-and-compile",
+        "-O3",
+        "-O4",
     ]
 
     return [flag for flag in flags if flag not in unsupported_flags]
@@ -306,133 +317,87 @@ def _valid_for_clang_tidy(target, ctx):
             return False
     return True
 
-def _clang_tidy_aspect_impl(target, ctx):
-    if not _valid_for_clang_tidy(target, ctx):
-        return []
-
-    exe = ctx.attr._clang_tidy_executable
-    additional_deps = ctx.attr._clang_tidy_additional_deps
-    if ctx.attr._clang_tidy_config.files:
-        config = ctx.attr._clang_tidy_config.files.to_list()[0]
-        default_options = []
-    else:
-        config = None
-        default_options = ctx.attr._default_options
-    compilation_context = target[CcInfo].compilation_context
-
-    rule_flags = ctx.rule.attr.copts if hasattr(ctx.rule.attr, "copts") else []
-    c_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.c_compile) + rule_flags) + ["-xc"]
-    cxx_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.cpp_compile) + rule_flags) + ["-xc++"]
-    compile_args = _compile_args(compilation_context)
-    c_flags += compile_args
-    cxx_flags += compile_args
-
-    srcs = _rule_sources(ctx)
-
-    outputs = [
-        _run_tidy(
-            ctx,
-            exe,
-            config,
-            default_options,
-            compilation_context,
-            src,
-            c_flags if src.extension in ["c", "C"] else cxx_flags,
-            target.label.name,
-            additional_deps,
-        )
-        for src in srcs
-    ]
-    return [
-        OutputGroupInfo(report = depset(direct = outputs)),
-    ]
-
-clang_tidy_aspect = aspect(
-    implementation = _clang_tidy_aspect_impl,
-    fragments = ["cpp"],
-    attrs = {
-        "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
-        "_clang_tidy_executable": attr.label(default = Label("@codechecker_bazel//src:clang_tidy_executable")),
-        "_clang_tidy_additional_deps": attr.label(default = Label("@codechecker_bazel//src:clang_tidy_additional_deps")),
-        "_clang_tidy_config": attr.label(default = Label("@codechecker_bazel//src:clang_tidy_config")),
-        "_default_options": attr.string_list(default = ["--use-color", "--warnings-as-errors=*"]),
-    },
-    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
-)
-
 CompileInfo = provider(
     doc = "Source files and corresponding compilation arguments",
     fields = {
         "arguments": "dict: file -> list of arguments",
+        "headers": "list: header files",
     },
 )
 
-def _compile_info_sources(deps):
-    sources = []
-    if type(deps) == "list":
-        for dep in deps:
-            if CompileInfo in dep:
-                if hasattr(dep[CompileInfo], "arguments"):
-                    srcs = dep[CompileInfo].arguments.keys()
-                    sources += srcs
-    return sources
-
-def _collect_all_sources(ctx):
-    sources = _rule_sources(ctx)
-    for attr in source_attr:
+def _process_all_deps(ctx, arguments, headers):
+    for attr in ["srcs", "deps", "data", "exports"]:
         if hasattr(ctx.rule.attr, attr):
             deps = getattr(ctx.rule.attr, attr)
-            sources += _compile_info_sources(deps)
+            for dep in deps:
+                if CompileInfo in dep:
+                    if hasattr(dep[CompileInfo], "arguments"):
+                        arguments.update(dep[CompileInfo].arguments)
+                    if hasattr(dep[CompileInfo], "headers"):
+                        headers += dep[CompileInfo].headers.to_list()
 
-    # Remove duplicates
-    sources = depset(sources).to_list()
-    return sources
+    # # NOTE: Alternative implementation
+    # for attr in dir(ctx.rule.attr):
+    #     deps = getattr(ctx.rule.attr, attr)
+    #     if type(deps) == "list":
+    #         for dep in deps:
+    #             if type(dep) == "Target" and CompileInfo in dep:
+    #                 if hasattr(dep[CompileInfo], "arguments"):
+    #                     arguments.update(dep[CompileInfo].arguments)
+    #                 if hasattr(dep[CompileInfo], "headers"):
+    #                     headers += dep[CompileInfo].headers.to_list()
+
+def _get_sources(ctx):
+    sources = _rule_sources(ctx)
+    arguments = { src: [] for src in sources }
+    headers = []
+    _process_all_deps(ctx, arguments, headers)
+    return arguments.keys()
 
 def _compile_info_aspect_impl(target, ctx):
-    if not _valid_for_clang_tidy(target, ctx):
-        return []
-
-    compilation_context = target[CcInfo].compilation_context
-
-    rule_flags = ctx.rule.attr.copts if hasattr(ctx.rule.attr, "copts") else []
-    c_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.c_compile) + rule_flags)  # + ["-xc"]
-    cxx_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.cpp_compile) + rule_flags)  # + ["-xc++"]
-
-    srcs = _collect_all_sources(ctx)
-
-    compile_args = _compile_args(compilation_context)
     arguments = {}
-    for src in srcs:
-        flags = c_flags if src.extension in ["c", "C"] else cxx_flags
-        arguments[src] = compile_args + flags
+    headers = []
+    _process_all_deps(ctx, arguments, headers)
+
+    if _valid_for_clang_tidy(target, ctx):
+        compilation_context = target[CcInfo].compilation_context
+        headers += compilation_context.headers.to_list()
+        rule_flags = ctx.rule.attr.copts if hasattr(ctx.rule.attr, "copts") else []
+        c_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.c_compile) + rule_flags)  # + ["-xc"]
+        cxx_flags = _safe_flags(_toolchain_flags(ctx, ACTION_NAMES.cpp_compile) + rule_flags)  # + ["-xc++"]
+        srcs = _get_sources(ctx)
+        compile_args = _compile_args(compilation_context)
+        for src in srcs:
+            flags = c_flags if src.extension in ["c", "C"] else cxx_flags
+            arguments[src] = compile_args + flags
+
     return [
         CompileInfo(
             arguments = arguments,
+            headers = depset(headers),
         ),
     ]
 
 compile_info_aspect = aspect(
     implementation = _compile_info_aspect_impl,
     fragments = ["cpp"],
+    attr_aspects = ["srcs", "deps", "data", "exports"],
+    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
     attrs = {
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
     },
-    attr_aspects = ["srcs", "deps", "data", "exports"],
-    toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
 )
 
 def _clang_test(ctx, tool):
     all_files = []
-
-    # headers = depset()
+    all_headers = depset()
     for target in ctx.attr.targets:
-        if not CcInfo in target:
-            continue
         if CompileInfo in target:
             if hasattr(target[CompileInfo], "arguments"):
                 srcs = target[CompileInfo].arguments.keys()
+                headers = target[CompileInfo].headers
+                # print(":::", target.label, ":", len(srcs), len(headers.to_list()))
                 all_files += srcs
-                compilation_context = target[CcInfo].compilation_context
                 for src in srcs:
                     arguments = target[CompileInfo].arguments[src]
                     report = tool(
@@ -440,13 +405,13 @@ def _clang_test(ctx, tool):
                         ctx.attr.executable,
                         ctx.attr.config_file,
                         ctx.attr.default_options + ctx.attr.options,
-                        compilation_context,
+                        headers,
                         src,
                         arguments,
                         ctx.attr.name,
                     )
                     all_files.append(report)
-                    # headers = depset(transitive = [headers, compilation_context.headers])
+                    all_headers = depset(transitive = [all_headers, headers])
 
     ctx.actions.write(
         output = ctx.outputs.test_script,
@@ -455,7 +420,7 @@ def _clang_test(ctx, tool):
     )
     files = depset(
         direct = all_files,
-        # transitive = [headers],
+        transitive = [all_headers],
     )
     run_files = [ctx.outputs.test_script] + files.to_list()
     return [
@@ -466,16 +431,31 @@ def _clang_test(ctx, tool):
         ),
     ]
 
+def _extra_attributes():
+    if BAZEL_VERSION.startswith("6."):
+        return {
+            "_whitelist_function_transition": attr.label(
+                default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
+                doc = "needed for transitions",
+            ),
+        }
+    return {}
+
 def _clang_tidy_test_impl(ctx):
     return _clang_test(ctx, _run_tidy)
 
 clang_tidy_test = rule(
     implementation = _clang_tidy_test_impl,
     attrs = {
+        "platform": attr.string(
+            default = "",  #"@platforms//os:linux",
+            doc = "Platform to build for",
+        ),
         "targets": attr.label_list(
             aspects = [
                 compile_info_aspect,
             ],
+            cfg = platforms_transition,
             doc = "List of compilable targets which should be checked.",
         ),
         "options": attr.string_list(
@@ -484,6 +464,7 @@ clang_tidy_test = rule(
         ),
         "default_options": attr.string_list(
             default = [
+                "--quiet",
                 "--use-color",
                 "--warnings-as-errors=*",
                 # "--header-filter=.*",
@@ -503,7 +484,7 @@ clang_tidy_test = rule(
             cfg = "exec",
             doc = "Clang-tidy executable",
         ),
-    },
+    } | _extra_attributes(),
     outputs = {
         "test_script": "%{name}.test_script.sh",
     },
@@ -516,10 +497,15 @@ def _clang_analyze_test_impl(ctx):
 clang_analyze_test = rule(
     implementation = _clang_analyze_test_impl,
     attrs = {
+        "platform": attr.string(
+            default = "",  #"@platforms//os:linux",
+            doc = "Platform to build for",
+        ),
         "targets": attr.label_list(
             aspects = [
                 compile_info_aspect,
             ],
+            cfg = platforms_transition,
             doc = "List of compilable targets which should be checked.",
         ),
         "options": attr.string_list(
@@ -529,7 +515,15 @@ clang_analyze_test = rule(
         "default_options": attr.string_list(
             default = [
                 "-fcolor-diagnostics",
+                "-Qunused-arguments",
                 "-Xanalyzer -analyzer-werror",
+                "-Xclang -analyzer-opt-analyze-headers",
+                "-Xclang -analyzer-config -Xclang expand-macros=true",
+                "-Xclang -analyzer-config -Xclang aggressive-binary-operation-simplification=true",
+                "-Xclang -analyzer-config -Xclang crosscheck-with-z3=true",
+                # "-Xclang -analyzer-config -Xclang experimental-enable-naive-ctu-analysis=true",
+                # "-Xclang -analyzer-config -Xclang ctu-dir=.../data/ctu-dir/${platform}",
+                # "-Xclang -analyzer-config -Xclang display-ctu-progress=true",
             ],
             doc = "List of default clang options",
         ),
@@ -545,7 +539,7 @@ clang_analyze_test = rule(
             cfg = "exec",
             doc = "Clang executable",
         ),
-    },
+    } | _extra_attributes(),
     outputs = {
         "test_script": "%{name}.test_script.sh",
     },
