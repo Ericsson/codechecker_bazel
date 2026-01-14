@@ -6,7 +6,7 @@
 # export MISE_GITHUB_TOKEN="XxXx..."
 
 if ! command -v mise >/dev/null 2>&1; then
-    echo ">>> Install Mise:"
+    echo "Install Mise:"
     curl https://mise.run | sh
     eval "$(~/.local/bin/mise activate bash)"
 fi
@@ -14,8 +14,13 @@ mise trust
 mise version
 mise install
 
-echo ">>> Run Test:"
-mise run test:6
-mise run test:7
-mise run test:8
+mise run test:6-25
+mise run test:6-26
+mise run test:6-27
+mise run test:7-25
+mise run test:7-26
+mise run test:7-27
+mise run test:8-25
+mise run test:8-26
+mise run test:8-27
 mise run test:latest
