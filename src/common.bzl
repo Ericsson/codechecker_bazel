@@ -41,3 +41,12 @@ def version_specific_attributes():
             doc = "needed for transitions",
         )})
     return {}
+
+def warning(ctx, msg):
+    """
+    Prints message if the debug tag is enabled.
+
+    NOTE: "debug" in tags works only for rules, not aspects
+    """
+    if hasattr(ctx.attr, "tags") and "debug" in ctx.attr.tags:
+        print(msg)

@@ -202,11 +202,7 @@ def _compile_info_aspect_impl(target, ctx):
         elif src.extension.lower() in ["cc", "cpp", "cxx", "c++"]:
             flags = cxx_flags
         else:
-            if "debug" in ctx.attr.tags:
-                print(
-                    "Unknown file extension for {} defaulting to c++ compile flags".
-                    format(src.short_path)
-                )
+            print("Unknown file extension for", src.short_path, "defaulting to C++ compile flags")
             flags = cxx_flags
         arguments[src] = flags + compile_args + [src.path]
     return [
