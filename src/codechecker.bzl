@@ -27,21 +27,17 @@ load(
     "CODECHECKER_BIN_PATH",
 )
 load(
+    "codechecker_config.bzl",
+    "get_config_file",
+    "codechecker_config_internal",
+)
+load(
     "per_file.bzl",
     "per_file_test",
 )
 load(
-    "tools.bzl",
-    "warning"
-)
-load(
     "common.bzl",
-    "old_bazel_attributes",
-)
-load(
-    "@codechecker_bazel//src:codechecker_config.bzl",
-    "get_config_file",
-    "codechecker_config_internal",
+    "version_specific_attributes",
 )
 
 def get_platform_alias(platform):
@@ -303,7 +299,7 @@ _codechecker_test = rule(
             default = [],
             doc = "List of analyze command arguments, e.g. --ctu",
         ),
-    } | old_bazel_attributes(),
+    } | version_specific_attributes(),
     outputs = {
         "compile_commands": "%{name}/compile_commands.json",
         "codechecker_commands": "%{name}/codechecker_commands.json",

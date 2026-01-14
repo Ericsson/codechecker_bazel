@@ -40,13 +40,9 @@ load(
     "C_COMPILE_ACTION_NAME",
 )
 load(
-    "@codechecker_bazel//src:tools.bzl",
-    "source_attr"
-)
-
-load(
-    "@codechecker_bazel//src:common.bzl",
-    "old_bazel_attributes"
+    "common.bzl",
+    "SOURCE_ATTR",
+    "version_specific_attributes",
 )
 
 SourceFilesInfo = provider(
@@ -113,7 +109,7 @@ def get_compile_flags(ctx, dep):
             quote_include = "."
         options.append(QUOTE_INCLUDE + quote_include)
 
-    for attr in source_attr:
+    for attr in SOURCE_ATTR:
         if not hasattr(ctx.rule.attr, attr):
             continue
 
@@ -270,7 +266,7 @@ def collect_headers(target, ctx):
     else:
         headers = []
     headers = depset(headers)
-    for attr in source_attr:
+    for attr in SOURCE_ATTR:
         if hasattr(ctx.rule.attr, attr):
             deps = getattr(ctx.rule.attr, attr)
             headers = [headers]
@@ -308,7 +304,7 @@ def _compile_commands_aspect_impl(target, ctx):
     compilation_db = get_compilation_database(target, ctx)
     compilation_db = depset(compilation_db)
 
-    for attr in source_attr:
+    for attr in SOURCE_ATTR:
         if hasattr(ctx.rule.attr, attr):
             source_files = _accumulate_transitive_source_files(
                 source_files,
@@ -329,7 +325,7 @@ def _compile_commands_aspect_impl(target, ctx):
 
 compile_commands_aspect = aspect(
     implementation = _compile_commands_aspect_impl,
-    attr_aspects = source_attr,
+    attr_aspects = SOURCE_ATTR,
     attrs = {
         "_cc_toolchain": attr.label(
             default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
@@ -436,7 +432,7 @@ _compile_commands = rule(
             cfg = platforms_transition,
             doc = "List of compilable targets which should be checked.",
         ),
-    } | old_bazel_attributes(),
+    } | version_specific_attributes(),
     outputs = {
         "compile_commands": "%{name}/compile_commands.json",
     },

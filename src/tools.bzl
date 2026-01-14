@@ -57,14 +57,6 @@ python3_bin_path = "{}"
 python2_bin_path = "{}"
 """
 
-source_attr = [
-    "srcs",
-    "deps",
-    "data",
-    "exports",
-    "implementation_deps",
-]
-
 def _python_local_repository_impl(repository_ctx):
     repository_ctx.file(
         repository_ctx.path("BUILD"),
@@ -136,10 +128,3 @@ def register_default_codechecker(ctx = None):
 module_register_default_codechecker = module_extension(
     implementation = register_default_codechecker,
 )
-
-def warning(ctx, msg):
-    """
-    Prints message if the debug tag is enabled.
-    """
-    if "debug" in ctx.attr.tags:
-        print(msg)

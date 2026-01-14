@@ -16,22 +16,28 @@
 Provide a collection of functions used by multiple bzl files.
 """
 
-load(
-    "@default_codechecker_tools//:defs.bzl",
-    "BAZEL_VERSION"
-)
+load("@default_codechecker_tools//:defs.bzl", "BAZEL_VERSION")
 
-def old_bazel_attributes():
+SOURCE_ATTR = [
+    "srcs",
+    "deps",
+    "data",
+    "exports",
+    "implementation_deps",
+]
+
+def version_specific_attributes():
     """
-    Returns a map with necessary attributes for the used Bazel version
+    Returns a map of Bazel version specific attributes
 
+    For instance:
     In older Bazel versions (e.g. 6) rulesets using transitions
     must have the attribute _whitelist_function_transition.
     In newer versions (e.g. 7) this is an error.
     """
     if BAZEL_VERSION.split(".")[0] in "0123456":
         return ({"_whitelist_function_transition": attr.label(
-        default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
-        doc = "needed for transitions",
+            default = "@bazel_tools//tools/whitelists/function_transition_whitelist",
+            doc = "needed for transitions",
         )})
     return {}

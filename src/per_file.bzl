@@ -19,11 +19,8 @@ for each translation unit.
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
-load("@codechecker_bazel//src:tools.bzl", "warning", "source_attr")
-load(
-    "@codechecker_bazel//src:codechecker_config.bzl",
-    "get_config_file"
-)
+load("codechecker_config.bzl", "get_config_file")
+load("common.bzl", "SOURCE_ATTR")
 
 def _run_code_checker(
         ctx,
@@ -177,7 +174,7 @@ def _compile_info_sources(deps):
 
 def _collect_all_sources(ctx):
     sources = _rule_sources(ctx)
-    for attr in source_attr:
+    for attr in SOURCE_ATTR:
         if hasattr(ctx.rule.attr, attr):
             deps = getattr(ctx.rule.attr, attr)
             sources += _compile_info_sources(deps)
@@ -205,9 +202,10 @@ def _compile_info_aspect_impl(target, ctx):
         elif src.extension.lower() in ["cc", "cpp", "cxx", "c++"]:
             flags = cxx_flags
         else:
-            warning(
-                "Unknown file extension for {} defaulting to c++ compile flags".
-                format(src.short_path)
+            if "debug" in ctx.attr.tags:
+                print(
+                    "Unknown file extension for {} defaulting to c++ compile flags".
+                    format(src.short_path)
                 )
             flags = cxx_flags
         arguments[src] = flags + compile_args + [src.path]
@@ -223,7 +221,7 @@ compile_info_aspect = aspect(
     attrs = {
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
     },
-    attr_aspects = source_attr,
+    attr_aspects = SOURCE_ATTR,
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
 )
 
@@ -392,21 +390,3 @@ per_file_test = rule(
     },
     test = True,
 )
-
-# This interface is deprecated and will be removed
-def code_checker_test(
-    name,
-    targets,
-    config = None,
-    options = [],
-    tags = [],
-    **kwargs
-):
-    per_file_test(
-        name = name,
-        options = options,
-        targets = targets,
-        config = config,
-        tags = tags,
-        **kwargs
-    )

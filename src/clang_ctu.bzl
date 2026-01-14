@@ -18,10 +18,7 @@ Ruleset for running the clang static analyzer with CTU analysis.
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
-load(
-    "@codechecker_bazel//src:tools.bzl",
-    "source_attr"
-)
+load("common.bzl", "SOURCE_ATTR", "version_specific_attributes")
 
 CLANG_CTU_WRAPPER_SCRIPT = """#!/usr/bin/env bash
 #set -x
@@ -269,7 +266,7 @@ compile_info_aspect = aspect(
     attrs = {
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
     },
-    attr_aspects = source_attr,
+    attr_aspects = SOURCE_ATTR,
     toolchains = ["@bazel_tools//tools/cpp:toolchain_type"],
 )
 
