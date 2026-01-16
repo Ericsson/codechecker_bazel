@@ -46,23 +46,32 @@ def _run_code_checker(
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
     if "--ctu" in options:
-        inputs = [compile_commands_json, config_file] + sources_and_headers
+        inputs = [ctx.outputs.per_file_script,
+                  compile_commands_json, config_file] + sources_and_headers
     else:
         # NOTE: we collect only headers, so CTU may not work!
         headers = depset([src], transitive = [compilation_context.headers])
-        inputs = depset([compile_commands_json, config_file, src], transitive = [headers])
+        inputs = depset(
+            [
+                ctx.outputs.per_file_script,
+                compile_commands_json,
+                config_file,
+                src
+            ], transitive = [headers])
 
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
     analyzer_output_paths = "clangsa," + clangsa_plist.path + \
                         ";clang-tidy," + clang_tidy_plist.path
 
+    py_toolchain = ctx.toolchains["@rules_python//python:toolchain_type"].py3_runtime
     # Action to run CodeChecker for a file
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
-        executable = ctx.outputs.per_file_script,
+        executable = py_toolchain.interpreter,
         arguments = [
+            ctx.outputs.per_file_script.path,
             data_dir,
             src.path,
             codechecker_log.path,
@@ -286,7 +295,6 @@ def _create_wrapper_script(ctx, options, compile_commands_json, config_file):
         output = ctx.outputs.per_file_script,
         is_executable = True,
         substitutions = {
-            "{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
             "{compile_commands_json}": compile_commands_json.path,
             "{codechecker_args}": options_str,
             "{config_file}": config_file.path,
@@ -375,11 +383,8 @@ per_file_test = rule(
             default = ":per_file_script.py",
             allow_single_file = True,
         ),
-        "_python_runtime": attr.label(
-            default = "@default_python_tools//:py3_runtime",
-        ),
-
     },
+    toolchains = ["@rules_python//python:toolchain_type"],
     outputs = {
         "test_script": "%{name}/test_script.sh",
         "per_file_script": "%{name}/per_file_script.py",

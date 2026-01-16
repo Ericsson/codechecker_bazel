@@ -87,4 +87,4 @@ jobs:
 
       - name: Run Test On Opensource Projects
         working-directory: test
-        run: python3 -m unittest foss/test_foss.py -vvv
+        run: runuser -u test -- python3 -m unittest foss/test_foss.py -vvv

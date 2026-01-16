@@ -52,7 +52,7 @@ Prerequisites
 We need the following tools:
 
 - Git 2 or newer (we use 2.36)
-- Bazel 6 or 7, not yet bazel 8 (we recommend version 7.7.0)
+- Bazel 6, 7 or 8 (we recommend version 8.5.0)
 - Clang 16 or newer (we use 16), we use clang-tidy
 - Python 3.8 or newer (we use 3.11)
 - CodeChecker 6.26 or newer (we use 6.26.0)
@@ -100,11 +100,11 @@ pip3 install codechecker
 ```
 
 Install Bazel:
-We recommend bazel 7.7.0
+We recommend bazel 8.5.0
 ```bash
-wget https://github.com/bazelbuild/bazel/releases/download/7.7.0/bazel-7.7.0-linux-x86_64 && \
-chmod +x bazel-7.7.0-linux-x86_64 && \
-sudo mv bazel-7.7.0-linux-x86_64 /usr/local/bin/bazel
+wget https://github.com/bazelbuild/bazel/releases/download/8.5.0/bazel-8.5.0-linux-x86_64 && \
+chmod +x bazel-8.5.0-linux-x86_64 && \
+sudo mv bazel-8.5.0-linux-x86_64 /usr/local/bin/bazel
 ```
 Or choose a suitable binary for your system from this list: https://github.com/bazelbuild/bazel/releases/tag/7.7.0
 Alternatively follow the official guide at: https://bazel.build/install
@@ -127,16 +127,25 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 git_repository(
     name = "codechecker_bazel",
     remote = "https://github.com/Ericsson/codechecker_bazel.git",
-    branch = "main",
 )
 
 load(
     "@codechecker_bazel//src:tools.bzl",
     "register_default_codechecker",
-    "register_default_python_toolchain",
 )
 
-register_default_python_toolchain()
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "rules_python",
+    sha256 = "ca2671529884e3ecb5b79d6a5608c7373a82078c3553b1fa53206e6b9dddab34",
+    strip_prefix = "rules_python-0.38.0",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.38.0/rules_python-0.38.0.tar.gz",
+)
+
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
 
 register_default_codechecker()
 ```

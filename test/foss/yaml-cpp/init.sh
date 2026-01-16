@@ -49,6 +49,11 @@ codechecker_test(
 
 #-------------------------------------------------------
 EOF
-
+# Apply bazel 8 specific flag, forcing the use of WORKSPACE
+VERSION=$(< "../../templates/.bazelversion")
+MAJOR_VERSION=${VERSION%%.*}
+if [ "$MAJOR_VERSION" -eq 8 ]; then
+    echo "common --enable_workspace" >> .bazelrc
+fi
 # Add codechecker_bazel repo to WORKSPACE
 cat ../../templates/WORKSPACE.template >> WORKSPACE

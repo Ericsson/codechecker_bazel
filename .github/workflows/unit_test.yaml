@@ -108,4 +108,4 @@ jobs:
       - name: Run tests
         run: |
           cd test
-          python3 -m unittest discover unit -vvv
+          runuser -u test -- python3 -m unittest discover unit -vvv

@@ -17,10 +17,9 @@ module(
     name = "codechecker_bazel",
 )
 
-python_extension = use_extension(
-    "//src:tools.bzl", "module_register_default_python_toolchain")
+# newest version working with Bazel 6.5.0
+bazel_dep(name = "rules_python", version = "0.38.0")
+bazel_dep(name = "rules_cc", version = "0.2.16")
 codechecker_extension = use_extension(
     "//src:tools.bzl", "module_register_default_codechecker")
-use_repo(python_extension, "default_python_tools")
 use_repo(codechecker_extension, "default_codechecker_tools")
-register_toolchains("@default_python_tools//:python_toolchain")
