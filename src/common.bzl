@@ -42,6 +42,31 @@ def version_specific_attributes():
         )})
     return {}
 
+def python_toolchain_type():
+    """
+    Returns version specific Python toolchain type
+    """
+    if BAZEL_VERSION.split(".")[0] in "01234567":
+        return "@bazel_tools//tools/python:toolchain_type"
+    return "@rules_python//python:toolchain_type"
+
+def python_path(ctx):
+    """
+    Returns version specific Python path
+    """
+    py_toolchain = ctx.toolchains[python_toolchain_type()]
+    if hasattr(py_toolchain, "py3_runtime_info"):
+        py_runtime_info = py_toolchain.py3_runtime_info
+        python_path = py_runtime_info.interpreter
+    elif hasattr(py_toolchain, "py3_runtime"):
+        py_runtime = py_toolchain.py3_runtime
+        python_path = py_runtime.interpreter_path
+    else:
+        fail("The resolved Python toolchain does not provide a Python3 runtime.")
+    if not python_path:
+        fail("The resolved Python toolchain does not provide a Python3 interpreter.")
+    return python_path
+
 def warning(ctx, msg):
     """
     Prints message if the debug tag is enabled.
