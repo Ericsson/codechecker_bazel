@@ -88,7 +88,6 @@ default_python_tools = repository_rule(
 
 def register_default_python_toolchain(ctx = None):
     default_python_tools(name = "default_python_tools")
-    #native.register_toolchains("@default_python_tools//:python_toolchain")
 
 # Define the extension here
 module_register_default_python_toolchain = module_extension(
