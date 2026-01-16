@@ -74,9 +74,9 @@ class TestImplDepExternalDep(TestBase):
             pass
 
     def test_compile_commands_external_lib(self):
-        """Test: bazel build :compile_commands_isystem"""
+        """Test: bazel build :compile_commands_isystem --experimental_cc_implementation_deps"""
         ret, _, _ = self.run_command(
-            "bazel build :compile_commands_isystem")
+            "bazel build :compile_commands_isystem --experimental_cc_implementation_deps")
         self.assertEqual(ret, 0)
         comp_json_file = os.path.join(
             self.BAZEL_BIN_DIR, # pyright: ignore[reportOptionalOperand]
@@ -101,15 +101,15 @@ class TestImplDepExternalDep(TestBase):
             pattern2))
 
     def test_codechecker_external_lib(self):
-        """Test: bazel build :codechecker_external_deps"""
+        """Test: bazel build :codechecker_external_deps --experimental_cc_implementation_deps"""
         ret, _, _ = self.run_command(
-            "bazel build :codechecker_external_deps")
+            "bazel build :codechecker_external_deps --experimental_cc_implementation_deps")
         self.assertEqual(ret, 0)
 
     def test_per_file_external_lib(self):
-        """Test: bazel build :per_file_external_deps"""
+        """Test: bazel build :per_file_external_deps --experimental_cc_implementation_deps"""
         ret, _, _ = self.run_command(
-            "bazel build :per_file_external_deps")
+            "bazel build :per_file_external_deps --experimental_cc_implementation_deps")
         # TODO: set to 1, the nothing header should be found
         self.assertEqual(ret, 1)
 
