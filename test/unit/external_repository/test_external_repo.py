@@ -43,6 +43,8 @@ class TestImplDepExternalDep(TestBase):
             shutil.copy("../../../.bazelversion", ".bazelversion")
             shutil.copy(
                 "../../../.bazelversion", "third_party/my_lib/.bazelversion")
+            # Disable bazelignore, this messes with the jenkins job
+            shutil.move("../../../.bazelignore", "../../../.bazelign")
         except:
             logging.debug("No bazel version set, using system default")
 
@@ -57,6 +59,11 @@ class TestImplDepExternalDep(TestBase):
             pass
         try:
             os.remove("third_party/my_lib/.bazelversion")
+        except:
+            pass
+        try:
+            # Reenable .bazelignore
+            shutil.move("../../../.bazelign", "../../../.bazelignore")
         except:
             pass
 
