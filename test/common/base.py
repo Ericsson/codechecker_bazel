@@ -135,10 +135,14 @@ class TestBase(unittest.TestCase):
             cwd=working_dir,
         ) as process:
             stdout, stderr = process.communicate()
+            stdout = stdout.decode("utf-8")
+            stderr = stderr.decode("utf-8")
+            logging.debug("stdout: %s", stdout)
+            logging.debug("stderr: %s", stderr)
             return (
                 process.returncode,
-                f"stdout: {stdout.decode('utf-8')}",
-                f"stderr: {stderr.decode('utf-8')}",
+                f"stdout: {stdout}",
+                f"stderr: {stderr}",
             )
 
     @classmethod
