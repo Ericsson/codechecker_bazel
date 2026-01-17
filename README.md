@@ -21,8 +21,8 @@ The main Bazel rule for CodeChecker is `codechecker_test()`.
 
 ### Clang-tidy
 
-Clang-tidy is a fast static analyzer/linter for the C family of languages. This
-repository provides Bazel aspect `clang_tidy_aspect()` and rule `clang_tidy_test()`
+Clang-tidy is a fast static analyzer/linter for the C family of languages.
+This repository provides Bazel rule `clang_tidy_test()`
 to run clang-tidy natively (without CodeChecker).
 
 Find more information about LLVM clang-tidy:
@@ -313,9 +313,10 @@ codechecker_test(
 
 The following rules are _not_ using CodeChecker.
 
-### Clang-tidy: `clang_tidy_aspect()` and `clang_tidy_test()`
+### Clang-tidy: `clang_tidy_test()`
 
-The Bazel rule `clang_tidy_test()` runs clang-tidy natively without CodeChecker. To use it, add the following to your BUILD file:
+The Bazel rule `clang_tidy_test()` runs clang-tidy natively without CodeChecker.
+To use it, add the following to your BUILD file:
 
 ```python
 load(
@@ -331,15 +332,11 @@ clang_tidy_test(
 )
 ```
 
-You can also run clang-tidy via the Bazel aspect `clang_tidy_aspect()` that can be invoked from the command line by passing the following parameter to Bazel build/test: `--aspects @codechecker_bazel//src:clang.bzl%clang_tidy_aspect`:
-
-```bash
-bazel build ... --aspects @codechecker_bazel//src:clang.bzl%clang_tidy_aspect --output_groups=report
-```
-
 ### Clang Static Analyzer: `clang_analyze_test()`
 
-The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer natively without CodeChecker. To use it, add the following to your BUILD file:
+The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer
+natively without CodeChecker.
+To use it, add the following to your BUILD file:
 
 ```python
 load(
@@ -354,6 +351,9 @@ clang_analyze_test(
     ],
 )
 ```
+
+> [!Note]
+> Currently `clang_analyze_test()` rule does not support CTU (Cross Translation Unit) analysis.
 
 ### Generating a compilation database: `compile_commands()`
 
@@ -420,7 +420,3 @@ After that you can find all artifacts in `bazel-bin` directory:
     
     # compile_commands.json for compile_commands_pass
     cat bazel-bin/test/compile_commands_pass/compile_commands.json
-
-To run `clang_tidy_aspect()` on all C/C++ code:
-
-    bazel build ... --aspects @codechecker_bazel//src:clang.bzl%clang_tidy_aspect --output_groups=report
