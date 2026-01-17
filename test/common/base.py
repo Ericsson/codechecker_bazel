@@ -135,6 +135,9 @@ class TestBase(unittest.TestCase):
             cwd=working_dir,
         ) as process:
             stdout, stderr = process.communicate()
+            # if process.returncode:
+            logging.debug("stdout: %s", stdout.decode('utf-8'))
+            logging.debug("stderr: %s", stderr.decode('utf-8'))
             return (
                 process.returncode,
                 f"stdout: {stdout.decode('utf-8')}",

@@ -14,12 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -x
+
 git clone --recurse https://github.com/jbeder/yaml-cpp.git test-proj
 cd test-proj
 git checkout yaml-cpp-0.7.0
 
 # This file must be in the root of the project to be analyzed for bazelisk to work
-cp ../../templates/.bazelversion ./.bazelversion
+bazelversion="../../../../.bazelversion"
+[ -f $bazelversion ] && cp $bazelversion .
+cat .bazelversion
 
 # Add codechecker to the project
 cat <<EOF >> BUILD.bazel
@@ -52,3 +56,7 @@ EOF
 
 # Add codechecker_bazel repo to WORKSPACE
 cat ../../templates/WORKSPACE.template >> WORKSPACE
+
+# Check
+bazel version
+which bazel
