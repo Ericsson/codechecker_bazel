@@ -53,7 +53,7 @@ class TestImplDepExternalDep(TestBase):
             logging.debug("No bazel version set, using system default")
         _, stdout, _ = cls.run_command("bazel --version")
         cls.BAZEL_VERSION = stdout.split(' ')[2].strip()
-        logging.debug("Using Bazel", cls.BAZEL_VERSION)
+        logging.debug("Using Bazel %s", cls.BAZEL_VERSION)
 
     @final
     @classmethod
