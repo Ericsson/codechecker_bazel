@@ -1,0 +1,61 @@
+# Copyright 2025 Ericsson AB
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: codechecker-bazel-mise-tests
+
+# Triggers the workflow on push or pull request events.
+on: [push, pull_request]
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mise-test:
+    # We use Ubuntu as the host, then run everything inside the RHEL 9 container
+    name: "Mise tests (RHEL9)"
+    runs-on: ubuntu-24.04
+    container:
+      image: redhat/ubi9:latest
+      options: --init
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: System Information
+        run: |
+          cat /etc/redhat-release
+          uname -a
+
+      - name: Install LLVM, Clang tools, GCC
+        run: |
+          dnf update -y && \
+          dnf install -y llvm-toolset && \
+          dnf install -y clang-tools-extra && \
+          dnf install -y gcc g++
+        shell: bash
+
+      - name: Install Mise and tools
+        run: |
+          .mise/run.sh install
+
+      - name: Run Mise tests
+        run: |
+          echo "Example: unittests with bazel 7 and CodeChecker 6.25"
+          .mise/run.sh test:7-25 test/unit

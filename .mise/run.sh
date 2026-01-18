@@ -5,13 +5,18 @@
 #        See https://mise.jdx.dev/dev-tools/mise-lock.html#backend-support
 # export MISE_GITHUB_TOKEN="XxXx..."
 
-if ! command -v mise >/dev/null 2>&1; then
-    echo "Install Mise:"
+if [ ! -f ~/.local/bin/mise ]; then
+    # Install mise:
     curl https://mise.run | sh
+fi
+if ! command -v mise >/dev/null 2>&1; then
+    # Activate mise:
     eval "$(~/.local/bin/mise activate bash)"
 fi
 mise trust
 mise version
 mise install
 
-mise ${@:- test}
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    mise run ${@}
+fi
