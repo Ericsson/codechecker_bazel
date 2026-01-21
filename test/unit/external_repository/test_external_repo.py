@@ -54,6 +54,12 @@ class TestImplDepExternalDep(TestBase):
                 f"{os.path.dirname(os.path.abspath(__file__))}/../../../"
                 )
             module_file.write_text(content)
+            workspace_file = Path(os.path.join(cls.__test_path__, "WORKSPACE"))
+            content = workspace_file.read_text().replace(
+                "../../../",
+                f"{os.path.dirname(os.path.abspath(__file__))}/../../../"
+                )
+            workspace_file.write_text(content)
         except Exception as e:
             raise Exception(f"Failed to copy files to the temporary folder {e}")
         try:
