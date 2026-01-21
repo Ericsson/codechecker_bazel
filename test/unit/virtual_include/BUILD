@@ -63,6 +63,7 @@ cc_library(
     name = "virtual_implementation_deps_include",
     srcs = ["source.cc"],
     implementation_deps = ["test_inc"],
+    tags = ["manual"],
 )
 
 codechecker_test(
