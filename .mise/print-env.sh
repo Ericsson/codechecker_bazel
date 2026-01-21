@@ -35,4 +35,5 @@ if [[ -n "$VERBOSE_FLAG" ]]; then
     which clang
     which clang-tidy
     which clang-extdef-mapping
+    which diagtool
 fi

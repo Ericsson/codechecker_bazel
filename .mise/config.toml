@@ -1,3 +1,6 @@
+[settings]
+experimental = true   # NOTE: this is needed for conda backend (clang, clang-ttols)
+
 [tools]
 # Environment tools:
 "bazel" = "6"
@@ -6,10 +9,10 @@
 "pipx:codechecker" = "6.26"
 
 # Clang tools:
-# "conda:clang" = "latest"   # FIXME: tests fail with clang 21
+"conda:clang" = "latest"          # FIXME: CodeChecker thinks it is 8.0.0
+"conda:clang-tools" = "latest"    # FIXME: diagtool is not next to clang
+# "pipx:clang-tidy" = "latest"
 # "vfox:mise-plugins/vfox-clang" = "latest"
-"pipx:clang-tidy" = "latest"
-# NOTE: clang-extdef-mapping cannot be installed via mise
 
 # Dev tools:
 "pipx:pycodestyle" = "latest"
@@ -19,7 +22,7 @@
 
 
 [vars]
-run = ".mise/print-env.sh && pytest"
+run = ".mise/print-env.sh -vvv && pytest"
 
 
 [tasks."install:bazel-6"]

@@ -43,19 +43,23 @@ jobs:
           cat /etc/redhat-release
           uname -a
 
-      - name: Install LLVM, Clang tools, GCC
+      - name: Install system tools
         run: |
-          dnf update -y && \
-          dnf install -y llvm-toolset && \
-          dnf install -y clang-tools-extra && \
+          dnf update -y
           dnf install -y gcc g++
+          # Seems like we still depend on something from LLVM/Clang tools?
+          dnf install -y llvm-toolset clang-tools-extra
         shell: bash
 
-      - name: Install Mise and tools
+      - name: Install Mise
+        run: |
+          source .mise/run.sh
+
+      - name: Install Mise tools
         run: |
           .mise/run.sh install
 
       - name: Run Mise tests
         run: |
           echo "Example: unittests with bazel 7 and CodeChecker 6.25"
-          .mise/run.sh test:7-25 test/unit
+          .mise/run.sh test:7-25 test/unit -vvv
