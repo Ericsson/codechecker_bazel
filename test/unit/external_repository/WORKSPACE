@@ -1,0 +1,44 @@
+"""
+Copyright 2023 Ericsson AB
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Test project for using headers thought implementation_deps,
+from external repositories
+"""
+workspace(name = "minimal_isystem_example")
+
+# Bazel will regard this as an external dependency (despite being a *local*
+# repository). This will lead to header files from external_lib being included
+# via -isystem instead of -I (which is what we are testing here).
+local_repository(
+    name = "external_lib",
+    path = "third_party/my_lib",
+)
+
+# Since we created a WORKSPACE file, we manually include these as well. The
+# other tests don't have this because they don't have a WORKSPACE file.
+local_repository(
+    name = "bazel_codechecker",
+    path = "../../../",
+)
+
+load(
+    "@bazel_codechecker//src:tools.bzl",
+    "register_default_codechecker",
+    "register_default_python_toolchain",
+)
+
+register_default_python_toolchain()
+
+register_default_codechecker()
