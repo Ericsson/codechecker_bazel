@@ -19,7 +19,7 @@ Rulesets for running codechecker in a single Bazel job.
 load(
     "compile_commands.bzl",
     "compile_commands_aspect",
-    "compile_commands_impl",
+    "get_compile_commands_json_and_srcs",
     "platforms_transition",
 )
 load(
@@ -58,19 +58,7 @@ def _codechecker_impl(ctx):
     py_runtime_info = ctx.attr._python_runtime[PyRuntimeInfo]
     python_path = py_runtime_info.interpreter_path
 
-    # Get compile_commands.json file and source files
-    compile_commands = None
-    source_files = None
-    for output in compile_commands_impl(ctx):
-        if type(output) == "DefaultInfo":
-            compile_commands = output.files.to_list()[0]
-            source_files = output.default_runfiles.files.to_list()
-    if not compile_commands:
-        fail("Failed to generate compile_commands.json file!")
-    if not source_files:
-        fail("Failed to collect source files!")
-    if compile_commands != ctx.outputs.compile_commands:
-        fail("Seems compile_commands.json file is incorrect!")
+    compile_commands, source_files = get_compile_commands_json_and_srcs(ctx)
 
     # Convert flacc calls to clang in compile_commands.json
     # and save to codechecker_commands.json

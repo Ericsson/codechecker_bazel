@@ -418,6 +418,29 @@ def compile_commands_impl(ctx):
         ),
     ]
 
+def get_compile_commands_json_and_srcs(ctx):
+    """ Creates the compilation database for internal use.
+
+    Returns:
+      compile_commands - location of the compilation database file
+      source_files - files to analyze
+    """
+    # Get compile_commands.json file and source files
+    compile_commands = None
+    source_files = None
+    for output in compile_commands_impl(ctx):
+        if type(output) == "DefaultInfo":
+            compile_commands = output.files.to_list()[0]
+            source_files = output.default_runfiles.files.to_list()
+    if not compile_commands:
+        fail("Failed to generate compile_commands.json file!")
+    if not source_files:
+        fail("Failed to collect source files!")
+    if compile_commands != ctx.outputs.compile_commands:
+        fail("Seems compile_commands.json file is incorrect!")
+
+    return compile_commands, source_files
+
 _compile_commands = rule(
     implementation = compile_commands_impl,
     attrs = {
