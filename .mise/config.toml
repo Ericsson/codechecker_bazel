@@ -1,5 +1,6 @@
 [settings]
-experimental = true   # NOTE: this is needed for conda backend (clang, clang-ttols)
+# NOTE: experimental is needed for conda backend (clang, clang-ttols)
+experimental = true
 
 [tools]
 # Environment tools:
@@ -9,10 +10,8 @@ experimental = true   # NOTE: this is needed for conda backend (clang, clang-tto
 "pipx:codechecker" = "6.26"
 
 # Clang tools:
-"conda:clang" = "latest"          # FIXME: CodeChecker thinks it is 8.0.0
-"conda:clang-tools" = "latest"    # FIXME: diagtool is not next to clang
-# "pipx:clang-tidy" = "latest"
-# "vfox:mise-plugins/vfox-clang" = "latest"
+"conda:clang" = "latest"
+"conda:clang-tools" = "latest"
 
 # Dev tools:
 "pipx:pycodestyle" = "latest"

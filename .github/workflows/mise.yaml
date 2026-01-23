@@ -47,15 +47,15 @@ jobs:
         run: |
           dnf update -y
           dnf install -y gcc g++
-          # Seems like we still depend on something from LLVM/Clang tools?
+          # FIXME: Seems like we still depend on something from LLVM/Clang tools?
           dnf install -y llvm-toolset clang-tools-extra
         shell: bash
 
-      - name: Install Mise
+      - name: Install and init Mise
         run: |
-          source .mise/run.sh
+          source .mise/init.sh
 
-      - name: Install Mise tools
+      - name: Install all tools in Mise
         run: |
           .mise/run.sh install
 
