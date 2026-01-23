@@ -14,8 +14,15 @@
 
 name: codechecker-bazel-mise-tests
 
-# Triggers the workflow on push or pull request events.
-on: [push, pull_request]
+# Trigger the workflow manually
+on:
+  workflow_dispatch:
+    inputs:
+      arguments:
+        description: "Arguments to run mise test task"
+        default: "test:7-25 test/unit -vvv"
+        required: true
+        type: string
 
 permissions: read-all
 
@@ -51,15 +58,14 @@ jobs:
           dnf install -y llvm-toolset clang-tools-extra
         shell: bash
 
-      - name: Install and init Mise
+      - name: Install and init mise
         run: |
           source .mise/init.sh
 
-      - name: Install all tools in Mise
+      - name: Install all versions
         run: |
           .mise/run.sh install
 
       - name: Run Mise tests
         run: |
-          echo "Example: unittests with bazel 7 and CodeChecker 6.25"
-          .mise/run.sh test:7-25 test/unit -vvv
+          .mise/run.sh ${{ inputs.arguments }}
