@@ -18,7 +18,8 @@ git clone https://github.com/jbeder/yaml-cpp.git $1
 git -C $1 checkout yaml-cpp-0.7.0
 
 # This file must be in the root of the project to be analyzed for bazelisk to work
-cp ../../../.bazelversion $1/.bazelversion
+bazelversion="../../../.bazelversion"
+[ -f $bazelversion ] && cp $bazelversion $1
 
 # Add codechecker to the project
 cat <<EOF >> $1/BUILD.bazel

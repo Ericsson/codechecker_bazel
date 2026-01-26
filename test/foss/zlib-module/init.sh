@@ -18,7 +18,9 @@ git clone --recurse https://github.com/madler/zlib.git $1
 git -C $1 checkout 5a82f71ed1dfc0bec044d9702463dbdf84ea3b71
 
 # This file must be in the root of the project to be analyzed for bazelisk to work
-cp ../templates/.bazelversion $1/.bazelversion
+bazelversion="../../../.bazelversion"
+[ -f $bazelversion ] && cp $bazelversion $1
+
 # Add codechecker to the project
 cat <<EOF >> $1/BUILD.bazel
 #-------------------------------------------------------
