@@ -1,10 +1,10 @@
 [settings]
-# NOTE: experimental is needed for conda backend (clang, clang-ttols)
+# NOTE: experimental is needed for conda backend (clang, clang-tools)
 experimental = true
 
 [tools]
 # Environment tools:
-"bazel" = "6"
+"bazel" = "6.5"
 "python" = "3.11"
 "pipx" = "latest"
 "pipx:codechecker" = "6.26"
@@ -25,7 +25,7 @@ run = ".mise/print-env.sh -vvv && pytest"
 
 
 [tasks."install:bazel-6"]
-tools = { "bazel" = "6" }
+tools = { "bazel" = "6.5" }
 run = ""
 quiet = true
 
@@ -111,15 +111,15 @@ run = [
 
 [tasks."test:6-25"]
 run = "{{vars.run}}"
-tools = { "bazel" = "6", "pipx:codechecker" = "6.25" }
+tools = { "bazel" = "6.5", "pipx:codechecker" = "6.25" }
 
 [tasks."test:6-26"]
 run = "{{vars.run}}"
-tools = { "bazel" = "6", "pipx:codechecker" = "6.26" }
+tools = { "bazel" = "6.5", "pipx:codechecker" = "6.26" }
 
 [tasks."test:6-27"]
 run = "{{vars.run}}"
-tools = { "bazel" = "6", "pipx:codechecker" = "6.27" }
+tools = { "bazel" = "6.5", "pipx:codechecker" = "6.27" }
 
 [tasks."test:7-25"]
 run = "{{vars.run}}"
