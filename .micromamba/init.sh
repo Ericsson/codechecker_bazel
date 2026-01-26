@@ -71,6 +71,7 @@ fi
 
 # Create environment
 info "Creating environment [$ENV_NAME]..."
+micromamba deactivate
 micromamba create --file $THIS_DIR/$ENV_NAME.yaml --name $ENV_NAME --yes $MAMBA_VERBOSITY
 # micromamba config set env_prompt "[{name}] "
 micromamba activate $ENV_NAME
