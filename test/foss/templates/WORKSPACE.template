@@ -4,7 +4,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 local_repository(
     name = "codechecker_bazel",
-    path = "../../../../",
+    path = "{rule_path}",
 )
 
 load(
