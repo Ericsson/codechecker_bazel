@@ -42,11 +42,17 @@ CODECHECKER_SEVERITIES = "{Severities}"
 CODECHECKER_ENV = "{codechecker_env}"
 COMPILE_COMMANDS = "{compile_commands}"
 
-START_PATH = r"\/(?:(?!\.\s+)\S)+"
 BAZEL_PATHS = {
-    r"\/sandbox\/processwrapper-sandbox\/\S*\/execroot\/": "/execroot/",
-    START_PATH + r"\/worker\/build\/[0-9a-fA-F]{16}\/root\/": "",
-    START_PATH + r"\/[0-9a-fA-F]{32}\/execroot\/": "",
+    # Running with Build Barn produces path output like:
+    # /worker/build/b301eed7f2bf2fd8/root/local_path.cc
+    # By removing the part until bin we have resolved the path to a local file 
+    r"\/worker\/build\/[a-z0-9]{16}\/root\/": "",
+    # Sometimes the previous part is followed by this, before the local_path:
+    r"bazel-out\/k8-fastbuild\/bin\/": "",
+    # Virtual includes seems to be just a folder between the package and the
+    # folder containing the header files, like this:
+    # /path/to/package/_virtual_include/folder_with_headers/header.h
+    r"\/_virtual_includes\/" : "/",
 }
 
 
@@ -295,18 +301,17 @@ def resolve_symlinks():
     files_processed = 0
     for root, _, files in os.walk(analyze_outdir):
         for filename in files:
-            if re.search("clang-tidy", filename):
-                filepath = os.path.join(root, filename)
-                if os.path.splitext(filepath)[1] == ".plist":
-                    resolve_plist_symlinks(filepath)
-                elif os.path.splitext(filepath)[1] == ".yaml":
-                    resolve_yaml_symlinks(filepath)
-                files_processed += 1
+            filepath = os.path.join(root, filename)
+            if os.path.splitext(filepath)[1] == ".plist":
+                resolve_plist_symlinks(filepath)
+            elif os.path.splitext(filepath)[1] == ".yaml":
+                resolve_yaml_symlinks(filepath)
+            files_processed += 1
     logging.info("Processed file paths in %d files", files_processed)
 def update_file_paths():
-    """ Fix bazel sandbox paths and resolve symbolic links in generated files to real paths """
-    fix_bazel_paths()
+    """ Resolve symlinks from local jobs, then try fixing path from remote executors """
     resolve_symlinks()
+    fix_bazel_paths()
 
 
 def parse():

@@ -102,9 +102,7 @@ class TestVirtualInclude(TestBase):
         self.assertTrue(
             os.path.isdir(f"{self.BAZEL_BIN_DIR}/_virtual_includes")
         )
-        # FIXME: In the postprocessed plists, all _virtual_include paths
-        # should've been removed. Possible fix is in the github PR #14.
-        self.assertNotEqual(
+        self.assertEqual(
             self.contains_in_files(r"/_virtual_includes/", plist_files), []
         )
 
