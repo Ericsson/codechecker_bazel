@@ -1,16 +1,10 @@
 [MASTER]
+# To find common lib for tests
 init-hook='import sys; sys.path.append("test")'
 
 [FORMAT]
 max-line-length=80
-# ^\s*(# )?<?https?://\S+>?$ - Default pattern, ignores comments with links
-# (^f?\s*".*"\s*$) - Ignores a line only containing a string
-ignore-long-lines = '(^\s*(# )?<?https?://\S+>?$)|(^f?\s*".*"\s*$)'
 
 [MESSAGES CONTROL]
 disable=
     fixme,
-    consider-using-f-string,
-    invalid-name,
-    bare-except,
-    unspecified-encoding
