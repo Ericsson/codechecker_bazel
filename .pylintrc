@@ -1,0 +1,10 @@
+[MASTER]
+# To find common lib for tests
+init-hook='import sys; sys.path.append("test")'
+
+[FORMAT]
+max-line-length=80
+
+[MESSAGES CONTROL]
+disable=
+    fixme,
