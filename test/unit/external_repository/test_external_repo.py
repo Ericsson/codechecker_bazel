@@ -29,6 +29,8 @@ from pathlib import Path
 
 class TestImplDepExternalDep(TestBase):
     """Test external repositories with codechecker"""
+    # Set working directory
+    __test_path__ = os.path.dirname(os.path.abspath(__file__))
     BAZEL_BIN_DIR = os.path.join("bazel-bin")
     BAZEL_TESTLOGS_DIR = os.path.join("bazel-testlogs")
     BAZEL_VERSION = None
@@ -40,37 +42,9 @@ class TestImplDepExternalDep(TestBase):
         Copy bazelversion from main, otherwise bazelisk will download the latest
         bazel version.
         """
-        # Set working directory before calling base class!
-        cls.__test_path__ = tempfile.mkdtemp()
+        _ = cls.run_command("bazel clean")
         try:
-            shutil.copytree(
-                os.path.dirname(os.path.abspath(__file__)),
-                cls.__test_path__,
-                dirs_exist_ok=True
-            )
-            module_file = Path(os.path.join(cls.__test_path__, "MODULE.bazel"))
-            content = module_file.read_text().replace(
-                "../../../",
-                f"{os.path.dirname(os.path.abspath(__file__))}/../../../"
-                )
-            module_file.write_text(content)
-            workspace_file = Path(os.path.join(cls.__test_path__, "WORKSPACE"))
-            content = workspace_file.read_text().replace(
-                "../../../",
-                f"{os.path.dirname(os.path.abspath(__file__))}/../../../"
-                )
-            workspace_file.write_text(content)
-        except Exception as e:
-            raise Exception(f"Failed to copy files to the temporary folder {e}")
-        try:
-            shutil.copy(
-                os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    "../../../",
-                    ".bazelversion",
-                ),
-                os.path.join(cls.__test_path__, ".bazelversion")
-            )
+            shutil.copy("../../../", ".bazelversion")
         except:
             logging.debug("No bazel version set, using system default")
         _, version, _ = cls.run_command("bazel --version")
@@ -84,7 +58,7 @@ class TestImplDepExternalDep(TestBase):
         """Remove bazelversion from this test"""
         super().tearDownClass()
         try:
-            os.remove(cls.__test_path__)  #type: ignore
+            os.remove(".bazelversion")  #type: ignore
         except:
             pass
 
