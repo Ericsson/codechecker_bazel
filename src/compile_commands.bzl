@@ -299,6 +299,14 @@ def _accumulate_compilation_database(accumulated, deps):
     return depset(transitive = compilation_db)
 
 def _compile_commands_aspect_impl(target, ctx):
+    # from: https://github.com/thekyz/snippets/tree/master/compilation_command_aspects
+    for action in target.actions:
+        if action.mnemonic == 'CppCompile':
+            for input in action.inputs.to_list():
+                if input.extension == 'c' or input.extension == 'cpp':
+                    break
+            print(target, action.argv)
+
     source_files = get_sources(ctx)
     source_files = depset(source_files)
     compilation_db = get_compilation_database(target, ctx)
