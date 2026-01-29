@@ -29,12 +29,12 @@ local_repository(
 # Since we created a WORKSPACE file, we manually include these as well. The
 # other tests don't have this because they don't have a WORKSPACE file.
 local_repository(
-    name = "bazel_codechecker",
+    name = "codechecker_bazel",
     path = "../../../",
 )
 
 load(
-    "@bazel_codechecker//src:tools.bzl",
+    "@codechecker_bazel//src:tools.bzl",
     "register_default_codechecker",
     "register_default_python_toolchain",
 )
