@@ -1,4 +1,4 @@
-#!{PythonPath}
+#{PythonPath}
 
 # Copyright 2023 Ericsson AB
 #
