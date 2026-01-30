@@ -60,11 +60,21 @@ def _run_code_checker(
     codechecker_log = ctx.actions.declare_file(codechecker_log_file_name)
 
     if "--ctu" in options:
-        inputs = [ctx.outputs.per_file_script, compile_commands_json, config_file] + sources_and_headers
+        inputs = [
+            ctx.outputs.per_file_script,
+            compile_commands_json,
+            config_file,
+            ] + sources_and_headers
     else:
         # NOTE: we collect only headers, so CTU may not work!
         headers = depset(transitive = target[SourceFilesInfo].headers.to_list())
-        inputs = depset([ctx.outputs.per_file_script, compile_commands_json, config_file, src], transitive = [headers])
+        inputs = depset(
+            [
+                ctx.outputs.per_file_script,
+                compile_commands_json,
+                config_file,
+                src,
+                ], transitive = [headers])
 
     outputs = [clang_tidy_plist, clangsa_plist, codechecker_log]
 
@@ -131,9 +141,8 @@ def _create_wrapper_script(ctx, options, compile_commands_json, config_file):
     ctx.actions.expand_template(
         template = ctx.file._per_file_script_template,
         output = ctx.outputs.per_file_script,
-        is_executable = True,
+        is_executable = False,
         substitutions = {
-            #"{PythonPath}": ctx.attr._python_runtime[PyRuntimeInfo].interpreter_path,
             "{compile_commands_json}": compile_commands_json.path,
             "{codechecker_args}": options_str,
             "{config_file}": config_file.path,

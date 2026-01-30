@@ -101,11 +101,10 @@ def _codechecker_impl(ctx):
     ctx.actions.expand_template(
         template = ctx.file._codechecker_script_template,
         output = ctx.outputs.codechecker_script,
-        is_executable = True,
+        is_executable = False,
         substitutions = {
             "{Mode}": "Run",
             "{Verbosity}": "DEBUG",
-            #"{PythonPath}": python_path(ctx),  # "/usr/bin/env python3",
             "{codechecker_bin}": CODECHECKER_BIN_PATH,
             "{compile_commands}": ctx.outputs.codechecker_commands.path,
             "{codechecker_skipfile}": ctx.outputs.codechecker_skipfile.path,
@@ -130,8 +129,6 @@ def _codechecker_impl(ctx):
             codechecker_files,
             ctx.outputs.codechecker_log,
         ],
-        #executable = ctx.outputs.codechecker_script,
-        #arguments = [],
         executable = python_path(ctx),
         tools = python_interpreter_tool(ctx),
         arguments = [ctx.outputs.codechecker_script.path],
@@ -235,13 +232,12 @@ def _codechecker_test_impl(ctx):
         substitutions = {
             "{Mode}": "Test",
             "{Verbosity}": "INFO",
-            #"{PythonPath}": python_path(ctx),  # "/usr/bin/env python3",
             "{codechecker_bin}": CODECHECKER_BIN_PATH,
             "{codechecker_files}": codechecker_files.short_path,
             "{Severities}": " ".join(ctx.attr.severities),
         },
     )
-    # For use in script the short path must be used
+    # For use in script the short path must be used (or absolute path)
     # For use in executable the full path
     python_interpreter_path = python_path(ctx)
     if python_interpreter_tool(ctx) != []:
@@ -259,13 +255,15 @@ def _codechecker_test_impl(ctx):
     )
 
     # Return test script and all required files
-    run_files = default_runfiles + [ctx.outputs.codechecker_test_script, ctx.outputs.test_script_wrapper] + python_interpreter_tool(ctx)
+    run_files = default_runfiles + [
+        ctx.outputs.codechecker_test_script,
+        ctx.outputs.test_script_wrapper,
+        ] + python_interpreter_tool(ctx)
 
     return [
         DefaultInfo(
             files = depset(all_files),
             runfiles = ctx.runfiles(files = run_files),
-            #executable = ctx.outputs.codechecker_test_script,
             executable = ctx.outputs.test_script_wrapper,
         ),
     ]
