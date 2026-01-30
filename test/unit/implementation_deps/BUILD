@@ -43,7 +43,8 @@ compile_commands(
     name = "compile_commands_implementation_deps",
     targets = [
         ":main_lib",
-    ]
+    ],
+    tags = ["manual"]
 )
 codechecker_test(
     name = "codechecker_implementation_deps",
