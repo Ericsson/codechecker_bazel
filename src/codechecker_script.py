@@ -19,9 +19,7 @@ CodeChecker Bazel build & test wrapper script
 """
 
 from __future__ import print_function
-import getpass
 import logging
-import multiprocessing
 import os
 import plistlib
 import re
@@ -57,10 +55,10 @@ def fail(message, exit_code=1):
     print("*" * 50)
     print("codechecker script execution FAILED!")
     if log_file_name():
-        print("See: %s" % log_file_name())
+        print(f"See: {log_file_name()}")
         print("*" * 50)
         try:
-            with open(log_file_name()) as log_file:
+            with open(log_file_name(), encoding="utf-8") as log_file:
                 print(log_file.read())
         except IOError:
             print("File not accessible")
@@ -68,14 +66,14 @@ def fail(message, exit_code=1):
         print(message)
     print("*" * 50)
     print()
-    exit(exit_code)
+    sys.exit(exit_code)
 
 
 def read_file(filename):
     """ Read text file and return its contents """
     if not os.path.isfile(filename):
-        fail("File not found: %s" % filename)
-    with open(filename) as handle:
+        fail(f"File not found: {filename}")
+    with open(filename, encoding="utf-8") as handle:
         return handle.read()
 
 
@@ -95,7 +93,7 @@ def valid_parameter(parameter):
     """ Check if external parameter is defined and valid """
     if parameter is None:
         return False
-    elif parameter and parameter[0] == "{":
+    if parameter and parameter[0] == "{":
         return False
     return True
 
@@ -118,7 +116,9 @@ def setup():
     log_format = "[codechecker] %(levelname)5s: %(message)s"
 
     if log_file_name():
-        logging.basicConfig(filename=log_file_name(), level=log_level, format=log_format)
+        logging.basicConfig(
+            filename=log_file_name(), level=log_level, format=log_format
+        )
     else:
         logging.basicConfig(level=log_level, format=log_format)
 
@@ -138,24 +138,24 @@ def input_data():
     logging.debug("COMPILE_COMMANDS     : %s", str(COMPILE_COMMANDS))
     logging.debug("")
 
-
+# pylint: disable=dangerous-default-value
 def execute(cmd, env=None, codes=[0]):
     """ Execute CodeChecker commands """
-    process = subprocess.Popen(
+    with subprocess.Popen(
         cmd,
         env=env,
         shell=True,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
-    stdout, stderr = process.communicate()
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
-    if process.returncode not in codes:
-        fail("\ncommand: %s\nstdout: %s\nstderr: %s\n" % (cmd, stdout, stderr))
-    logging.debug("Executing: %s", cmd)
-    # logging.debug("Output:\n\n%s\n", stdout)
+    ) as process:
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode("utf-8")
+        stderr = stderr.decode("utf-8")
+        if process.returncode not in codes:
+            fail(f"\ncommand: {cmd}\nstdout: {stdout}\nstderr: {stderr}\n")
+        logging.debug("Executing: %s", cmd)
+        # logging.debug("Output:\n\n%s\n", stdout)
     return stdout
 
 
@@ -186,17 +186,12 @@ def analyze():
         env["PATH"] = "/bin"  # NOTE: this is workaround for CodeChecker 6.24.4
     logging.debug("env: %s", str(env))
 
-    output = execute("%s analyzers --details" % CODECHECKER_PATH, env=env)
+    output = execute(f"{CODECHECKER_PATH} analyzers --details", env=env)
     logging.debug("Analyzers:\n\n%s", output)
 
-    command = "%s analyze --skip=%s %s --output=%s/data --config %s %s" % (
-        CODECHECKER_PATH,
-        CODECHECKER_SKIPFILE,
-        COMPILE_COMMANDS,
-        CODECHECKER_FILES,
-        CODECHECKER_CONFIG,
-        CODECHECKER_ANALYZE,
-    )
+    command = f"{CODECHECKER_PATH} analyze --skip={CODECHECKER_SKIPFILE} " \
+              f"{COMPILE_COMMANDS} --output={CODECHECKER_FILES}/data " \
+              f"--config {CODECHECKER_CONFIG} {CODECHECKER_ANALYZE}"
     # FIXME: Workaround "CodeChecker simply remove compiler-rt include path".
     # This can be removed once codechecker 6.16.0 is used.
     # command += " --keep-gcc-intrin"
@@ -217,11 +212,11 @@ def fix_bazel_paths():
     for root, _, files in os.walk(folder):
         for filename in files:
             fullpath = os.path.join(root, filename)
-            with open(fullpath, "rt") as data_file:
+            with open(fullpath, "rt", encoding="utf-8") as data_file:
                 data = data_file.read()
                 for pattern, replace in BAZEL_PATHS.items():
                     data = re.sub(pattern, replace, data)
-            with open(fullpath, "w") as data_file:
+            with open(fullpath, "w", encoding="utf-8") as data_file:
                 data_file.write(data)
             counter += 1
     logging.info("Fixed Bazel paths in %d files", counter)
@@ -238,6 +233,7 @@ def realpath(filename):
 
 def resolve_plist_symlinks(filepath):
     """ Resolve the symbolic links in plist files to real file paths """
+    # pylint: disable=no-member
     logging.info("Processing plist file: %s", filepath)
     if sys.version_info >= (3, 9):
         with open(filepath, "rb") as input_file:
@@ -265,10 +261,10 @@ def resolve_yaml_symlinks(filepath):
     ]
     updated = 0
     line_to_write = []
-    with open(filepath, "r") as input_file:
+    with open(filepath, "r", encoding="utf-8") as input_file:
         for line in input_file.readlines():
             for field in fields:
-                pattern = "(%s)'(.*)'" % field
+                pattern = f"({field})'(.*)'"
                 match = re.match(pattern, line)
                 if match:
                     field = match.group(1)
@@ -276,13 +272,13 @@ def resolve_yaml_symlinks(filepath):
                     fullpath = realpath(filename)
                     if fullpath != filename:
                         updated += 1
-                        replace = field + "'" + fullpath + "'\r\n"
+                        replace = f"{field}'{fullpath}'\r\n"
                         line = replace
                     break
             line_to_write.append(line)
     if updated:
         logging.debug("     %d updated paths", updated)
-        with open(filepath, "w") as output_file:
+        with open(filepath, "w", encoding="utf-8") as output_file:
             logging.debug("     saving...")
             output_file.writelines(line_to_write)
 
@@ -291,7 +287,10 @@ def resolve_symlinks():
     """ Change ".../execroot/apps" paths to absolute paths in data/* files """
     stage("Resolve file paths in CodeChecker analyze output:")
     analyze_outdir = CODECHECKER_FILES + "/data"
-    logging.info("Resolving file paths in CodeChecker analyze output at: %s", analyze_outdir)
+    logging.info(
+        "Resolving file paths in CodeChecker analyze output at: %s",
+        analyze_outdir,
+    )
     files_processed = 0
     for root, _, files in os.walk(analyze_outdir):
         for filename in files:
@@ -303,8 +302,13 @@ def resolve_symlinks():
                     resolve_yaml_symlinks(filepath)
                 files_processed += 1
     logging.info("Processed file paths in %d files", files_processed)
+
+
 def update_file_paths():
-    """ Fix bazel sandbox paths and resolve symbolic links in generated files to real paths """
+    """
+    Fix bazel sandbox paths and resolve symbolic links
+    in generated files to real paths
+    """
     fix_bazel_paths()
     resolve_symlinks()
 
@@ -313,23 +317,31 @@ def parse():
     """ Run CodeChecker parse commands """
     stage("CodeChecker parse:")
     logging.info("CodeChecker parse -e json")
-    codechecker_parse = "{codechecker} parse --config {config} {output}".format(
-        codechecker=CODECHECKER_PATH,
-        config=CODECHECKER_CONFIG,
-        output=CODECHECKER_FILES + "/data")
+    codechecker_parse = f"{CODECHECKER_PATH} parse --config " \
+                        f"{CODECHECKER_CONFIG} {CODECHECKER_FILES}/data"
     # Save results to JSON file
-    command = codechecker_parse + " --export=json > " + CODECHECKER_FILES + "/result.json"
+    command = f"{codechecker_parse} --export=json > " \
+              f"{CODECHECKER_FILES}/result.json"
     execute(command, codes=[0, 2])
-    # logging.debug("JSON:\n\n%s\n", read_file(CODECHECKER_FILES + "/result.json"))
+    #logging.debug(
+    #    "JSON:\n\n%s\n", read_file(CODECHECKER_FILES + "/result.json")
+    #)
     # Save results as HTML report
     logging.info("CodeChecker parse -e html")
-    command = codechecker_parse + " --export=html --output=" + CODECHECKER_FILES + "/report"
+    command = (
+        codechecker_parse
+        + " --export=html --output="
+        + CODECHECKER_FILES
+        + "/report"
+    )
     execute(command, codes=[0, 2])
     # Save results to text file
     logging.info("CodeChecker parse to text result")
     command = codechecker_parse + " > " + CODECHECKER_FILES + "/result.txt"
     execute(command, codes=[0, 2])
-    logging.info("Result:\n\n%s\n", read_file(CODECHECKER_FILES + "/result.txt"))
+    logging.info(
+        "Result:\n\n%s\n", read_file(CODECHECKER_FILES + "/result.txt")
+    )
 
 
 def run():
@@ -353,7 +365,10 @@ def check_results():
     logging.info("Results: \n\n%s\n", results)
     # Collect defect severities to detect
     if not valid_parameter(CODECHECKER_SEVERITIES):
-        fail("CodeChecker defect severities are invalid: %s" % str(CODECHECKER_SEVERITIES))
+        fail(
+            "CodeChecker defect severities are invalid: "
+            f"{str(CODECHECKER_SEVERITIES)}"
+        )
     severities = shlex.split(CODECHECKER_SEVERITIES)
     # Add HIGH severity by default
     if not severities:
@@ -365,9 +380,10 @@ def check_results():
     issues = dict.fromkeys(severities, 0)
     logging.debug("Issues: %s", str(issues))
     # Grep results for defects according to severities
+    # pylint: disable=consider-using-dict-items
     for issue in issues:
-        found = re.findall(r"^%s .* (\d+)" % issue, results, re.M)
-        defects = sum([int(number) for number in found])
+        found = re.findall(rf"^{issue} .* (\d+)", results, re.M)
+        defects = sum(int(number) for number in found)
         logging.debug("   %s : %s = %d", issue, str(found), defects)
         issues[issue] = defects
     logging.info("Defects: %s", str(issues))
@@ -377,11 +393,11 @@ def check_results():
     for issue in issues:
         if issues[issue] > 0:
             passed = False
-            conclusion += "%15s : %d\n" % (issue, issues[issue])
+            conclusion += f"{issue:>15} : {issues[issue]}\n"
     if passed:
         logging.info("No defects found by CodeChecker")
     else:
-        fail("CodeChecker found defects:\n%s" % conclusion)
+        fail(f"CodeChecker found defects:\n{conclusion}")
 
 
 def test():
@@ -399,7 +415,8 @@ def main():
         elif EXECUTION_MODE == "Test":
             test()
         else:
-            fail("Wrong codechecker script mode: %s" % EXECUTION_MODE)
+            fail(f"Wrong codechecker script mode: {EXECUTION_MODE}")
+    # pylint: disable=broad-exception-caught
     except Exception as error:
         logging.exception(error)
         fail("Caught Exception. Terminated")
