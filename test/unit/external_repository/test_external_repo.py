@@ -91,15 +91,15 @@ class TestImplDepExternalDep(TestBase):
 
     def test_codechecker_external_lib(self):
         """Test: bazel build :codechecker_external_deps --experimental_cc_implementation_deps"""
-        ret, _, _ = self.run_command(
+        ret, _, stderr = self.run_command(
             "bazel build :codechecker_external_deps --experimental_cc_implementation_deps")
-        self.assertEqual(ret, 0)
+        self.assertEqual(ret, 0, stderr)
 
     def test_per_file_external_lib(self):
         """Test: bazel build :per_file_external_deps --experimental_cc_implementation_deps"""
-        ret, _, _ = self.run_command(
+        ret, _, stderr = self.run_command(
             "bazel build :per_file_external_deps --experimental_cc_implementation_deps")
-        self.assertEqual(ret, 0)
+        self.assertEqual(ret, 0, stderr)
 
 
 if __name__ == "__main__":
