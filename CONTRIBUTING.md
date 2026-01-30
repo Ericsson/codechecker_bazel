@@ -49,4 +49,4 @@ test/test.sh                   | Functional and unit test runner
 Submitting a patch and testing
 -------
 
-Before submitting any changes please make sure all tests and checks are passed, and fill out the Pull Request template. If you are a new contributor, and the template is confusing, feel free to submit the PR and we will help you iron it out! On how to run or add a new test, please see [test/README.md](test/README.md).
+Before submitting any changes please make sure all tests and checks are passed, pylint doesn't show warnings on new code, and fill out the Pull Request template. If you are a new contributor, and the template is confusing, feel free to submit the PR and we will help you iron it out! On how to run or add a new test, please see [test/README.md](test/README.md).

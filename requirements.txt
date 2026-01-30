@@ -1,0 +1,4 @@
+pytest
+pylint
+codechecker >= 6.26
+
