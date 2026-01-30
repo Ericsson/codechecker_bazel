@@ -1,6 +1,7 @@
 [MASTER]
 # To find common lib for tests
 init-hook='import sys; sys.path.append("test")'
+ignore = test_template.py
 
 [FORMAT]
 max-line-length=80
