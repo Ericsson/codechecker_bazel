@@ -3,9 +3,3 @@ local_path_override(
     path = "../../../../",
 )
 bazel_dep(name = "codechecker_bazel")
-# zlib-modules runs on bazel 6 too
-bazel_dep(name = "rules_python", version = "0.38.0")
-# rules_cc can't be added a second time to a project
-# since we specifically target c++ projects in our test suit
-# They are more than likely to have already included rules_cc as a dependency
-#bazel_dep(name = "rules_cc", version = "0.2.16")
