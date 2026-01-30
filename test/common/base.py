@@ -70,24 +70,24 @@ class TestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Load module, save environment"""
-        ErrorCollector: list[str] = []
-        if cls.__test_path__ == None:
-            ErrorCollector.append(
+        error_collector: list[str] = []
+        if cls.__test_path__ is None:
+            error_collector.append(
                 "Test path must be overwritten! Use:"
                 "\n__test_path__ = os.path.dirname(os.path.abspath(__file__))"
             )
-        if cls.BAZEL_BIN_DIR == None:
-            ErrorCollector.append(
+        if cls.BAZEL_BIN_DIR is None:
+            error_collector.append(
                 "Bazel bin directory must be overwritten! Use:"
                 "../../../bazel-bin/test/unit/my_test_folder"
             )
-        if cls.BAZEL_TESTLOGS_DIR == None:
-            ErrorCollector.append(
+        if cls.BAZEL_TESTLOGS_DIR is None:
+            error_collector.append(
                 "Bazel test logs directory must be overwritten! Use:"
                 "../../../bazel-testlogs/test/unit/my_test_folder"
             )
-        if ErrorCollector:
-            raise NotImplementedError("\n".join(ErrorCollector))
+        if error_collector:
+            raise NotImplementedError("\n".join(error_collector))
         # Enable debug logs for tests if "super verbose" flag is provided
         if "-vvv" in sys.argv:
             logging.basicConfig(
@@ -95,7 +95,7 @@ class TestBase(unittest.TestCase):
             )
         # Move to test dir
         cls.test_dir = cls.__test_path__
-        os.chdir(cls.test_dir)
+        os.chdir(cls.test_dir)  # pyright: ignore[reportArgumentType]
         # Save environment and location
         cls.save_env = os.environ
         cls.save_cwd = os.getcwd()
@@ -106,7 +106,7 @@ class TestBase(unittest.TestCase):
         os.chdir(cls.save_cwd)
         os.environ = cls.save_env
         try:
-            assert cls.server_process.poll() != None, "Server not stopped"
+            assert cls.server_process.poll() is not None, "Server not stopped"
         except AttributeError:
             pass  # if server_process is not set, everything is fine
 
@@ -116,7 +116,7 @@ class TestBase(unittest.TestCase):
 
     @classmethod
     def run_command(
-        self, cmd: str, working_dir: Optional[str] = None
+        cls, cmd: str, working_dir: Optional[str] = None
     ) -> tuple[int, str, str]:
         """
         Run shell command.
@@ -138,8 +138,8 @@ class TestBase(unittest.TestCase):
             cwd=working_dir,
         ) as process:
             stdout, stderr = process.communicate()
-            logging.debug(f"stdout:\n{stdout}")
-            logging.debug(f"stderr:\n{stderr}")
+            logging.debug("stdout:\n %s", stdout)
+            logging.debug("stderr:\n %s", stderr)
             return (
                 process.returncode,
                 f"stdout: {stdout}",
@@ -168,10 +168,14 @@ class TestBase(unittest.TestCase):
         """
         Returns a boolean, whether the specified file contains the regex or not.
         """
-        return cls.grep_file(file_path, regex) != []
+        return bool(cls.grep_file(file_path, regex))
 
     @classmethod
     def start_codechecker_server(cls):
+        """
+        Starts a CodeChecker server instance on port 8001
+        This server must be shutdown with stop_codechecker_sever
+        """
         cls.temp_workspace = tempfile.mkdtemp()
         server_command = [
             "CodeChecker",
@@ -181,7 +185,9 @@ class TestBase(unittest.TestCase):
             "--port",
             "8001",  # user running unittest must make this port free!
         ]
-        cls.devnull = open(os.devnull, "w")
+        # pylint: disable=consider-using-with
+        cls.devnull = open(os.devnull, "w", encoding='utf-8')
+        # pylint: disable=consider-using-with
         cls.server_process: subprocess.Popen = subprocess.Popen(
             server_command, stdout=cls.devnull
         )
@@ -191,17 +197,37 @@ class TestBase(unittest.TestCase):
 
     @classmethod
     def stop_codechecker_server(cls):
+        """
+        Stops the CodeChecker server started by start_codechecker_server
+        """
         os.kill(cls.server_process.pid, signal.SIGTERM)
         cls.server_process.wait()
         cls.devnull.close()
         shutil.rmtree(cls.temp_workspace)
 
-    def check_store(self, path : str, name : str):
+    def check_store(self, path: str, name: str):
+        """
+        Tries to store the results on the codechecker server,
+        asserts for successful storing.
+
+        Args:
+            path - Path of the result files
+            name - name of the project to be saved under
+        """
         ret, _, _ = self.run_command(
-            f'CodeChecker store {path} -n {name} --url=http://localhost:8001/Default'
+            f"CodeChecker store {path} -n {name}"
+            " --url=http://localhost:8001/Default"
         )
         self.assertEqual(ret, 0)
 
-    def check_parse(self, path : str, will_find_bug : bool = True):
+    def check_parse(self, path: str, will_find_bug: bool = True):
+        """
+        Checks if the parse command finishes correctly on results.
+
+        Args:
+            path - Path of the result files
+            will_find_bug - Will there be a bug in the result files,
+            changes on what we assert
+        """
         ret, _, _ = self.run_command(f"CodeChecker parse {path}")
         self.assertEqual(ret, 2 if will_find_bug else 0)
