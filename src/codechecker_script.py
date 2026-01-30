@@ -1,5 +1,3 @@
-#!{PythonPath}
-
 # Copyright 2023 Ericsson AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
