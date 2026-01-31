@@ -17,7 +17,6 @@ This file tests implementation_deps support
 """
 import os
 import unittest
-from typing import final
 from common.base import TestBase
 
 
@@ -34,52 +33,70 @@ class TestImplementationDeps(TestBase):
     )
 
     def test_codechecker_implementation_deps(self):
-        """Test: bazel test //test/unit/implementation_deps:codechecker_implementation_deps"""
+        """
+        Test: bazel test --experimental_cc_implementation_deps
+        //test/unit/implementation_deps:codechecker_implementation_deps
+        """
         ret, _, _ = self.run_command(
-            "bazel test --experimental_cc_implementation_deps //test/unit/implementation_deps:codechecker_implementation_deps"
+            "bazel test --experimental_cc_implementation_deps "
+            "//test/unit/implementation_deps:codechecker_implementation_deps"
         )
         self.assertEqual(ret, 3)
         test_log = os.path.join(
-            self.BAZEL_TESTLOGS_DIR, # type: ignore
+            self.BAZEL_TESTLOGS_DIR,  # type: ignore
             "codechecker_implementation_deps",
             "test.log",
         )
         self.assertTrue(
-            self.contains_regex_in_file(test_log, r"core\.DivideZero"))
+            self.contains_regex_in_file(test_log, r"core\.DivideZero")
+        )
         self.assertTrue(
-            self.contains_regex_in_file(test_log, r"cplusplus\.NewDeleteLeaks"))
+            self.contains_regex_in_file(test_log, r"cplusplus\.NewDeleteLeaks")
+        )
 
     def test_per_file_implementation_deps(self):
-        """Test: bazel test //test/unit/implementation_deps:pre_file_implementation_deps"""
+        """
+        Test: bazel test --experimental_cc_implementation_deps
+        //test/unit/implementation_deps:pre_file_implementation_deps
+        """
         ret, _, _ = self.run_command(
-            "bazel test --experimental_cc_implementation_deps //test/unit/implementation_deps:per_file_implementation_deps"
+            "bazel test --experimental_cc_implementation_deps "
+            "//test/unit/implementation_deps:per_file_implementation_deps"
         )
         self.assertEqual(ret, 3)
         test_log = os.path.join(
-            self.BAZEL_TESTLOGS_DIR, # type: ignore
+            self.BAZEL_TESTLOGS_DIR,  # type: ignore
             "per_file_implementation_deps",
             "test.log",
         )
         self.assertTrue(
-            self.contains_regex_in_file(test_log, r"core\.DivideZero"))
+            self.contains_regex_in_file(test_log, r"core\.DivideZero")
+        )
         self.assertTrue(
-            self.contains_regex_in_file(test_log, r"cplusplus\.NewDeleteLeaks"))
+            self.contains_regex_in_file(test_log, r"cplusplus\.NewDeleteLeaks")
+        )
 
     def test_compile_commands_implementation_deps(self):
-        """Test: bazel build //test/unit/implementation_deps:compile_commands_implementation_deps"""
+        """
+        Test: bazel build --experimental_cc_implementation_deps
+        //test/unit/implementation_deps:compile_commands_implementation_deps
+        """
         ret, _, _ = self.run_command(
-            "bazel build --experimental_cc_implementation_deps //test/unit/implementation_deps:compile_commands_implementation_deps"
+            "bazel build --experimental_cc_implementation_deps //test/unit/"
+            "implementation_deps:compile_commands_implementation_deps"
         )
         self.assertEqual(ret, 0)
         compile_commands = os.path.join(
-            self.BAZEL_BIN_DIR, # type: ignore
+            self.BAZEL_BIN_DIR,  # type: ignore
             "compile_commands_implementation_deps",
             "compile_commands.json",
         )
         self.assertTrue(
-            self.contains_regex_in_file(compile_commands, r"main.cpp"))
+            self.contains_regex_in_file(compile_commands, r"main.cpp")
+        )
         self.assertTrue(
-            self.contains_regex_in_file(compile_commands, r"dep.cpp"))
+            self.contains_regex_in_file(compile_commands, r"dep.cpp")
+        )
 
 
 if __name__ == "__main__":

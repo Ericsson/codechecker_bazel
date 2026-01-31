@@ -17,7 +17,6 @@ Tests involving config files
 """
 import os
 import unittest
-from typing import final
 from common.base import TestBase
 
 
@@ -40,9 +39,9 @@ class TestConfig(TestBase):
         )
         self.assertEqual(ret, 0)
         copied_config = os.path.join(
-            self.BAZEL_BIN_DIR, # type: ignore
+            self.BAZEL_BIN_DIR,  # type: ignore
             "codechecker_json",
-            "config.json"
+            "config.json",
         )
         self.assertTrue(os.path.exists(copied_config))
 
@@ -53,9 +52,9 @@ class TestConfig(TestBase):
         )
         self.assertEqual(ret, 0)
         copied_config = os.path.join(
-            self.BAZEL_BIN_DIR, # type: ignore
+            self.BAZEL_BIN_DIR,  # type: ignore
             "codechecker_yaml",
-            "config.yaml"
+            "config.yaml",
         )
         self.assertTrue(os.path.exists(copied_config))
 
@@ -67,9 +66,9 @@ class TestConfig(TestBase):
         # Should not find the division by zero bug
         self.assertEqual(ret, 0)
         copied_config = os.path.join(
-            self.BAZEL_BIN_DIR, # type: ignore
+            self.BAZEL_BIN_DIR,  # type: ignore
             "codechecker_test_json",
-            "config.json"
+            "config.json",
         )
         # After the fix the file name will change
         # from codechecker_config.json to config.json
@@ -83,9 +82,9 @@ class TestConfig(TestBase):
         # Should not find the division by zero bug
         self.assertEqual(ret, 0)
         copied_config = os.path.join(
-            self.BAZEL_BIN_DIR, # type: ignore
+            self.BAZEL_BIN_DIR,  # type: ignore
             "codechecker_test_yaml",
-            "config.yaml"
+            "config.yaml",
         )
         self.assertTrue(os.path.exists(copied_config))
 
@@ -97,9 +96,9 @@ class TestConfig(TestBase):
         # Should not find the division by zero bug
         self.assertEqual(ret, 0)
         copied_config = os.path.join(
-            self.BAZEL_BIN_DIR, # type: ignore
+            self.BAZEL_BIN_DIR,  # type: ignore
             "per_file_test_json",
-            "config.json"
+            "config.json",
         )
         self.assertTrue(os.path.exists(copied_config))
 
@@ -111,9 +110,9 @@ class TestConfig(TestBase):
         # Should not find the division by zero bug
         self.assertEqual(ret, 0)
         copied_config = os.path.join(
-            self.BAZEL_BIN_DIR, # type: ignore
+            self.BAZEL_BIN_DIR,  # type: ignore
             "per_file_test_yaml",
-            "config.yaml"
+            "config.yaml",
         )
         self.assertTrue(os.path.exists(copied_config))
 

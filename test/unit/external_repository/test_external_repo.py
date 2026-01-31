@@ -15,7 +15,6 @@
 """
 Test external repositories with codechecker
 """
-from logging import debug
 import logging
 import os
 import shutil
@@ -26,6 +25,7 @@ from common.base import TestBase
 
 class TestImplDepExternalDep(TestBase):
     """Test external repositories with codechecker"""
+
     # Set working directory
     __test_path__ = os.path.dirname(os.path.abspath(__file__))
     BAZEL_BIN_DIR = os.path.join("bazel-bin")
@@ -47,13 +47,14 @@ class TestImplDepExternalDep(TestBase):
         try:
             shutil.copy("../../../.bazelversion", ".bazelversion")
             shutil.copy(
-                "../../../.bazelversion", "third_party/my_lib/.bazelversion")
-
-        except:
+                "../../../.bazelversion", "third_party/my_lib/.bazelversion"
+            )
+        # pylint: disable=broad-exception-caught
+        except Exception:
             logging.debug("No bazel version set, using system default")
         _, stdout, _ = cls.run_command("bazel --version")
-        cls.BAZEL_VERSION = stdout.split(' ')[2].strip()
-        logging.debug("Using Bazel", cls.BAZEL_VERSION)
+        cls.BAZEL_VERSION = stdout.split(" ")[2].strip()
+        logging.debug("Using Bazel %s", cls.BAZEL_VERSION)
 
     @final
     @classmethod
@@ -66,50 +67,50 @@ class TestImplDepExternalDep(TestBase):
         cls.run_command("bazel clean")
         try:
             os.remove(".bazelversion")
-        except:
+        # pylint: disable=broad-exception-caught
+        except Exception:
             pass
         try:
             os.remove("third_party/my_lib/.bazelversion")
-        except:
+        # pylint: disable=broad-exception-caught
+        except Exception:
             pass
 
     def test_compile_commands_external_lib(self):
         """Test: bazel build :compile_commands_isystem"""
-        ret, _, _ = self.run_command(
-            "bazel build :compile_commands_isystem")
+        ret, _, _ = self.run_command("bazel build :compile_commands_isystem")
         self.assertEqual(ret, 0)
         comp_json_file = os.path.join(
-            self.BAZEL_BIN_DIR, # pyright: ignore[reportOptionalOperand]
+            self.BAZEL_BIN_DIR,  # pyright: ignore
             "compile_commands_isystem",
-            "compile_commands.json")
+            "compile_commands.json",
+        )
 
         # The ~override part is a consquence of using Bzlmod.
-        if self.BAZEL_VERSION.startswith("6"): # type: ignore
+        if self.BAZEL_VERSION.startswith("6"):  # type: ignore
             pattern1 = "-isystem external/external_lib~override/include"
-            pattern2 = "-isystem " + \
-            "bazel-out/k8-fastbuild/bin/external/external_lib~override/include"
+            pattern2 = (
+                "-isystem bazel-out/k8-fastbuild/bin/external/"
+                "external_lib~override/include"
+            )
         else:
             pattern1 = "-isystem external/external_lib~/include"
-            pattern2 = "-isystem " + \
-            "bazel-out/k8-fastbuild/bin/external/external_lib~/include"
+            pattern2 = (
+                "-isystem bazel-out/k8-fastbuild/bin/external/"
+                "external_lib~/include"
+            )
 
-        self.assertTrue(self.contains_regex_in_file(
-            comp_json_file,
-            pattern1))
-        self.assertTrue(self.contains_regex_in_file(
-            comp_json_file,
-            pattern2))
+        self.assertTrue(self.contains_regex_in_file(comp_json_file, pattern1))
+        self.assertTrue(self.contains_regex_in_file(comp_json_file, pattern2))
 
     def test_codechecker_external_lib(self):
         """Test: bazel build :codechecker_external_deps"""
-        ret, _, _ = self.run_command(
-            "bazel build :codechecker_external_deps")
+        ret, _, _ = self.run_command("bazel build :codechecker_external_deps")
         self.assertEqual(ret, 0)
 
     def test_per_file_external_lib(self):
         """Test: bazel build :per_file_external_deps"""
-        ret, _, _ = self.run_command(
-            "bazel build :per_file_external_deps")
+        ret, _, _ = self.run_command("bazel build :per_file_external_deps")
         self.assertEqual(ret, 0)
 
 

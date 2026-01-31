@@ -24,7 +24,6 @@ resolved
 """
 import logging
 import os
-import re
 import unittest
 import glob
 from typing import final
@@ -51,9 +50,19 @@ class TestVirtualInclude(TestBase):
         cls.run_command("bazel clean")
 
     def contains_in_files(self, regex, file_list):
+        """
+        Select files containing a regex from a list of files.
+
+        Args:
+            regex - Pattern to be searched.
+            file_list - List of files to be checked.
+
+        Returns:
+            List of files containing the regex pattern
+        """
         result = []
         for file in file_list:
-            logging.debug(f"Checking file: {file}")
+            logging.debug("Checking file: %s", file)
             if self.contains_regex_in_file(file, regex):
                 result.append(file)
         return result
@@ -66,7 +75,7 @@ class TestVirtualInclude(TestBase):
         self.assertEqual(ret, 0)
         plist_files = glob.glob(
             os.path.join(
-                self.BAZEL_BIN_DIR,
+                self.BAZEL_BIN_DIR,  # pyright: ignore
                 "per_file_virtual_include",
                 "**",
                 "*.plist",
@@ -77,7 +86,7 @@ class TestVirtualInclude(TestBase):
         self.assertTrue(
             os.path.isdir(f"{self.BAZEL_BIN_DIR}/_virtual_includes")
         )
-        # FIXME: In the postprocessed plists, all _virtual_include paths 
+        # FIXME: In the postprocessed plists, all _virtual_include paths
         # should've been removed. Possible fix is in the github PR #14.
         self.assertNotEqual(
             self.contains_in_files(r"/_virtual_includes/", plist_files), []
@@ -86,12 +95,13 @@ class TestVirtualInclude(TestBase):
     def test_bazel_codechecker_plist_path_resolved(self):
         """Test: bazel build :codechecker_virtual_include"""
         ret, _, _ = self.run_command(
-            "bazel build //test/unit/virtual_include:codechecker_virtual_include"
+            "bazel build "
+            "//test/unit/virtual_include:codechecker_virtual_include"
         )
         self.assertEqual(ret, 0)
         plist_files = glob.glob(
             os.path.join(
-                self.BAZEL_BIN_DIR,
+                self.BAZEL_BIN_DIR, # pyright: ignore
                 "codechecker_virtual_include",
                 "**",
                 "*.plist",
@@ -111,14 +121,16 @@ class TestVirtualInclude(TestBase):
     def test_bazel_codechecker_implementation_deps_virtual_include(self):
         """Test: bazel build :codechecker_impl_deps_include"""
         ret, _, _ = self.run_command(
-            "bazel build --experimental_cc_implementation_deps //test/unit/virtual_include:codechecker_impl_deps_include"
+            "bazel build --experimental_cc_implementation_deps "
+            "//test/unit/virtual_include:codechecker_impl_deps_include"
         )
         self.assertEqual(ret, 0)
 
     def test_bazel_per_file_implementation_deps_virtual_include(self):
         """Test: bazel build :per_file_impl_deps_include"""
         ret, _, _ = self.run_command(
-            "bazel build --experimental_cc_implementation_deps //test/unit/virtual_include:per_file_impl_deps_include"
+            "bazel build --experimental_cc_implementation_deps "
+            "//test/unit/virtual_include:per_file_impl_deps_include"
         )
         self.assertEqual(ret, 0)
 

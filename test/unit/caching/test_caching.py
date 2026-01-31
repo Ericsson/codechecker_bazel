@@ -49,6 +49,7 @@ class TestCaching(TestBase):
         if os.path.exists("tmp"):
             try:
                 shutil.rmtree("tmp")
+            # pylint: disable=broad-exception-caught
             except Exception as e:
                 self.fail(f"Failed to clean up the existing tmp directory {e}")
         os.mkdir("tmp")
@@ -77,7 +78,7 @@ class TestCaching(TestBase):
             with open("tmp/secondary.cc", "a", encoding="utf-8") as f:
                 f.write("//test")
         except FileNotFoundError:
-            self.fail(f"File not found!")
+            self.fail("File not found!")
         ret, _, stderr = self.run_command(f"bazel build {target} --subcommands")
         self.assertEqual(ret, 0)
         # Since everything in the monolithic rule is a single action,
@@ -98,7 +99,7 @@ class TestCaching(TestBase):
             with open("tmp/secondary.cc", "a", encoding="utf-8") as f:
                 f.write("//test")
         except FileNotFoundError:
-            self.fail(f"File not found!")
+            self.fail("File not found!")
         ret, _, stderr = self.run_command(f"bazel build {target} --subcommands")
         self.assertEqual(ret, 0)
         self.assertEqual(
@@ -117,7 +118,7 @@ class TestCaching(TestBase):
             with open("tmp/secondary.cc", "a", encoding="utf-8") as f:
                 f.write("//test")
         except FileNotFoundError:
-            self.fail(f"File not found!")
+            self.fail("File not found!")
         ret, _, stderr = self.run_command(f"bazel build {target} --subcommands")
         self.assertEqual(ret, 0)
         # We expect both files to be reanalyzed, since there is no caching
