@@ -46,12 +46,12 @@ class TestBasic(TestBase):
         exit_code, _, _ = self.run_command(build_cmd)
         self.assertEqual(0, exit_code)
         compile_commands = os.path.join(
-            self.BAZEL_BIN_DIR,
+            self.BAZEL_BIN_DIR,  # pyright: ignore
             "compile_commands_filter",
             "compile_commands.json",
         )
 
-        with open(compile_commands) as f:
+        with open(compile_commands, "r", encoding="utf-8") as f:
             json_content = json.load(f)
             for source in json_content:
                 if source["file"].endswith(".c"):
@@ -83,12 +83,12 @@ class TestBasic(TestBase):
         exit_code, _, _ = self.run_command(build_cmd)
         self.assertEqual(0, exit_code)
         compile_commands = os.path.join(
-            self.BAZEL_BIN_DIR,
+            self.BAZEL_BIN_DIR,  # pyright: ignore
             "per_file_filter",
             "compile_commands.json",
         )
         self.assertTrue(os.path.exists(compile_commands))
-        with open(compile_commands) as f:
+        with open(compile_commands, "r", encoding="utf-8") as f:
             json_content = json.load(f)
             for source in json_content:
                 if source["file"].endswith(".c"):
