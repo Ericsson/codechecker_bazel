@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import sys
+"""
+Test the rule integrated into open source projects
+"""
+
 import unittest
 import os
 from types import FunctionType
@@ -24,6 +26,9 @@ NOT_PROJECT_FOLDERS = ["templates", "__pycache__", ".pytest_cache"]
 
 
 def get_test_dirs() -> list[str]:
+    """
+    Collect directories containing a test project
+    """
     dirs = []
     for entry in os.listdir(ROOT_DIR):
         full_path = os.path.join(ROOT_DIR, entry)
@@ -37,6 +42,9 @@ PROJECT_DIRS = get_test_dirs()
 
 # This will contain the generated tests.
 class FOSSTestCollector(TestBase):
+    """
+    Test class for FOSS tests
+    """
     # Set working directory
     __test_path__ = os.path.dirname(os.path.abspath(__file__))
     # These are irrelevant for these kind of tests
@@ -50,13 +58,14 @@ def create_test_method(directory_name: str) -> FunctionType:
     """
     Returns a function pointer that points to a function for the given directory
     """
+
     def test_runner(self) -> None:
         project_root = os.path.join(ROOT_DIR, directory_name)
 
         self.assertTrue(
             os.path.exists(os.path.join(project_root, "init.sh")),
-            f"Missing 'init.sh' in {directory_name}\n" + \
-            "Please consult with the README on how to add a new FOSS project",
+            f"Missing 'init.sh' in {directory_name}\n"
+            + "Please consult with the README on how to add a new FOSS project",
         )
         project_working_dir = os.path.join(project_root, "test-proj")
         if not os.path.exists(project_working_dir):
@@ -72,6 +81,7 @@ def create_test_method(directory_name: str) -> FunctionType:
         self.assertEqual(ret, 0)
 
     return test_runner
+
 
 # Dynamically add a test method for each project
 # For each project directory it adds a new test function to the class
