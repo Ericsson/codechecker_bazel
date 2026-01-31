@@ -65,7 +65,8 @@ class TestTemplate(TestBase):
         # Adding the flag: "--experimental_writable_outputs"
         # makes the directory writeable
         ret, _, _ = self.run_command(
-            "bazel build //test/unit/parse:codechecker --experimental_writable_outputs"
+            "bazel build //test/unit/parse:codechecker "
+            "--experimental_writable_outputs"
         )
         self.assertEqual(ret, 0)
         self.check_store(
