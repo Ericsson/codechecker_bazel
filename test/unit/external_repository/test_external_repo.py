@@ -79,7 +79,7 @@ class TestImplDepExternalDep(TestBase):
             "bazel build :compile_commands_isystem --experimental_cc_implementation_deps --enable_bzlmod")
         self.assertEqual(ret, 0)
         comp_json_file = os.path.join(
-            self.BAZEL_BIN_DIR, # pyright: ignore[reportOptionalOperand]
+            self.BAZEL_BIN_DIR, # pyright: ignore
             "compile_commands_isystem",
             "compile_commands.json")
 
@@ -88,10 +88,14 @@ class TestImplDepExternalDep(TestBase):
             pattern1 = "-isystem external/external_lib~override/include"
             pattern2 = "-isystem " + \
             "bazel-out/k8-fastbuild/bin/external/external_lib~override/include"
-        else:
+        elif self.BAZEL_VERSION.startswith("7"): # type:ignore
             pattern1 = "-isystem external/external_lib~/include"
             pattern2 = "-isystem " + \
             "bazel-out/k8-fastbuild/bin/external/external_lib~/include"
+        else:
+            pattern1 = r"-isystem external/external_lib\+/include"
+            pattern2 = r"-isystem " + \
+            r"bazel-out/k8-fastbuild/bin/external/external_lib\+/include"
 
         self.assertTrue(self.contains_regex_in_file(
             comp_json_file,
