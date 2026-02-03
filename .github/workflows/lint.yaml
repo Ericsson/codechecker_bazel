@@ -24,6 +24,13 @@ jobs:
 
     - name: Analyzing the code with Buildifier
       run: |
-        buildifier -diff_command=diff -d -r .
+        echo "### Buildifier Format Issues" >> $GITHUB_STEP_SUMMARY
+        echo '```diff' >> $GITHUB_STEP_SUMMARY
+        buildifier -diff_command="diff -u" -d -r . 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "### Buildifier Linter Issues" >> $GITHUB_STEP_SUMMARY
+        echo '```diff' >> $GITHUB_STEP_SUMMARY
+        buildifier --lint=warn -r . 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
     # TODO: Add more linters here
