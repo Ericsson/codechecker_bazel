@@ -32,5 +32,7 @@ jobs:
         echo '```diff' >> $GITHUB_STEP_SUMMARY
         buildifier --lint=warn -r . 2>&1 | tee -a $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
+        # To fail job if either format or lint errors were found
+        buildifier --mode=diff --lint=warn -r .
 
     # TODO: Add more linters here
