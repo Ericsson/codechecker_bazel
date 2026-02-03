@@ -77,9 +77,9 @@ python3 -m unittest discover unit/my_test_dir -vvv
     - init.sh
 
 3. The init.sh script should:
-  - Clone the test project into a folder named `test-proj`.
+  - Clone the test project into a folder, its path will be the first command line argument.
   - To ensure the project doesn't change over time, check out a specific tag or commit instead of a branch!
-  - Copy the .bazelversion file from the templates directory into the test-proj directory.
+  - Copy the .bazelversion file, if it exists, from the root of codechecker_bazel into the projects directory.
   - Append the WORKSPACE.template file to the WORKSPACE file of the project.
   - Append the codechecker rules to the BUILD file of the project.
     - There can be only two targets, codechecker_test and per_file_test

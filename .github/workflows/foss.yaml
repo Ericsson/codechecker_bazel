@@ -57,7 +57,7 @@ jobs:
         uses: ./.github/platform_environment_setup/ubuntu
 
       - name: Set Bazel version
-        run: echo ${{ matrix.bazel_version }} >> test/foss/templates/.bazelversion
+        run: echo ${{ matrix.bazel_version }} >> .bazelversion
 
       - name: Run Test On Opensource Projects
         working-directory: test
@@ -83,7 +83,7 @@ jobs:
         uses: ./.github/platform_environment_setup/rhel9
 
       - name: Set Bazel version
-        run: echo ${{ matrix.bazel_version }} >> test/foss/templates/.bazelversion
+        run: echo ${{ matrix.bazel_version }} >> .bazelversion
 
       - name: Run Test On Opensource Projects
         working-directory: test
