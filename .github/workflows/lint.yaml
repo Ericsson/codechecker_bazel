@@ -24,15 +24,26 @@ jobs:
 
     - name: Analyzing the code with Buildifier
       run: |
+        set +e
+        BUILDIFIER_FORMAT=$(buildifier -diff_command="diff -u" -d -r . 2>&1)
+        FORMAT_EXIT_CODE=$?
+        BUILDIFIER_LINT=$(buildifier --lint=warn -r . 2>&1)
+        LINT_EXIT_CODE=$?
+        set -e
+        echo "$BUILDIFIER_FORMAT"
+        echo "$BUILDIFIER_LINT"
         echo "### Buildifier Format Issues" >> $GITHUB_STEP_SUMMARY
-        echo '```diff' >> $GITHUB_STEP_SUMMARY
-        buildifier -diff_command="diff -u" -d -r . 2>&1 | tee -a $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "```diff" >> $GITHUB_STEP_SUMMARY
+        echo "$BUILDIFIER_FORMAT" >> $GITHUB_STEP_SUMMARY
+        echo "```" >> $GITHUB_STEP_SUMMARY
         echo "### Buildifier Linter Issues" >> $GITHUB_STEP_SUMMARY
         echo '```diff' >> $GITHUB_STEP_SUMMARY
-        buildifier --lint=warn -r . 2>&1 | tee -a $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
-        # To fail job if either format or lint errors were found
-        buildifier --mode=diff --lint=warn -r .
+        echo "$BUILDIFIER_LINT" >> $GITHUB_STEP_SUMMARY
+        eho '```' >> $GITHUB_STEP_SUMMARY
+        if [ $FORMAT_EXIT_CODE -ne 0 ]; then
+          exit $FORMAT_EXIT_CODE
+        else
+          exit $LINT_EXIT_CODE
+        fi
 
     # TODO: Add more linters here
