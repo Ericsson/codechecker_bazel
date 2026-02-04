@@ -15,6 +15,7 @@
 """
 Functional test, to check if caching is working correctly
 """
+import tempfile
 import unittest
 import os
 import shutil
@@ -44,38 +45,36 @@ class TestCaching(TestBase):
     def setUp(self):
         """Before every test: clean Bazel cache"""
         super().setUp()
-        # If the test was unexpectedly stopped, we need to
-        # cleanup from the previous run.
-        if os.path.exists("tmp"):
-            try:
-                shutil.rmtree("tmp")
-            # pylint: disable=broad-exception-caught
-            except Exception as e:
-                self.fail(f"Failed to clean up the existing tmp directory {e}")
-        os.mkdir("tmp")
-        shutil.copy("primary.cc", "tmp")
-        shutil.copy("secondary.cc", "tmp")
-        shutil.copy("linking.h", "tmp")
-        shutil.copy("BUILD", "tmp")
+        # This directory is used during the test and cleared up in tearDown
+        # pylint: disable=consider-using-with
+        self.tmp_dir = tempfile.TemporaryDirectory(dir=".")
+        self.tmp_dir_rel_path = os.path.relpath(self.tmp_dir.name)
+        shutil.copy("primary.cc", self.tmp_dir.name)
+        shutil.copy("secondary.cc", self.tmp_dir.name)
+        shutil.copy("linking.h", self.tmp_dir.name)
+        shutil.copy("BUILD", self.tmp_dir.name)
 
     def tearDown(self):
         """Clean up working directory after every test"""
         super().tearDown()
-        try:
-            shutil.rmtree("tmp")
-        except FileNotFoundError:
-            self.fail("Temporary working directory does not exists!")
+        self.tmp_dir.cleanup()
 
     def test_bazel_test_codechecker_caching(self):
         """
         Verify that Bazel performs a full project re-analysis when using
         the monolithic rule, as expected from architectural constrains.
         """
-        target = "//test/unit/caching/tmp:codechecker_caching"
+        target = (
+            "//test/unit/caching/"
+            + self.tmp_dir_rel_path
+            + ":codechecker_caching"
+        )
         ret, _, _ = self.run_command(f"bazel build {target}")
         self.assertEqual(ret, 0)
         try:
-            with open("tmp/secondary.cc", "a", encoding="utf-8") as f:
+            with open(
+                f"{self.tmp_dir.name}/secondary.cc", "a", encoding="utf-8"
+            ) as f:
                 f.write("//test")
         except FileNotFoundError:
             self.fail("File not found!")
@@ -92,11 +91,15 @@ class TestCaching(TestBase):
         Test whether bazel correctly uses cached analysis
         results for unchanged input files.
         """
-        target = "//test/unit/caching/tmp:per_file_caching"
+        target = (
+            "//test/unit/caching/" + self.tmp_dir_rel_path + ":per_file_caching"
+        )
         ret, _, _ = self.run_command(f"bazel build {target}")
         self.assertEqual(ret, 0)
         try:
-            with open("tmp/secondary.cc", "a", encoding="utf-8") as f:
+            with open(
+                f"{self.tmp_dir_rel_path}/secondary.cc", "a", encoding="utf-8"
+            ) as f:
                 f.write("//test")
         except FileNotFoundError:
             self.fail("File not found!")
@@ -111,11 +114,17 @@ class TestCaching(TestBase):
         Test whether bazel correctly reanalyses
         the whole project when CTU is enabled
         """
-        target = "//test/unit/caching/tmp:per_file_caching_ctu"
+        target = (
+            "//test/unit/caching/"
+            + self.tmp_dir_rel_path
+            + ":per_file_caching_ctu"
+        )
         ret, _, _ = self.run_command(f"bazel build {target}")
         self.assertEqual(ret, 0)
         try:
-            with open("tmp/secondary.cc", "a", encoding="utf-8") as f:
+            with open(
+                f"{self.tmp_dir.name}/secondary.cc", "a", encoding="utf-8"
+            ) as f:
                 f.write("//test")
         except FileNotFoundError:
             self.fail("File not found!")
