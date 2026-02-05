@@ -1,0 +1,49 @@
+name: Linters
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint
+        source dependency/buildifier.sh
+        echo "$(dirname $BUILDIFIER_EXE)" >> $GITHUB_PATH
+
+    - name: Analyzing the code with Buildifier
+      run: |
+        set +e
+        BUILDIFIER_FORMAT=$(buildifier -diff_command="diff -u" -d -r . 2>&1)
+        FORMAT_EXIT_CODE=$?
+        BUILDIFIER_LINT=$(buildifier --lint=warn -r . 2>&1)
+        LINT_EXIT_CODE=$?
+        set -e
+        echo "$BUILDIFIER_FORMAT"
+        echo "$BUILDIFIER_LINT"
+        echo "### Buildifier Format Issues" >> $GITHUB_STEP_SUMMARY
+        echo '```diff' >> $GITHUB_STEP_SUMMARY
+        echo "$BUILDIFIER_FORMAT" >> $GITHUB_STEP_SUMMARY
+        ech '```' >> $GITHUB_STEP_SUMMARY
+        echo "### Buildifier Linter Issues" >> $GITHUB_STEP_SUMMARY
+        echo '```diff' >> $GITHUB_STEP_SUMMARY
+        echo "$BUILDIFIER_LINT" >> $GITHUB_STEP_SUMMARY
+        eho '```' >> $GITHUB_STEP_SUMMARY
+        if [ $FORMAT_EXIT_CODE -ne 0 ]; then
+          exit $FORMAT_EXIT_CODE
+        else
+          exit $LINT_EXIT_CODE
+        fi
+
+    # TODO: Add more linters here
