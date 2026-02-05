@@ -61,11 +61,30 @@ def python_path(ctx):
     elif hasattr(py_toolchain, "py3_runtime"):
         py_runtime = py_toolchain.py3_runtime
         python_path = py_runtime.interpreter_path
+
+        # @rules_python does not provide interpreter_path, but interpreter.path
+        if python_path == None:
+            python_path = py_runtime.interpreter.path
     else:
         fail("The resolved Python toolchain does not provide a Python3 runtime.")
     if not python_path:
         fail("The resolved Python toolchain does not provide a Python3 interpreter.")
     return python_path
+
+def python_interpreter_tool(ctx):
+    """
+    Returns version specific Python interpreter object as only element in a list
+    that is appropriate for the Bazel version that is running
+    This list should be added to tools in ctx.action.run using it
+    """
+    py_toolchain = ctx.toolchains[python_toolchain_type()]
+    python_interpreter = None
+    if hasattr(py_toolchain, "py3_runtime"):
+        py_runtime = py_toolchain.py3_runtime
+        python_interpreter = py_runtime.interpreter
+    if python_interpreter == None:
+        return []
+    return [python_interpreter]
 
 def warning(ctx, msg):
     """
