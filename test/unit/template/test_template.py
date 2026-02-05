@@ -23,20 +23,22 @@ from common.base import TestBase
 
 class TestTemplate(TestBase):
     """TODO: Add a description"""
+
     # Set working directory
     __test_path__ = os.path.dirname(os.path.abspath(__file__))
     # TODO: fix folder name
-    BAZEL_BIN_DIR = os.path.join("../../..", "bazel-bin", "test", 
-                                        "unit", "my_test_folder")
-    BAZEL_TESTLOGS_DIR = os.path.join("../../..", "bazel-testlogs", "test", 
-                                        "unit", "my_test_folder")
+    BAZEL_BIN_DIR = os.path.join(
+        "../../..", "bazel-bin", "test", "unit", "my_test_folder"
+    )
+    BAZEL_TESTLOGS_DIR = os.path.join(
+        "../../..", "bazel-testlogs", "test", "unit", "my_test_folder"
+    )
 
     @final
     @classmethod
     def setUpClass(cls):
         """TODO: Define set up before the test suite"""
         super().setUpClass()
-        cls.run_command("bazel clean")
 
     @final
     @classmethod
@@ -54,7 +56,8 @@ class TestTemplate(TestBase):
 
     def test_template(self):
         """Test: TODO: describe your test"""
-        self.assertTrue(True)
+        return_code, stdout, stderr = self.run_command("bazel build //src:*")
+        self.assertEqual(0, return_code, stderr)
 
 
 if __name__ == "__main__":
