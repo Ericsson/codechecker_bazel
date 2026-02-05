@@ -116,7 +116,7 @@ Alternatively follow the official guide at: https://bazel.build/install
 How to use
 ----------
 
-To use these rules you should first add `codechecker_bazel` as an
+To use these rules you should first add `rules_codechecker` as an
 [external dependency](https://bazel.build/versions/6.5.0/external/overview#workspace-system)
 
 Using the legacy `WORKSPACE` system:
@@ -125,13 +125,13 @@ Using the legacy `WORKSPACE` system:
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
-    name = "codechecker_bazel",
-    remote = "https://github.com/Ericsson/codechecker_bazel.git",
+    name = "rules_codechecker",
+    remote = "https://github.com/Ericsson/rules_codechecker.git",
     branch = "main",
 )
 
 load(
-    "@codechecker_bazel//src:tools.bzl",
+    "@rules_codechecker//src:tools.bzl",
     "register_default_codechecker",
     "register_default_python_toolchain",
 )
@@ -147,11 +147,11 @@ TODO: update this part when we have an actual release-->
 In Bazel 6, to activate the MODULE system, add `--enable_bzlmod` to the `.bazelrc` file
 ```
 git_override(
-    module_name = "codechecker_bazel",
-    remote = "https://github.com/Ericsson/codechecker_bazel.git",
+    module_name = "rules_codechecker",
+    remote = "https://github.com/Ericsson/rules_codechecker.git",
     commit = "a32e9d75df4fb453c8bbfdf0fdf6a767797ae53d", # Update to latest
 )
-bazel_dep(name = "codechecker_bazel")
+bazel_dep(name = "rules_codechecker")
 
 ```
 ## CodeChecker
@@ -172,7 +172,7 @@ To use `codechecker_test()` include it to your BUILD file:
 
 ```python
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "@rules_codechecker//src:codechecker.bzl",
     "codechecker_test",
 )
 ```
@@ -191,7 +191,7 @@ codechecker_test(
 
 #### Per-file CodeChecker analysis:
 > [!IMPORTANT]
-> The option is still in prototype status and is subject to changes or removal without notice. See [#31](https://github.com/Ericsson/codechecker_bazel/issues/31).
+> The option is still in prototype status and is subject to changes or removal without notice. See [#31](https://github.com/Ericsson/rules_codechecker/issues/31).
 > You are free to experiment and report issues however!
 
 Instead of a single CodeChecker call, adding `per_file = True,` parameter to codechecker_test bazel rule invokes
@@ -241,7 +241,7 @@ You can include and use it similarly as well:
 
 ```python
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "@rules_codechecker//src:codechecker.bzl",
     "codechecker"
 )
 ```
@@ -249,14 +249,14 @@ load(
 -->
 
 ### Multi-platform CodeChecker analysis: `codechecker_suite()`
-_TODO: Describe this rule: see issue [#44](https://github.com/Ericsson/codechecker_bazel/issues/44)._
+_TODO: Describe this rule: see issue [#44](https://github.com/Ericsson/rules_codechecker/issues/44)._
 <!--
 This rule is functionally equivalent to `codechecker_test()` but allows for running on multiple platforms via the `platforms` parameter.
 You can include and use it similarly as well:
 
 ```python
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "@rules_codechecker//src:codechecker.bzl",
     "codechecker_suite"
 )
 ```
@@ -269,7 +269,7 @@ First, include the rule in your BUILD file:
 
 ```python
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "@rules_codechecker//src:codechecker.bzl",
     "codechecker_config"
 )
 ```
@@ -320,7 +320,7 @@ To use it, add the following to your BUILD file:
 
 ```python
 load(
-    "@codechecker_bazel//src:clang.bzl",
+    "@rules_codechecker//src:clang.bzl",
     "clang_tidy_test",
 )
 
@@ -340,7 +340,7 @@ To use it, add the following to your BUILD file:
 
 ```python
 load(
-    "@codechecker_bazel//src:clang.bzl",
+    "@rules_codechecker//src:clang.bzl",
     "clang_analyze_test",
 )
 
@@ -361,7 +361,7 @@ As generating a compilation database for C/C++ is a known pain point for bazel, 
 
 ```python
 load(
-    "@codechecker_bazel//src:compile_commands.bzl",
+    "@rules_codechecker//src:compile_commands.bzl",
     "compile_commands",
 )
 ```
@@ -382,14 +382,14 @@ You can find the generated `compile_commands.json` under `bazel-bin/`.
 
 ### Cross-translation unit analysis via the Clang Static Analyzer: `clang_ctu_test()`
 > [!IMPORTANT]
-> The rule is still in prototype status and is subject to changes or removal without notice. See [#32](https://github.com/Ericsson/codechecker_bazel/issues/32).
+> The rule is still in prototype status and is subject to changes or removal without notice. See [#32](https://github.com/Ericsson/rules_codechecker/issues/32).
 > We are also actively pursuing better CTU support _using_ CodeChecker.
 
 The Bazel rule `clang_analyze_test()` runs The Clang Static Analyzer with [cross translation unit analysis](https://clang.llvm.org/docs/analyzer/user-docs/CrossTranslationUnit.html) analysis without CodeChecker. To use it, add the following to your BUILD file:
 
 ```python
 load(
-    "@codechecker_bazel//src:clang_ctu.bzl",
+    "@rules_codechecker//src:clang_ctu.bzl",
     "clang_ctu_test",
 )
 

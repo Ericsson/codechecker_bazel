@@ -11,7 +11,7 @@ A clear and concise description of what the bug is.
 Versions of `CodeChecker`, `bazel` and this repo. You can get version info via:
 * `CodeChecker version`
 * `bazel --version`
-* Inspecting the WORKSPACE file where you added `codechecker_bazel`.
+* Inspecting the WORKSPACE file where you added `rules_codechecker`.
 
 **To Reproduce**
 Steps to reproduce the behaviour:

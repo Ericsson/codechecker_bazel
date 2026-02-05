@@ -27,7 +27,7 @@ cat <<EOF >> BUILD.bazel
 
 # codechecker rules
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "@rules_codechecker//src:codechecker.bzl",
     "codechecker_test",
 )
 
@@ -50,5 +50,5 @@ codechecker_test(
 #-------------------------------------------------------
 EOF
 
-# Add codechecker_bazel repo to WORKSPACE
+# Add rules_codechecker repo to WORKSPACE
 cat ../../templates/WORKSPACE.template >> WORKSPACE

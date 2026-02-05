@@ -1,19 +1,19 @@
 # clang-tidy and clang -analyze rules
 load(
-    "@codechecker_bazel//src:clang.bzl",
+    "//src:clang.bzl",
     "clang_analyze_test",
     "clang_tidy_test",
 )
 
 # clang -analyze + CTU rule
 load(
-    "@codechecker_bazel//src:clang_ctu.bzl",
+    "//src:clang_ctu.bzl",
     "clang_ctu_test",
 )
 
 # codechecker rules
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "//src:codechecker.bzl",
     "codechecker",
     "codechecker_config",
     "codechecker_suite",
@@ -22,7 +22,7 @@ load(
 
 # compile_commands rule
 load(
-    "@codechecker_bazel//src:compile_commands.bzl",
+    "//src:compile_commands.bzl",
     "compile_commands",
 )
 

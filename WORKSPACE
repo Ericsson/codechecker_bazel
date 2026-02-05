@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-workspace(name = "codechecker_bazel")
+workspace(name = "rules_codechecker")
 
 load(
-    "@codechecker_bazel//src:tools.bzl",
+    "@rules_codechecker//src:tools.bzl",
     "register_default_codechecker",
     "register_default_python_toolchain",
 )

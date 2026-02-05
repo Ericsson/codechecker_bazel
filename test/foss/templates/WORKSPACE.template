@@ -3,12 +3,12 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 local_repository(
-    name = "codechecker_bazel",
+    name = "rules_codechecker",
     path = "../../../../",
 )
 
 load(
-    "@codechecker_bazel//src:tools.bzl",
+    "@rules_codechecker//src:tools.bzl",
     "register_default_codechecker",
     "register_default_python_toolchain",
 )

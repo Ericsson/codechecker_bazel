@@ -13,7 +13,7 @@
 # limitations under the License.
 
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "//src:codechecker.bzl",
     "codechecker_test",
 )
 

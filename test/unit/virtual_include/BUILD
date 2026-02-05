@@ -14,7 +14,7 @@
 
 # codechecker rules
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "//src:codechecker.bzl",
     "codechecker_test",
 )
 

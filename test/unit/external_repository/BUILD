@@ -13,11 +13,11 @@
 # limitations under the License.
 
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "@rules_codechecker//src:codechecker.bzl",
     "codechecker_test",
 )
 load(
-    "@codechecker_bazel//src:compile_commands.bzl",
+    "@rules_codechecker//src:compile_commands.bzl",
     "compile_commands",
 )
 

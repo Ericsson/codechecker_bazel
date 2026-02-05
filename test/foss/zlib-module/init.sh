@@ -26,7 +26,7 @@ cat <<EOF >> BUILD.bazel
 
 # codechecker rules
 load(
-    "@codechecker_bazel//src:codechecker.bzl",
+    "@rules_codechecker//src:codechecker.bzl",
     "codechecker_test",
 )
 codechecker_test(
@@ -49,5 +49,5 @@ EOF
 
 # Enable MODULE.bazel (in Bazel 6)
 echo "common --enable_bzlmod" > .bazelrc
-# Add codechecker_bazel repo MODULE.bazel
+# Add rules_codechecker repo MODULE.bazel
 cat ../../templates/MODULE.template >> MODULE.bazel
