@@ -24,37 +24,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  load_versions:
-    name: "Load bazel versions for Unit tests"
-    runs-on: ubuntu-24.04
-    outputs:
-      bazel_version: ${{ steps.generate_matrix.outputs.matrix_json }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Load versions
-        id: generate_matrix
-        run: |
-          JSON=$(jq -c . ./.github/bazel_version.json)
-          echo "matrix_json=$JSON" >> $GITHUB_OUTPUT
-
   ubuntu_test:
-    name: "Unit tests: Bazel ${{ matrix.bazel_version }} (Ubuntu)"
+    name: "Unit tests (Ubuntu)"
     runs-on: ubuntu-24.04
-    needs: load_versions
     strategy:
       fail-fast: false
-      matrix:
-        bazel_version: ${{ fromJson(needs.load_versions.outputs.bazel_version) }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set bazel version to ${{ matrix.bazel_version }}
-        run: echo "${{ matrix.bazel_version }}" > .bazelversion
-        shell: bash
 
       - name: Setup environment
         uses: ./.github/platform_environment_setup/ubuntu
@@ -68,22 +46,30 @@ jobs:
                "Be sure to double check during debugging."
           CodeChecker analyzers
 
-      - name: Run tests
+      - name: Run Tests
         run: |
-          cd test
-          python3 -m unittest discover unit -vvv
+          VERSIONS=$(jq -rc '.[]' .github/bazel_version.json)
+          
+          for VERSION in $VERSIONS; do
+            echo "------------------------------------------------"
+            echo "STARTING TEST FOR BAZEL VERSION: $VERSION"
+            echo "------------------------------------------------"
+            echo "$VERSION" > .bazelversion
+            # Use a subshell to reset directory in each iteration
+            (
+            cd test
+            python3 -m unittest discover unit -vvv
+            )
+          done
 
   rhel9_test:
-    name: "Unit tests: Bazel ${{ matrix.bazel_version }} (RHEL9)"
+    name: "Unit tests (RHEL9)"
     runs-on: ubuntu-24.04
     container:
       image: redhat/ubi9:latest
       options: --init
-    needs: load_versions
     strategy:
       fail-fast: false
-      matrix:
-        bazel_version: ${{ fromJson(needs.load_versions.outputs.bazel_version) }}
 
     steps:
       - name: Checkout repository
@@ -105,7 +91,19 @@ jobs:
                "Be sure to double check during debugging."
           CodeChecker analyzers
 
-      - name: Run tests
+
+      - name: Run Tests
         run: |
-          cd test
-          runuser -u test -- python3 -m unittest discover unit -vvv
+          VERSIONS=$(jq -rc '.[]' .github/bazel_version.json)
+          
+          for VERSION in $VERSIONS; do
+            echo "------------------------------------------------"
+            echo "STARTING TEST FOR BAZEL VERSION: $VERSION"
+            echo "------------------------------------------------"
+            echo "$VERSION" > .bazelversion
+            # Use a subshell to reset directory in each iteration
+            (
+            cd test
+            runuser -u test -- python3 -m unittest discover unit -vvv
+            )
+          done

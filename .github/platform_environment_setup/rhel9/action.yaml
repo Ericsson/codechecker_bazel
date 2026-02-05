@@ -30,6 +30,7 @@ runs:
             gcc \
             g++ \
             scl-utils \
+            jq \
         shell: bash
 
       - name: Install CodeChecker

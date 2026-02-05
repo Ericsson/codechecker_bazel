@@ -24,30 +24,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # TODO: Parallelize the running of projects
-  load_versions:
-    name: "Load bazel versions for FOSS tests"
-    runs-on: ubuntu-24.04
-    outputs:
-      bazel_version: ${{ steps.generate_matrix.outputs.matrix_json }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Load versions
-        id: generate_matrix
-        run: |
-          JSON=$(jq -c . ./.github/bazel_version.json)
-          echo "matrix_json=$JSON" >> $GITHUB_OUTPUT
-
   foss_ubuntu_test:
-    name: "Test rules on FOSS projects Bazel: ${{ matrix.bazel_version }} (ubuntu)"
+    name: "Test rules on FOSS projects (ubuntu)"
     runs-on: ubuntu-24.04
-    needs: load_versions
     strategy:
       fail-fast: false
-      matrix:
-        bazel_version: ${{ fromJson(needs.load_versions.outputs.bazel_version) }}
 
     steps:
       - name: Checkout repository
@@ -56,24 +37,32 @@ jobs:
       - name: Setup environment
         uses: ./.github/platform_environment_setup/ubuntu
 
-      - name: Set Bazel version
-        run: echo ${{ matrix.bazel_version }} >> test/foss/templates/.bazelversion
-
       - name: Run Test On Opensource Projects
-        working-directory: test
-        run: python3 -m unittest foss/test_foss.py -vvv
+        run: |
+          VERSIONS=$(jq -rc '.[]' .github/bazel_version.json)
+          
+          for VERSION in $VERSIONS; do
+            echo "------------------------------------------------"
+            echo "STARTING TEST FOR BAZEL VERSION: $VERSION"
+            echo "------------------------------------------------"
+            echo "$VERSION" > .bazelversion
+            # Use a subshell to reset directory in each iteration
+            (
+            cd test
+            # TODO: Remove when not necessary anymore
+            rm -rf foss/*/test-proj
+            python3 -m unittest discover foss -vvv
+            )
+          done
 
   foss_rhel_test:
-    name: "Test rules on FOSS projects Bazel ${{ matrix.bazel_version }} (RHEL)"
+    name: "Test rules on FOSS projects (RHEL)"
     runs-on: ubuntu-24.04
     container:
       image: redhat/ubi9:latest
       options: --init
-    needs: load_versions
     strategy:
       fail-fast: false
-      matrix:
-        bazel_version: ${{ fromJson(needs.load_versions.outputs.bazel_version) }}
 
     steps:
       - name: Checkout repository
@@ -82,9 +71,20 @@ jobs:
       - name: Setup environment
         uses: ./.github/platform_environment_setup/rhel9
 
-      - name: Set Bazel version
-        run: echo ${{ matrix.bazel_version }} >> test/foss/templates/.bazelversion
-
       - name: Run Test On Opensource Projects
-        working-directory: test
-        run: runuser -u test -- python3 -m unittest foss/test_foss.py -vvv
+        run: |
+          VERSIONS=$(jq -rc '.[]' .github/bazel_version.json)
+          
+          for VERSION in $VERSIONS; do
+            echo "------------------------------------------------"
+            echo "STARTING TEST FOR BAZEL VERSION: $VERSION"
+            echo "------------------------------------------------"
+            echo "$VERSION" > .bazelversion
+            # Use a subshell to reset directory in each iteration
+            (
+            cd test
+            # TODO: Remove when not necessary anymore
+            rm -rf foss/*/test-proj
+            python3 -m unittest discover foss -vvv
+            )
+          done
