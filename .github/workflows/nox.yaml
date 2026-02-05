@@ -1,0 +1,53 @@
+# Copyright 2023 Ericsson AB
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: codechecker-bazel-nox-tests
+
+# Triggers the workflow on push or pull request events.
+on: [push, pull_request]
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  micromamba-test:
+    name: "Nox tests (Ubuntu)"
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pip install nox pytest
+
+      # Bazel 7 provided by micromamba is compiled using a newer java version
+      # than the default in Github runner
+      - name: Set up JRE 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          java-package: 'jre'
+
+      - name: Install micromamba and run tests
+        run: |
+          source .ci/nox/install.sh
+          nox

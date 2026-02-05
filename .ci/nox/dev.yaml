@@ -1,0 +1,14 @@
+name: dev
+channels:
+  - conda-forge
+dependencies:
+#  - python=3.11
+  - pytest
+  - pylint
+  - pycodestyle
+  - buildifier
+  - clang
+  - clang-tools
+#  - bazel=6
+#  - pip:
+#    - codechecker==6.25
