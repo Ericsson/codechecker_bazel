@@ -422,6 +422,27 @@ def compile_commands_impl(ctx):
         ),
     ]
 
+def get_compile_commands(ctx, check=True):
+    """ Returns the compilation database file
+
+    Returns:
+      compile_commands.json File object
+    """
+    compile_commands = None
+    source_files = None
+    for output in compile_commands_impl(ctx):
+        if type(output) == "DefaultInfo":
+            compile_commands = output.files.to_list()[0]
+            source_files = output.default_runfiles.files.to_list()
+            # FIXME: there should be just one file
+    if check and not compile_commands:
+        fail("Failed to generate compile_commands.json file!")
+    if check and not source_files:
+        fail("Failed to collect source files!")
+    if check and compile_commands != ctx.outputs.compile_commands:
+        fail("Seems compile_commands.json file is incorrect!")
+    return compile_commands
+
 _compile_commands = rule(
     implementation = compile_commands_impl,
     attrs = {
