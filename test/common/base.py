@@ -20,43 +20,10 @@ import logging
 import os
 import re
 import shlex
-import shutil
-import signal
-import socket
 import subprocess
-import tempfile
-import time
 import unittest
 import sys
 from typing import Optional
-
-
-# Based on:
-# https://dev.to/farcellier/wait-for-a-server-to-respond-in-python-488e
-def wait_port(
-    port: int,
-    host: str = "localhost",
-    timeout: int = 3000,
-    attempt_every: int = 100,
-) -> bool:
-    """
-    Wait until a port would be open,
-    for example the port 8001 for CodeChecker server
-    """
-    start = time.monotonic()
-    while True:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.connect((host, port))
-                s.close()
-                return True
-            except ConnectionRefusedError:
-                if timeout is not None and time.monotonic() - start > (
-                    timeout / 1000
-                ):
-                    return False
-
-        time.sleep(attempt_every / 1000)
 
 
 class TestBase(unittest.TestCase):
@@ -105,10 +72,6 @@ class TestBase(unittest.TestCase):
         """Restore environment"""
         os.chdir(cls.save_cwd)
         os.environ = cls.save_env
-        try:
-            assert cls.server_process.poll() is not None, "Server not stopped"
-        except AttributeError:
-            pass  # if server_process is not set, everything is fine
 
     def setUp(self):
         """Before every test"""
@@ -169,41 +132,6 @@ class TestBase(unittest.TestCase):
         Returns a boolean, whether the specified file contains the regex or not.
         """
         return bool(cls.grep_file(file_path, regex))
-
-    @classmethod
-    def start_codechecker_server(cls):
-        """
-        Starts a CodeChecker server instance on port 8001
-        This server must be shutdown with stop_codechecker_sever
-        """
-        cls.temp_workspace = tempfile.mkdtemp()
-        server_command = [
-            "CodeChecker",
-            "server",
-            "--workspace",
-            cls.temp_workspace,
-            "--port",
-            "8001",  # user running unittest must make this port free!
-        ]
-        # pylint: disable=consider-using-with
-        cls.devnull = open(os.devnull, "w", encoding='utf-8')
-        # pylint: disable=consider-using-with
-        cls.server_process: subprocess.Popen = subprocess.Popen(
-            server_command, stdout=cls.devnull
-        )
-        assert wait_port(
-            port=8001, timeout=10000
-        ), "Failed to start CodeChecker server"
-
-    @classmethod
-    def stop_codechecker_server(cls):
-        """
-        Stops the CodeChecker server started by start_codechecker_server
-        """
-        os.kill(cls.server_process.pid, signal.SIGTERM)
-        cls.server_process.wait()
-        cls.devnull.close()
-        shutil.rmtree(cls.temp_workspace)
 
     def check_store(self, path: str, name: str):
         """

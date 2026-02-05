@@ -20,6 +20,7 @@ import os
 import unittest
 from typing import final
 from common.base import TestBase
+from common.codechecker_server import CodeCheckerServer
 
 
 class TestTemplate(TestBase):
@@ -39,13 +40,13 @@ class TestTemplate(TestBase):
     def setUpClass(cls):
         """Start CodeChecker server"""
         super().setUpClass()
-        cls.start_codechecker_server()
+        cls.codechecker_server = CodeCheckerServer()
 
     @final
     @classmethod
     def tearDownClass(cls):
         """Stop CodeChecker server"""
-        cls.stop_codechecker_server()
+        del cls.codechecker_server
         super().tearDownClass()
 
     def test_parse_html(self):
