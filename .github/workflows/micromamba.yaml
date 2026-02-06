@@ -14,8 +14,15 @@
 
 name: codechecker-bazel-micromamba-tests
 
-# Triggers the workflow on push or pull request events.
-on: [push, pull_request]
+# Trigger the workflow manually
+on:
+  workflow_dispatch:
+    inputs:
+      arguments:
+        description: "Arguments: test to run"
+        default: "pytest test/unit -v"
+        required: true
+        type: string
 
 permissions: read-all
 
@@ -42,4 +49,4 @@ jobs:
       - name: Install micromamba and run tests
         run: |
           . .ci/micromamba/init.sh -v
-          pytest test/unit -v
+          ${{ inputs.arguments }}

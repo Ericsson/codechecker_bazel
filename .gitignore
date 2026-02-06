@@ -16,6 +16,10 @@ __pycache__
 # Ignore Python virtual environment
 venv
 
+# Ignore MicroMamba artifacts
+.ci/micromamba/bin/
+.ci/micromamba/micromamba/
+
 # Ignore FOSS project clone dirs
 /test/foss/*/test-proj/
 
