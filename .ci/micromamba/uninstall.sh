@@ -1,6 +1,6 @@
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-MICROMAMBA=".micromamba"
+MICROMAMBA=".ci/micromamba"
 if [[ "$(basename $THIS_DIR)" == "$MICROMAMBA" ]]; then
     PROCESSES="bazel java python3 CodeChecke"
     echo "Killing: $PROCESSES"

@@ -41,5 +41,5 @@ jobs:
 
       - name: Install micromamba and run tests
         run: |
-          . .micromamba/init.sh -v
+          . .ci/micromamba/init.sh -v
           pytest test/unit -v
