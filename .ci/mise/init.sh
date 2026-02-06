@@ -24,6 +24,7 @@ fi
 mise trust --quiet
 mise version
 export MISE_CONDA_CONCURRENCY=1
+export MISE_CONFIG_FILE=".ci/mise/config.toml"
 mise install || mise install
 mise reshim
 

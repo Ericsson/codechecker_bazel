@@ -21,7 +21,7 @@ experimental = true
 
 
 [vars]
-run = ".mise/print-env.sh -vvv && pytest"
+run = ".ci/mise/print-env.sh -vvv && pytest"
 
 
 [tasks."install:bazel-6"]
