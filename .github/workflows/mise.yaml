@@ -60,12 +60,12 @@ jobs:
 
       - name: Install and init mise
         run: |
-          source .mise/init.sh
+          source .ci/mise/init.sh
 
       - name: Install all versions
         run: |
-          .mise/run.sh install
+          .ci/mise/run.sh install
 
       - name: Run Mise tests
         run: |
-          .mise/run.sh ${{ inputs.arguments }}
+          .ci/mise/run.sh ${{ inputs.arguments }}
