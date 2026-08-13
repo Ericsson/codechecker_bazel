@@ -40,6 +40,29 @@ cc_library(
     tags = ["manual"],
 )
 
+# BUG (manual): defines from implementation_deps are not collected.
+cc_library(
+    name = "compile_flags_tests_impl_dep_with_defines",
+    srcs = ["testdata/bar.cc"],
+    hdrs = ["testdata/bar.h"],
+    defines = ["IMPL_DEP_DEFINE=1"],
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "compile_flags_tests_with_impl_dep_defines",
+    srcs = ["testdata/foo.cc"],
+    hdrs = ["testdata/foo.h"],
+    implementation_deps = [":compile_flags_tests_impl_dep_with_defines"],
+    tags = ["manual"],
+)
+
+get_compile_flags_defines_from_impl_deps_test(
+    name = "get_compile_flags_defines_from_impl_deps",
+    tags = ["manual"],
+    target_under_test = ":compile_flags_tests_with_impl_dep_defines",
+)
+
 cc_library(
     name = "compile_flags_tests_with_local_defines",
     srcs = ["testdata/foo.cc"],
@@ -48,12 +71,57 @@ cc_library(
     tags = ["manual"],
 )
 
+# BUG (manual): local_defines from implementation_deps are not collected.
+cc_library(
+    name = "compile_flags_tests_impl_dep_with_local_defines",
+    srcs = ["testdata/bar.cc"],
+    hdrs = ["testdata/bar.h"],
+    local_defines = ["IMPL_DEP_LOCAL_DEF=1"],
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "compile_flags_tests_with_impl_dep_local_defines",
+    srcs = ["testdata/foo.cc"],
+    hdrs = ["testdata/foo.h"],
+    implementation_deps = [":compile_flags_tests_impl_dep_with_local_defines"],
+    tags = ["manual"],
+)
+
+get_compile_flags_local_defines_from_impl_deps_test(
+    name = "get_compile_flags_local_defines_from_impl_deps",
+    tags = ["manual"],
+    target_under_test = ":compile_flags_tests_with_impl_dep_local_defines",
+)
+
 cc_library(
     name = "compile_flags_tests_with_includes",
     srcs = ["testdata/foo.cc"],
     hdrs = ["testdata/foo.h"],
     includes = ["my/include/path"],
     tags = ["manual"],
+)
+
+# includes from implementation_deps should be collected.
+cc_library(
+    name = "compile_flags_tests_impl_dep_with_includes",
+    srcs = ["testdata/bar.cc"],
+    hdrs = ["testdata/bar.h"],
+    includes = ["impl_dep/include"],
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "compile_flags_tests_with_impl_dep_includes",
+    srcs = ["testdata/foo.cc"],
+    hdrs = ["testdata/foo.h"],
+    implementation_deps = [":compile_flags_tests_impl_dep_with_includes"],
+    tags = ["manual"],
+)
+
+get_compile_flags_includes_from_impl_deps_test(
+    name = "get_compile_flags_includes_from_impl_deps",
+    target_under_test = ":compile_flags_tests_with_impl_dep_includes",
 )
 
 cc_library(
@@ -97,6 +165,26 @@ cc_library(
     deps = [":compile_flags_tests_sys_include_provider"],
 )
 
+# system_includes from implementation_deps should be collected.
+custom_ccinfo(
+    name = "compile_flags_tests_impl_dep_sys_include_provider",
+    system_includes = ["impl_dep/sys/include"],
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "compile_flags_tests_with_impl_dep_system_includes",
+    srcs = ["testdata/foo.cc"],
+    hdrs = ["testdata/foo.h"],
+    implementation_deps = [":compile_flags_tests_impl_dep_sys_include_provider"],
+    tags = ["manual"],
+)
+
+get_compile_flags_system_includes_from_impl_deps_test(
+    name = "get_compile_flags_system_includes_from_impl_deps",
+    target_under_test = ":compile_flags_tests_with_impl_dep_system_includes",
+)
+
 custom_ccinfo(
     name = "compile_flags_tests_quote_include_provider",
     quote_includes = ["my/quote/include"],
@@ -109,15 +197,6 @@ cc_library(
     hdrs = ["testdata/foo.h"],
     tags = ["manual"],
     deps = [":compile_flags_tests_quote_include_provider"],
-)
-
-get_compile_flags_test_suite(name = "compile_flags_tests")
-
-# BUG (manual): compile commands should not contain duplicate flags.
-get_compile_flags_no_duplicates_test(
-    name = "get_compile_flags_no_duplicates",
-    tags = ["manual"],
-    target_under_test = ":compile_flags_tests_with_dep_includes",
 )
 
 # BUG (manual): quote_includes from implementation_deps are not collected.
@@ -141,90 +220,11 @@ get_compile_flags_quote_includes_from_deps_test(
     target_under_test = ":compile_flags_tests_with_dep_quote_includes",
 )
 
-# includes from implementation_deps should be collected.
-cc_library(
-    name = "compile_flags_tests_impl_dep_with_includes",
-    srcs = ["testdata/bar.cc"],
-    hdrs = ["testdata/bar.h"],
-    includes = ["impl_dep/include"],
+get_compile_flags_test_suite(name = "compile_flags_tests")
+
+# BUG (manual): compile commands should not contain duplicate flags.
+get_compile_flags_no_duplicates_test(
+    name = "get_compile_flags_no_duplicates",
     tags = ["manual"],
-)
-
-cc_library(
-    name = "compile_flags_tests_with_impl_dep_includes",
-    srcs = ["testdata/foo.cc"],
-    hdrs = ["testdata/foo.h"],
-    implementation_deps = [":compile_flags_tests_impl_dep_with_includes"],
-    tags = ["manual"],
-)
-
-get_compile_flags_includes_from_impl_deps_test(
-    name = "get_compile_flags_includes_from_impl_deps",
-    target_under_test = ":compile_flags_tests_with_impl_dep_includes",
-)
-
-# system_includes from implementation_deps should be collected.
-custom_ccinfo(
-    name = "compile_flags_tests_impl_dep_sys_include_provider",
-    system_includes = ["impl_dep/sys/include"],
-    tags = ["manual"],
-)
-
-cc_library(
-    name = "compile_flags_tests_with_impl_dep_system_includes",
-    srcs = ["testdata/foo.cc"],
-    hdrs = ["testdata/foo.h"],
-    implementation_deps = [":compile_flags_tests_impl_dep_sys_include_provider"],
-    tags = ["manual"],
-)
-
-get_compile_flags_system_includes_from_impl_deps_test(
-    name = "get_compile_flags_system_includes_from_impl_deps",
-    target_under_test = ":compile_flags_tests_with_impl_dep_system_includes",
-)
-
-# BUG (manual): defines from implementation_deps are not collected.
-cc_library(
-    name = "compile_flags_tests_impl_dep_with_defines",
-    srcs = ["testdata/bar.cc"],
-    hdrs = ["testdata/bar.h"],
-    defines = ["IMPL_DEP_DEFINE=1"],
-    tags = ["manual"],
-)
-
-cc_library(
-    name = "compile_flags_tests_with_impl_dep_defines",
-    srcs = ["testdata/foo.cc"],
-    hdrs = ["testdata/foo.h"],
-    implementation_deps = [":compile_flags_tests_impl_dep_with_defines"],
-    tags = ["manual"],
-)
-
-get_compile_flags_defines_from_impl_deps_test(
-    name = "get_compile_flags_defines_from_impl_deps",
-    tags = ["manual"],
-    target_under_test = ":compile_flags_tests_with_impl_dep_defines",
-)
-
-# BUG (manual): local_defines from implementation_deps are not collected.
-cc_library(
-    name = "compile_flags_tests_impl_dep_with_local_defines",
-    srcs = ["testdata/bar.cc"],
-    hdrs = ["testdata/bar.h"],
-    local_defines = ["IMPL_DEP_LOCAL_DEF=1"],
-    tags = ["manual"],
-)
-
-cc_library(
-    name = "compile_flags_tests_with_impl_dep_local_defines",
-    srcs = ["testdata/foo.cc"],
-    hdrs = ["testdata/foo.h"],
-    implementation_deps = [":compile_flags_tests_impl_dep_with_local_defines"],
-    tags = ["manual"],
-)
-
-get_compile_flags_local_defines_from_impl_deps_test(
-    name = "get_compile_flags_local_defines_from_impl_deps",
-    tags = ["manual"],
-    target_under_test = ":compile_flags_tests_with_impl_dep_local_defines",
+    target_under_test = ":compile_flags_tests_with_dep_includes",
 )
