@@ -34,8 +34,9 @@ load(
 # =============================================================================
 
 def _custom_ccinfo_impl(ctx):
-    """Rule that provides a CcInfo with custom include paths."""
+    """Rule that provides a CcInfo with custom include paths and defines."""
     compilation_context = cc_common.create_compilation_context(
+        defines = depset(ctx.attr.defines),
         system_includes = depset(ctx.attr.system_includes),
         quote_includes = depset(ctx.attr.quote_includes),
         includes = depset(ctx.attr.includes),
@@ -45,6 +46,7 @@ def _custom_ccinfo_impl(ctx):
 custom_ccinfo = rule(
     implementation = _custom_ccinfo_impl,
     attrs = {
+        "defines": attr.string_list(default = []),
         "includes": attr.string_list(default = []),
         "quote_includes": attr.string_list(default = []),
         "system_includes": attr.string_list(default = []),
@@ -82,6 +84,30 @@ get_compile_flags_defines_test = analysistest.make(
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
+def _get_compile_flags_defines_from_impl_deps_test_impl(ctx):
+    """BUG: defines from implementation_deps are missing in compile commands.
+
+    get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
+    system_includes, and external_includes — but NOT defines.
+    """
+    env = analysistest.begin(ctx)
+    commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
+
+    foo_commands = [c for c in commands if "foo.cc" in c]
+    asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
+    asserts.true(
+        env,
+        "IMPL_DEP_DEFINE" in foo_commands[0],
+        "Should contain define IMPL_DEP_DEFINE from implementation_dep, got: %s" % foo_commands[0],
+    )
+
+    return analysistest.end(env)
+
+get_compile_flags_defines_from_impl_deps_test = analysistest.make(
+    _get_compile_flags_defines_from_impl_deps_test_impl,
+    extra_target_under_test_aspects = [compile_commands_aspect],
+)
+
 def _get_compile_flags_local_defines_test_impl(ctx):
     """local_defines appear as -D in the compile command."""
     env = analysistest.begin(ctx)
@@ -101,6 +127,30 @@ get_compile_flags_local_defines_test = analysistest.make(
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
+def _get_compile_flags_local_defines_from_impl_deps_test_impl(ctx):
+    """BUG: local_defines from implementation_deps are missing in compile commands.
+
+    get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
+    system_includes, and external_includes — but NOT local_defines.
+    """
+    env = analysistest.begin(ctx)
+    commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
+
+    foo_commands = [c for c in commands if "foo.cc" in c]
+    asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
+    asserts.true(
+        env,
+        "IMPL_DEP_LOCAL_DEF" in foo_commands[0],
+        "Should contain local_define IMPL_DEP_LOCAL_DEF from implementation_dep, got: %s" % foo_commands[0],
+    )
+
+    return analysistest.end(env)
+
+get_compile_flags_local_defines_from_impl_deps_test = analysistest.make(
+    _get_compile_flags_local_defines_from_impl_deps_test_impl,
+    extra_target_under_test_aspects = [compile_commands_aspect],
+)
+
 def _get_compile_flags_includes_test_impl(ctx):
     """includes appear as -I in the compile command."""
     env = analysistest.begin(ctx)
@@ -117,6 +167,26 @@ def _get_compile_flags_includes_test_impl(ctx):
 
 get_compile_flags_includes_test = analysistest.make(
     _get_compile_flags_includes_test_impl,
+    extra_target_under_test_aspects = [compile_commands_aspect],
+)
+
+def _get_compile_flags_includes_from_impl_deps_test_impl(ctx):
+    """includes from implementation_deps propagate to the compile command."""
+    env = analysistest.begin(ctx)
+    commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
+
+    foo_commands = [c for c in commands if "foo.cc" in c]
+    asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
+    asserts.true(
+        env,
+        "impl_dep/include" in foo_commands[0],
+        "Should contain impl_dep's include path, got: %s" % foo_commands[0],
+    )
+
+    return analysistest.end(env)
+
+get_compile_flags_includes_from_impl_deps_test = analysistest.make(
+    _get_compile_flags_includes_from_impl_deps_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
@@ -183,6 +253,26 @@ get_compile_flags_system_includes_test = analysistest.make(
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
+def _get_compile_flags_system_includes_from_impl_deps_test_impl(ctx):
+    """system_includes from implementation_deps appear as -isystem in the compile command."""
+    env = analysistest.begin(ctx)
+    commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
+
+    foo_commands = [c for c in commands if "foo.cc" in c]
+    asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
+    asserts.true(
+        env,
+        "-isystem impl_dep/sys/include" in foo_commands[0],
+        "Should contain -isystem impl_dep/sys/include from implementation_dep, got: %s" % foo_commands[0],
+    )
+
+    return analysistest.end(env)
+
+get_compile_flags_system_includes_from_impl_deps_test = analysistest.make(
+    _get_compile_flags_system_includes_from_impl_deps_test_impl,
+    extra_target_under_test_aspects = [compile_commands_aspect],
+)
+
 def _get_compile_flags_quote_includes_test_impl(ctx):
     """quote_includes appear as -iquote in the compile command."""
     env = analysistest.begin(ctx)
@@ -232,7 +322,7 @@ def _get_compile_flags_no_duplicates_test_impl(ctx):
 
     get_compile_flags may add the same include path multiple times — once
     from the target's own CcInfo compilation_context, and again when iterating
-    over deps in SOURCE_ATTR. This test asserts the desired fixed behavior:
+    over deps in SOURCE_ATTR. This test asserts the desired behavior:
     no flag should appear more than once in a compile command.
     """
     env = analysistest.begin(ctx)
