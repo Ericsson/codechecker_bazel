@@ -40,10 +40,9 @@ foss_test(
 foss_test(
     name = "yaml-cpp",
     tests = [
+        ":codechecker_per_file",
         ":codechecker_test",
         ":compile_commands",
-        # FIXME: output 'analysis/codechecker_per_file/data/src-emit.cpp_clangsa.plist' was not created
-        # ":codechecker_per_file",
     ],
-    url = "https://github.com/jbeder/yaml-cpp/archive/refs/tags/0.8.0.tar.gz",
+    url = "https://github.com/jbeder/yaml-cpp/archive/refs/tags/yaml-cpp-0.9.0.tar.gz",
 )

@@ -39,8 +39,7 @@ bazel_dep(name = "rules_codechecker")
 """
 
 BUILD_TEMPLATE = """
-load("@rules_codechecker//src:codechecker.bzl", "codechecker_test")
-load("@rules_codechecker//src:compile_commands.bzl", "compile_commands")
+load("@rules_codechecker//:defs.bzl", "codechecker_test", "compile_commands")
 
 codechecker_test(
     name = "codechecker_test",
@@ -106,24 +105,29 @@ class FossTest(unittest.TestCase):
                     tar.extract(m, self.work_dir / "src")
         self.project_dir = self.work_dir / "src"
 
-    def _setup_bazel_project(self):
-        analysis_dir = self.project_dir / "analysis"
-        analysis_dir.mkdir()
-        (analysis_dir / "BUILD.bazel").write_text(
-            BUILD_TEMPLATE.format(target=self.target)
-        )
+    def _build_file(self):
+        """The build file of the project, BUILD.bazel unless BUILD is used."""
+        for name in ("BUILD.bazel", "BUILD"):
+            build_file = self.project_dir / name
+            if build_file.exists():
+                return build_file
+        return self.project_dir / "BUILD.bazel"
 
-        (self.project_dir / "MODULE.bazel").write_text(
-            MODULE_TEMPLATE.format(rules_path=self.rules_path)
-        )
-        (self.project_dir / "WORKSPACE").touch()
+    def _setup_bazel_project(self):
+        """Append to MODULE.bazel and BUILD.bazel (or BUILD)"""
+        with (self.project_dir / "MODULE.bazel").open("a") as module_file:
+            module_file.write(
+                MODULE_TEMPLATE.format(rules_path=self.rules_path)
+            )
+        with self._build_file().open("a") as build_file:
+            build_file.write(BUILD_TEMPLATE.format(target=self.target))
 
     def _bazel_build(self):
-        prefixed = [f"//analysis{t}" for t in self.tests]
+        targets = [f"//{t}" for t in self.tests]
         result = subprocess.run(
             ["bazel",
              f"--output_base={self.work_dir / '.bazel_output'}",
-             "build"] + prefixed,
+             "build"] + targets,
             cwd=self.project_dir,
             capture_output=True,
             text=True,
@@ -150,7 +154,7 @@ class FossTest(unittest.TestCase):
         """Verify compile_commands.json is valid and non-empty."""
         self._bazel_build()
         bazel_bin = self._bazel_bin()
-        cc_json = bazel_bin / "analysis" / "compile_commands" / "compile_commands.json"
+        cc_json = bazel_bin / "compile_commands" / "compile_commands.json"
         self.assertTrue(cc_json.exists(),
                         f"compile_commands.json not found at {cc_json}")
         data = json.loads(cc_json.read_text())
@@ -165,7 +169,7 @@ class FossTest(unittest.TestCase):
         """Verify codechecker produces expected output files."""
         self._bazel_build()
         bazel_bin = self._bazel_bin()
-        cc_dir = bazel_bin / "analysis" / "codechecker_test"
+        cc_dir = bazel_bin / "codechecker_test"
         self.assertTrue(cc_dir.exists(),
                         f"codechecker output dir not found at {cc_dir}")
         cc_json = cc_dir / "compile_commands.json"
