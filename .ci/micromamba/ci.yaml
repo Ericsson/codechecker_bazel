@@ -17,5 +17,6 @@ dependencies:
   - gcc
   - gxx
   - git
+  - wget
   - pip:
     - codechecker==6.27.3

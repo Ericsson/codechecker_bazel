@@ -158,8 +158,13 @@ jobs:
       # Therefore: less wasted CI runtime.
       - name: Run unit tests
         run: |
-          runuser -u test -- bazel test //...
+          runuser -u test -- bazel test //... --test_tag_filters=-foss --test_output=errors
           runuser -u test -- pytest test/unit ${{ runner.debug == '1' && '--log-cli-level=DEBUG' || '' }}
+        shell: bash -el {0}
+
+      - name: Run foss tests
+        run: |
+          runuser -u test -- bazel test //test/bazel/... --test_output=errors
         shell: bash -el {0}
 
       - name: Run Open Source tests
