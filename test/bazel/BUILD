@@ -46,3 +46,23 @@ foss_test(
     ],
     url = "https://github.com/jbeder/yaml-cpp/archive/refs/tags/yaml-cpp-0.9.0.tar.gz",
 )
+
+foss_test(
+    name = "double-conversion",
+    tests = [
+        ":codechecker_per_file",
+        ":codechecker_test",
+        ":compile_commands",
+    ],
+    url = "https://github.com/google/double-conversion/archive/refs/tags/v3.4.0.tar.gz",
+)
+
+foss_test(
+    name = "cpuinfo",
+    tests = [
+        ":codechecker_per_file",
+        ":codechecker_test",
+        ":compile_commands",
+    ],
+    url = "https://github.com/pytorch/cpuinfo/archive/66ee79c0.tar.gz",
+)
