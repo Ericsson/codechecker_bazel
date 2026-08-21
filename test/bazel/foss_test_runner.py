@@ -21,6 +21,7 @@ rules_codechecker, builds codechecker targets, and verifies outputs.
 
 import argparse
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -62,98 +63,155 @@ compile_commands(
 class FossTest(unittest.TestCase):
     """Base test that downloads a FOSS project and runs rules_codechecker."""
 
-    # Set by main()
+    # NOTE: Set by main()
     url = None
     target = None
-    tests = None
+    tests = []
 
-    def setUp(self):
-        self.work_dir = Path(tempfile.mkdtemp())
+    @classmethod
+    def configure(cls, url, target, tests):
+        """Initialize the class"""
+        cls.url = url
+        cls.target = target
+        cls.tests = tests
 
-        # Resolve rules_codechecker path from the real script location
-        script_path = Path(os.path.realpath(__file__))
-        self.rules_path = script_path.parent.parent.parent
+    @classmethod
+    def setUpClass(cls):
+        """Download, extract, setup and analyze the FOSS project code"""
+        if not cls.url:
+            raise AssertionError("FOSS: project url is empty")
+        if not cls.target:
+            raise AssertionError("FOSS: bazel target is empty")
+        if not cls.tests:
+            raise AssertionError("FOSS: bazel test list is empty")
 
-        self._download_and_extract()
-        self._setup_bazel_project()
+        cls.work_dir = Path(tempfile.mkdtemp())
+        cls.output_base = cls.work_dir / ".bazel_output"
 
-    def tearDown(self):
-        if self.work_dir.exists():
+        # NOTE: Resolve rules_codechecker path from the script location
+        cls.rules_path = Path(os.path.realpath(__file__)).parents[2]
+
+        cls.download_and_extract()
+        cls.setup_bazel_project()
+
+        # NOTE: we run bazel build, not bazel test
+        cls.build_result = cls.run_bazel(
+            "build", *[f"//{t}" for t in cls.tests])
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop bazel and cleanup"""
+        if cls.work_dir.exists():
+            cls.run_bazel("shutdown")
+            # The outputs of bazel are read only
             subprocess.run(
-                ["bazel", f"--output_base={self.work_dir / '.bazel_output'}",
-                 "shutdown"],
+                ["chmod", "-R", "u+w", str(cls.work_dir)],
                 capture_output=True,
-            )
-            subprocess.run(
-                ["chmod", "-R", "u+w", str(self.work_dir)],
-                capture_output=True,
-            )
-            shutil.rmtree(self.work_dir, ignore_errors=True)
+                check=False)
+            shutil.rmtree(cls.work_dir, ignore_errors=True)
 
-    def _download_and_extract(self):
-        archive = self.work_dir / "archive.tar.gz"
+    @classmethod
+    def download_and_extract(cls):
+        """Download and extract FOSS project"""
+        archive = cls.work_dir / "archive.tar.gz"
+        # NOTE: using wget - it should be available in the system
+        logging.debug("Downloading: %s", cls.url)
         subprocess.run(
-            ["wget", "-q", "-O", str(archive), self.url],
-            check=True,
-        )
+            ["wget", "-q", "-O", str(archive), cls.url],
+            check=True)
+        logging.debug("Extracting: %s", archive)
         with tarfile.open(archive) as tar:
             members = tar.getmembers()
             prefix = members[0].name.split("/")[0]
-            for m in members:
-                m.name = m.name[len(prefix):].lstrip("/")
-                if m.name:
-                    tar.extract(m, self.work_dir / "src")
-        self.project_dir = self.work_dir / "src"
+            for member in members:
+                member.name = member.name[len(prefix):].lstrip("/")
+                if member.name:
+                    tar.extract(member, cls.work_dir / "src")
+        cls.project_dir = cls.work_dir / "src"
+        logging.debug("Project: %s", cls.project_dir)
 
-    def _build_file(self):
+    @classmethod
+    def build_file(cls):
         """The build file of the project, BUILD.bazel unless BUILD is used."""
         for name in ("BUILD.bazel", "BUILD"):
-            build_file = self.project_dir / name
+            build_file = cls.project_dir / name
             if build_file.exists():
                 return build_file
-        return self.project_dir / "BUILD.bazel"
+        return cls.project_dir / "BUILD.bazel"
 
-    def _setup_bazel_project(self):
+    @classmethod
+    def setup_bazel_project(cls):
         """Append to MODULE.bazel and BUILD.bazel (or BUILD)"""
-        with (self.project_dir / "MODULE.bazel").open("a") as module_file:
+        with (cls.project_dir / "MODULE.bazel").open("a") as module_file:
             module_file.write(
-                MODULE_TEMPLATE.format(rules_path=self.rules_path)
-            )
-        with self._build_file().open("a") as build_file:
-            build_file.write(BUILD_TEMPLATE.format(target=self.target))
+                MODULE_TEMPLATE.format(rules_path=cls.rules_path))
+        with cls.build_file().open("a") as build_file:
+            build_file.write(
+                BUILD_TEMPLATE.format(target=cls.target))
 
-    def _bazel_build(self):
-        targets = [f"//{t}" for t in self.tests]
-        result = subprocess.run(
-            ["bazel",
-             f"--output_base={self.work_dir / '.bazel_output'}",
-             "build"] + targets,
-            cwd=self.project_dir,
+    @classmethod
+    def run_bazel(cls, *arguments):
+        """Run bazel in the project, return the completed process"""
+        command = [
+            "bazel", f"--output_base={cls.output_base}"] + list(arguments)
+        logging.debug("Running: %s", " ".join(command))
+        return subprocess.run(
+            command,
+            cwd=cls.project_dir,
             capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0,
-                         f"bazel build failed:\n{result.stderr}")
+            check=False,
+            text=True)
 
-    def _bazel_bin(self):
-        result = subprocess.run(
-            ["bazel",
-             f"--output_base={self.work_dir / '.bazel_output'}",
-             "info", "bazel-bin"],
-            cwd=self.project_dir,
-            capture_output=True,
-            text=True,
-        )
-        return Path(result.stdout.strip())
+    def bazel_bin(self):
+        """Return path to bazel-bin"""
+        return Path(self.run_bazel("info", "bazel-bin").stdout.strip())
+
+    def setUp(self):
+        """Just indicate test start"""
+        logging.debug("")
+        logging.debug("." * 60)
+        # NOTE: Earlier check if bazel build fails
+        if self.build_result.returncode:
+            logging.debug("Build failed! Skipping other tests")
+            if self._testMethodName != "test_build_succeeds":
+                self.skipTest("bazel build failed")
 
     def test_build_succeeds(self):
         """Verify that codechecker rules build successfully."""
-        self._bazel_build()
+        logging.debug("Build result: code = %d", self.build_result.returncode)
+        logging.debug("stderr:\n%s", self.build_result.stderr)
+        logging.debug("stdout:\n%s", self.build_result.stdout)
+        self.assertEqual(self.build_result.returncode, 0,
+                         f"bazel build failed:\n{self.build_result.stderr}")
 
-    def test_compile_commands_valid(self):
+    def test_build_artifacts(self):
+        """Verify codechecker build artifacts."""
+        def ls_la(directory):
+            """List files in given directory"""
+            result = subprocess.run(
+                ["ls", "-la", str(directory) + "/"],
+                cwd=self.project_dir,
+                capture_output=True,
+                check=False,
+                text=True)
+            logging.debug("-" * 20)
+            logging.debug("ls -la %s:\n%s", directory, result.stdout)
+
+        bazel_bin = self.bazel_bin()
+        ls_la(bazel_bin)
+        for test in self.tests:
+            test = test.replace(":", "/").lstrip("/")
+            logging.debug("test: %s", test)
+            test_dir = bazel_bin / test
+            ls_la(test_dir)
+            self.assertTrue(test_dir.exists(),
+                            f"test dir not found at {test_dir}")
+
+    def test_compile_commands_output(self):
         """Verify compile_commands.json is valid and non-empty."""
-        self._bazel_build()
-        bazel_bin = self._bazel_bin()
+        if ":compile_commands" not in self.tests:
+            self.skipTest(f":compile_commands - not in tests ({self.tests})")
+        bazel_bin = self.bazel_bin()
         cc_json = bazel_bin / "compile_commands" / "compile_commands.json"
         self.assertTrue(cc_json.exists(),
                         f"compile_commands.json not found at {cc_json}")
@@ -165,16 +223,22 @@ class FossTest(unittest.TestCase):
             self.assertIn("file", entry)
             self.assertIn("directory", entry)
 
-    def test_codechecker_outputs_exist(self):
+    def test_codechecker_test_outputs(self):
         """Verify codechecker produces expected output files."""
-        self._bazel_build()
-        bazel_bin = self._bazel_bin()
-        cc_dir = bazel_bin / "codechecker_test"
-        self.assertTrue(cc_dir.exists(),
-                        f"codechecker output dir not found at {cc_dir}")
-        cc_json = cc_dir / "compile_commands.json"
+        if ":codechecker_test" not in self.tests:
+            self.skipTest(f":codechecker_test - not in tests ({self.tests})")
+        bazel_bin = self.bazel_bin()
+        test_dir = bazel_bin / "codechecker_test"
+        self.assertTrue(test_dir.exists(),
+                        f"codechecker output dir not found at {test_dir}")
+        cc_json = test_dir / "compile_commands.json"
         self.assertTrue(cc_json.exists(),
-                        "codechecker compile_commands.json not found")
+                        "codechecker: compile_commands.json not found")
+        codechecker_log = test_dir / "codechecker.log"
+        self.assertTrue(codechecker_log.exists(),
+                        "codechecker: codechecker.log not found")
+        log = codechecker_log.read_text()
+        logging.debug("codechecker.log:\n%s", log)
 
 
 if __name__ == "__main__":
@@ -184,8 +248,10 @@ if __name__ == "__main__":
     parser.add_argument("--tests", nargs="+", required=True)
     args, remaining = parser.parse_known_args()
 
-    FossTest.url = args.url
-    FossTest.target = args.target
-    FossTest.tests = args.tests
+    # Enable debug logging
+    if "-vvv" in remaining:
+        logging.basicConfig(level=logging.DEBUG, format="[FOSS]: %(message)s")
+
+    FossTest.configure(args.url, args.target, args.tests)
 
     unittest.main(argv=[sys.argv[0]] + remaining)
