@@ -80,14 +80,16 @@ SYSTEM_INCLUDE = "-isystem "
 QUOTE_INCLUDE = "-iquote "
 EXTERNAL_INCLUDE = "-isystem "
 
-# Function copied from https://gist.github.com/oquenchil/7e2c2bd761aa1341b458cc25608da50c
-# NOTE: added local_defines
-def get_compile_flags(ctx, dep):
+def get_compile_flags(dep, local_defines = True):
     """ Return a list of compile options
 
+    Original function copied from
+    https://gist.github.com/oquenchil/7e2c2bd761aa1341b458cc25608da50c
+    Also added local_defines and external_includes
+
     Args:
-        ctx: The context variable.
         dep: A target with CcInfo.
+        local_defines: if local_defines should be added (default: True)
     Returns:
       List of compile options.
     """
@@ -97,8 +99,9 @@ def get_compile_flags(ctx, dep):
     for define in compilation_context.defines.to_list():
         options.append("-D'{}'".format(define))
 
-    for define in compilation_context.local_defines.to_list():
-        options.append("-D'{}'".format(define))
+    if local_defines:
+        for define in compilation_context.local_defines.to_list():
+            options.append("-D'{}'".format(define))
 
     for system_include in compilation_context.system_includes.to_list():
         if len(system_include) == 0:
@@ -114,42 +117,43 @@ def get_compile_flags(ctx, dep):
         if len(quote_include) == 0:
             quote_include = "."
         options.append(QUOTE_INCLUDE + quote_include)
+
     if hasattr(compilation_context, "external_includes"):
         for external_include in compilation_context.external_includes.to_list():
             if len(external_include) == 0:
                 external_include = "."
             options.append(EXTERNAL_INCLUDE + external_include)
 
-    for attr in SOURCE_ATTR:
-        if not hasattr(ctx.rule.attr, attr):
-            continue
-
-        deps = getattr(ctx.rule.attr, attr)
-        if not type(deps) == "list":
-            continue
-
-        for dep in deps:
-            if CcInfo not in dep:
-                continue
-
-            compilation_context = dep[CcInfo].compilation_context
-            for include in compilation_context.includes.to_list():
-                if len(include) == 0:
-                    include = "."
-                options.append("-I{}".format(include))
-
-            for system_include in compilation_context.system_includes.to_list():
-                if len(system_include) == 0:
-                    system_include = "."
-                options.append(SYSTEM_INCLUDE + system_include)
-
-            if hasattr(compilation_context, "external_includes"):
-                for external_include in compilation_context.external_includes.to_list():
-                    if len(external_include) == 0:
-                        external_include = "."
-                    options.append(EXTERNAL_INCLUDE + external_include)
-
     return options
+
+def get_implementation_deps_flags(ctx):
+    """ Return a list of compile options for implementation_deps
+
+    Unlike deps, implementation_deps is used in cc_library() to define private
+    (implementation-only) dependencies and intentionally does not propagate
+    its includes into the target's CcInfo.compilation_context,
+    so we must extract them explicitly.
+
+    Args:
+        ctx: The context variable.
+    Returns:
+      List of compile options for implementation_deps.
+    """
+    if not hasattr(ctx.rule.attr, "implementation_deps"):
+        return []
+
+    implementation_deps = getattr(ctx.rule.attr, "implementation_deps")
+    if type(implementation_deps) != "list":
+        return []
+
+    flags = []
+    for dep in implementation_deps:
+        if CcInfo not in dep:
+            continue
+        for flag in get_compile_flags(dep, local_defines = False):
+            if flag not in flags:
+                flags.append(flag)
+    return flags
 
 def get_sources(ctx):
     """ Return a list of source files
@@ -173,11 +177,9 @@ def _is_cpp_target(src):
     return src.extension in _cpp_extensions
 
 # Function copied from https://github.com/grailbio/bazel-compilation-database/blob/master/aspects.bzl
-def _cc_compiler_info(ctx, target, src, feature_configuration, cc_toolchain):
-    compile_variables = None
+def _cc_compiler_info(ctx, src, feature_configuration, cc_toolchain):
     compiler_options = None
     compiler = None
-    compile_flags = None
     force_language_mode_option = ""
 
     # This is useful for compiling .h headers as C++ code.
@@ -215,15 +217,9 @@ def _cc_compiler_info(ctx, target, src, feature_configuration, cc_toolchain):
         ),
     )
 
-    compile_flags = (compiler_options +
-                     get_compile_flags(ctx, target) +
-                     (ctx.rule.attr.copts if "copts" in dir(ctx.rule.attr) else []))
-
     return struct(
-        compile_variables = compile_variables,
         compiler_options = compiler_options,
         compiler = compiler,
-        compile_flags = compile_flags,
         force_language_mode_option = force_language_mode_option,
     )
 
@@ -247,6 +243,21 @@ def get_compilation_database(target, ctx):
         unsupported_features = ctx.disabled_features,
     )
 
+    # Common compiler flags
+    compile_flags = get_compile_flags(target)
+    for flag in get_implementation_deps_flags(ctx):
+        if flag not in compile_flags:
+            compile_flags.append(flag)
+    copts = ctx.rule.attr.copts if "copts" in dir(ctx.rule.attr) else []
+    compile_flags += copts
+    builtin_includes = [
+        # Use -I to indicate that we want to keep the normal position in the system include chain.
+        # See https://github.com/grailbio/bazel-compilation-database/issues/36#issuecomment-531971361.
+        "-I " + str(d)
+        for d in cc_toolchain.built_in_include_directories
+    ]
+    compile_flags += builtin_includes
+
     srcs = get_sources(ctx)
 
     directory = "."
@@ -254,22 +265,10 @@ def get_compilation_database(target, ctx):
     for src in srcs:
         if src.extension not in _c_and_cpp_extensions:
             continue
-        compiler_info = _cc_compiler_info(
-            ctx,
-            target,
-            src,
-            feature_configuration,
-            cc_toolchain,
-        )
-        compile_flags = compiler_info.compile_flags
-        compile_flags += [
-            # Use -I to indicate that we want to keep the normal position in the system include chain.
-            # See https://github.com/grailbio/bazel-compilation-database/issues/36#issuecomment-531971361.
-            "-I " + str(d)
-            for d in cc_toolchain.built_in_include_directories
-        ]
+        compiler_info = _cc_compiler_info(ctx, src, feature_configuration, cc_toolchain)
+        flags = compiler_info.compiler_options + compile_flags
         compile_command = compiler_info.compiler + " " + \
-                          " ".join(compile_flags) + compiler_info.force_language_mode_option
+                          " ".join(flags) + compiler_info.force_language_mode_option
         command = compile_command + " -c " + src.path
         compilation_db.append(
             struct(
