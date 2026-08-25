@@ -84,16 +84,21 @@ jobs:
           bazel test //test/buildifier --test_output=all
         shell: bash -el {0}
 
-      # Splitting unit and FOSS tests, since unit tests fail faster.
+      # Splitting test runs to: bazel unit tests, bazel foss tests, python unittests
       # Therefore: less wasted CI runtime.
       - name: Run unit tests
         run: |
-          bazel test //...
-          pytest test/unit ${{ runner.debug == '1' && '--log-cli-level=DEBUG' || '' }}
+          bazel test //... --test_tag_filters=-foss --test_output=errors
         shell: bash -el {0}
 
-      - name: Run Open Source tests
-        run: pytest test/foss ${{ runner.debug == '1' && '--log-cli-level=DEBUG' || '' }}
+      - name: Run foss tests
+        run: |
+          bazel test //test/foss/... --test_output=errors
+        shell: bash -el {0}
+
+      - name: Run python unittests
+        run: |
+          pytest test ${{ runner.debug == '1' && '--log-cli-level=DEBUG' || '' }}
         shell: bash -el {0}
 
   rhel9_test:
@@ -154,20 +159,19 @@ jobs:
           runuser -u test -- bazel test //test/buildifier --test_output=all
         shell: bash -el {0}
 
-      # Splitting unit and FOSS tests, since unit tests fail faster.
+      # Splitting test runs to: bazel unit tests, bazel foss tests, python unittests
       # Therefore: less wasted CI runtime.
       - name: Run unit tests
         run: |
           runuser -u test -- bazel test //... --test_tag_filters=-foss --test_output=errors
-          runuser -u test -- pytest test/unit ${{ runner.debug == '1' && '--log-cli-level=DEBUG' || '' }}
         shell: bash -el {0}
 
       - name: Run foss tests
         run: |
-          runuser -u test -- bazel test //test/bazel/... --test_output=errors
+          runuser -u test -- bazel test //test/foss/... --test_output=errors
         shell: bash -el {0}
 
-      - name: Run Open Source tests
-        run: runuser -u test -- pytest test/foss ${{ runner.debug == '1' && '--log-cli-level=DEBUG' || '' }}
+      - name: Run python unittests
+        run: |
+          runuser -u test -- pytest test ${{ runner.debug == '1' && '--log-cli-level=DEBUG' || '' }}
         shell: bash -el {0}
-
