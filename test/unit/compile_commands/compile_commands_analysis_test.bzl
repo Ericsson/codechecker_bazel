@@ -145,7 +145,8 @@ def _get_compile_flags_local_defines_from_impl_deps_test_impl(ctx):
     asserts.false(
         env,
         "IMPL_DEP_LOCAL_DEF" in foo_commands[0],
-        "Should contain local_define IMPL_DEP_LOCAL_DEF from implementation_dep, got: %s" % foo_commands[0],
+        "Should contain local_define IMPL_DEP_LOCAL_DEF from " +
+        "implementation_dep, got: %s" % foo_commands[0],
     )
 
     return analysistest.end(env)
@@ -195,7 +196,7 @@ get_compile_flags_includes_from_impl_deps_test = analysistest.make(
 )
 
 def _get_compile_flags_copts_test_impl(ctx):
-    """copts are passed through to the compile command."""
+    """The copts flags are passed through to the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
 
