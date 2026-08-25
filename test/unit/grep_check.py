@@ -54,18 +54,29 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--contains",
         nargs="+",
+        action="extend",
         required=False,
         help="One or more string to assert are present in the file(s).",
     )
     parser.add_argument(
         "--excludes",
         nargs="+",
+        action="extend",
         required=False,
         help="One or more string to assert are not present in the file(s).",
     )
     parser.add_argument(
+        "--once",
+        nargs="+",
+        action="extend",
+        required=False,
+        help="One or more string to assert are present exactly once "
+        "in the file(s), for instance to detect duplicated flags.",
+    )
+    parser.add_argument(
         "--regex_patterns",
         nargs="+",
+        action="extend",
         required=False,
         help="One or more patterns to assert are present in the file(s).",
     )
@@ -81,13 +92,19 @@ def parse_args() -> argparse.Namespace:
 
 def check_args(args):
     """Checks wether the arguments are correct, aborts if not"""
-    if not args.contains and not args.excludes and not args.regex_patterns:
+    if (not args.contains and not args.excludes and
+            not args.regex_patterns and not args.once):
         fail("  [ERROR] Must define at least one pattern or negative pattern.")
 
 
 def exact_match(pattern: str, content: str) -> bool:
     """Default search: checks if pattern is exactly in content."""
     return pattern in content
+
+
+def single_match(pattern: str, content: str) -> bool:
+    """Checks if pattern is in content exactly once."""
+    return content.count(pattern) == 1
 
 
 def check_patterns(
@@ -134,6 +151,7 @@ def check_file(content: str, args) -> tuple[bool, set[str], set[str]]:
     groups = [
         (args.contains, exact_match, False),
         (args.excludes, exact_match, True),
+        (args.once, single_match, False),
         (args.regex_patterns, re.search, False),
     ]
 
@@ -219,6 +237,7 @@ def main() -> None:
         patterns = (
             (args.contains or [])
             + (args.excludes or [])
+            + (args.once or [])
             + (args.regex_patterns or [])
         )
 

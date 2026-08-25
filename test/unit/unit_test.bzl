@@ -36,6 +36,7 @@ def unit_test(
         expected_missing_files = [],
         contains = None,
         excludes = None,
+        once = None,
         regex_patterns = None,
         require_patterns_in_each_file = True,
         tags = [],
@@ -51,6 +52,7 @@ def unit_test(
                                 disregard the missing file error.
         contains: Text that should be inside the files.
         excludes: Text that shouldn't be inside the files.
+        once: Text that should be inside the files exactly once.
         regex_patterns: Regex patterns that should be found inside the files.
         require_patterns_in_each_file: If False its enough if every pattern is found in at least one file.
         tags: Additional test tags.
@@ -65,6 +67,8 @@ def unit_test(
         contains = [contains]
     if type(excludes) == "string":
         excludes = [excludes]
+    if type(once) == "string":
+        once = [once]
     if type(regex_patterns) == "string":
         regex_patterns = [regex_patterns]
 
@@ -73,14 +77,29 @@ def unit_test(
         python_args.append("--missing_files")
         python_args.extend(expected_missing_files)
     if contains:
-        python_args.append("--contains")
-        python_args.extend(["\"{}\"".format(pat) for pat in contains])
+        # Pass every pattern with = so that patterns starting with a dash,
+        # like compiler flags, are not parsed as options
+        python_args.extend(
+            ["--contains=\"{}\"".format(pat) for pat in contains],
+        )
     if excludes:
-        python_args.append("--excludes")
-        python_args.extend(["\"{}\"".format(pat) for pat in excludes])
+        # Pass every pattern with = so that patterns starting with a dash,
+        # like compiler flags, are not parsed as options
+        python_args.extend(
+            ["--excludes=\"{}\"".format(pat) for pat in excludes],
+        )
+    if once:
+        # Pass every pattern with = so that patterns starting with a dash,
+        # like compiler flags, are not parsed as options
+        python_args.extend(
+            ["--once=\"{}\"".format(pat) for pat in once],
+        )
     if regex_patterns:
-        python_args.append("--regex_patterns")
-        python_args.extend(["\"{}\"".format(pat) for pat in regex_patterns])
+        # Pass every pattern with = so that patterns starting with a dash,
+        # like compiler flags, are not parsed as options
+        python_args.extend(
+            ["--regex_patterns=\"{}\"".format(pat) for pat in regex_patterns],
+        )
     if not require_patterns_in_each_file:
         python_args.append("--any")
 
