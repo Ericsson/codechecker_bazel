@@ -251,8 +251,9 @@ def analyze(cfg):
         if env_list:
             codechecker_env = dict(item.split("=", 1) for item in env_list)
             env.update(codechecker_env)
+    # Note: This is a workaround, CodeChecker requires the PATH to be set
     if "PATH" not in env:
-        env["PATH"] = "/bin"  # NOTE: this is workaround for CodeChecker 6.24.4
+        env["PATH"] = "/bin"
     env["CC_ANALYZER_BIN"] = generate_analyzer_executables(cfg)
     logging.debug("env: %s", str(env))
 

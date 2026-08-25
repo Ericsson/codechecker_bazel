@@ -97,6 +97,7 @@ def _run_code_checker(
     # Action to run CodeChecker for a file
     # env_vars are unused for now, since
     # use_default_shell_env and env are incompatible
+    # TODO: use env for environment variables, instead of passing it as argument
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
@@ -119,7 +120,6 @@ def _run_code_checker(
             analyzer_executables,
         ],
         mnemonic = "CodeChecker",
-        use_default_shell_env = True,
         progress_message = "CodeChecker analyze {}".format(src.short_path),
     )
     return outputs
