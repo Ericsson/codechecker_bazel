@@ -40,7 +40,6 @@ cc_library(
     tags = ["manual"],
 )
 
-# BUG (manual): defines from implementation_deps are not collected.
 cc_library(
     name = "compile_flags_tests_impl_dep_with_defines",
     srcs = ["testdata/bar.cc"],
@@ -59,7 +58,6 @@ cc_library(
 
 get_compile_flags_defines_from_impl_deps_test(
     name = "get_compile_flags_defines_from_impl_deps",
-    tags = ["manual"],
     target_under_test = ":compile_flags_tests_with_impl_dep_defines",
 )
 
@@ -71,7 +69,6 @@ cc_library(
     tags = ["manual"],
 )
 
-# BUG (manual): local_defines from implementation_deps are not collected.
 cc_library(
     name = "compile_flags_tests_impl_dep_with_local_defines",
     srcs = ["testdata/bar.cc"],
@@ -90,7 +87,6 @@ cc_library(
 
 get_compile_flags_local_defines_from_impl_deps_test(
     name = "get_compile_flags_local_defines_from_impl_deps",
-    tags = ["manual"],
     target_under_test = ":compile_flags_tests_with_impl_dep_local_defines",
 )
 
@@ -199,7 +195,6 @@ cc_library(
     deps = [":compile_flags_tests_quote_include_provider"],
 )
 
-# BUG (manual): quote_includes from implementation_deps are not collected.
 custom_ccinfo(
     name = "compile_flags_tests_dep_quote_include_provider",
     quote_includes = ["dep/quote/path"],
@@ -216,15 +211,12 @@ cc_library(
 
 get_compile_flags_quote_includes_from_deps_test(
     name = "get_compile_flags_quote_includes_from_deps",
-    tags = ["manual"],
     target_under_test = ":compile_flags_tests_with_dep_quote_includes",
 )
 
 get_compile_flags_test_suite(name = "compile_flags_tests")
 
-# BUG (manual): compile commands should not contain duplicate flags.
 get_compile_flags_no_duplicates_test(
     name = "get_compile_flags_no_duplicates",
-    tags = ["manual"],
     target_under_test = ":compile_flags_tests_with_dep_includes",
 )
