@@ -10,13 +10,12 @@
     <link rel="stylesheet" media="(prefers-color-scheme: dark)" href="//cdn.jsdelivr.net/npm/docsify@5.0.0/dist/themes/addons/core-dark.css" />
 
     <style>
-        /* Hide the toggle button icon */
-        .sidebar-toggle {
-            display: none !important;
-        }
-        /* Ensure the content section leaves room for the persistent sidebar */
-        body.close .content {
-            transform: translateX(0) !important;
+        /* Hide the sidebar for narrow screen and show toggle button to bring it back.
+           On wider screens the sidebar is always visible. */
+        @media screen and (min-width: 1111px) {
+            .sidebar-toggle {
+                display: none !important;
+            }
         }
 
         /* Code blocks inherit the prose line height (1.6) from the theme,
