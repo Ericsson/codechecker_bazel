@@ -85,7 +85,9 @@ get_compile_flags_defines_test = analysistest.make(
 )
 
 def _get_compile_flags_defines_from_impl_deps_test_impl(ctx):
-    """BUG: defines from implementation_deps are missing in compile commands. #305
+    """
+    BUG: defines from implementation_deps are missing in compile commands. 
+    GitHub issue #305
 
     get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
     system_includes, and external_includes — but NOT defines.
@@ -130,7 +132,9 @@ get_compile_flags_local_defines_test = analysistest.make(
 )
 
 def _get_compile_flags_local_defines_from_impl_deps_test_impl(ctx):
-    """BUG: local_defines from implementation_deps are missing in compile commands. #306
+    """
+    BUG: local_defines from implementation_deps are missing in compile commands.
+    GitHub issue #306
 
     get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
     system_includes, and external_includes — but NOT local_defines.
@@ -298,7 +302,9 @@ get_compile_flags_quote_includes_test = analysistest.make(
 )
 
 def _get_compile_flags_quote_includes_from_deps_test_impl(ctx):
-    """BUG: quote_includes from implementation_deps are missing in compile commands. #304
+    """
+    BUG: quote_includes from implementation_deps are missing in compile commands.
+    GitHub issue #304
 
     get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
     system_includes, and external_includes — but NOT quote_includes.
@@ -324,7 +330,9 @@ get_compile_flags_quote_includes_from_deps_test = analysistest.make(
 )
 
 def _get_compile_flags_no_duplicates_test_impl(ctx):
-    """BUG: Compile flags should not contain duplicates. #307
+    """
+    BUG: Compile flags should not contain duplicates.
+    GitHub issue #307
 
     get_compile_flags may add the same include path multiple times — once
     from the target's own CcInfo compilation_context, and again when iterating
