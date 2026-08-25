@@ -8,19 +8,29 @@ CodeCheckerInfo = provider(
         "clang_tidy": "clang-tidy executable",
         "clangsa": "Clang executable",
         "codechecker": "CodeChecker executable",
-        "runfiles": "Depset of files needed to run the tools: the three executables " +
-                    "plus their transitive data_runfiles. Pass to `tools` in " +
-                    "ctx.actions.run and include in test runfiles.",
+        "fake_path": "A File in the fake PATH directory. Use .dirname to get the directory path.",
+        "runfiles": "Depset of files needed to run the tools: the three executables, " +
+                    "fake PATH contents, plus their transitive data_runfiles. Pass to " +
+                    "`tools` in ctx.actions.run and include in test runfiles.",
     },
 )
 
 def _codechecker_toolchain_impl(ctx):
+    fake_path_dir = "fake_path"
+    dirname = ctx.actions.declare_file(fake_path_dir + "/dirname")
+    ctx.actions.symlink(
+        output = dirname,
+        target_file = ctx.executable.dirname,
+    )
+
+    fake_path_files = [dirname]
+
     runfiles = depset(
         direct = [
             ctx.executable.codechecker,
             ctx.executable.clangsa,
             ctx.executable.clang_tidy,
-        ],
+        ] + fake_path_files,
         transitive = [
             # We also collect files necessary for these programs to run.
             # Those files should be declared with `data = [...]`
@@ -35,10 +45,14 @@ def _codechecker_toolchain_impl(ctx):
             codechecker = ctx.executable.codechecker,
             clang_tidy = ctx.executable.clang_tidy,
             clangsa = ctx.executable.clangsa,
+            fake_path = dirname,
             runfiles = runfiles,
         ),
     )
-    return [toolchain_info]
+    return [
+        toolchain_info,
+        DefaultInfo(files = depset(fake_path_files)),
+    ]
 
 codechecker_toolchain = rule(
     implementation = _codechecker_toolchain_impl,
@@ -58,6 +72,12 @@ codechecker_toolchain = rule(
         "codechecker": attr.label(
             default = "@default_codechecker_tools//:CodeChecker",
             doc = "Executable target for `CodeChecker`.",
+            executable = True,
+            cfg = "exec",
+        ),
+        "dirname": attr.label(
+            default = "@default_codechecker_tools//:dirname",
+            doc = "Executable target for dirname",
             executable = True,
             cfg = "exec",
         ),
