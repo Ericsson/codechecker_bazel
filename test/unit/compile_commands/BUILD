@@ -19,7 +19,7 @@ load(
     "custom_ccinfo",
     "defines_from_impl_deps_test",
     "includes_from_impl_deps_test",
-    "local_defines_from_impl_deps_test",
+    "local_defines_in_impl_deps_test",
     "no_duplicates_test",
     "quote_includes_from_deps_test",
     "system_includes_from_impl_deps_test",
@@ -85,8 +85,8 @@ cc_library(
     tags = ["manual"],
 )
 
-local_defines_from_impl_deps_test(
-    name = "local_defines_from_impl_deps",
+local_defines_in_impl_deps_test(
+    name = "local_defines_in_impl_deps",
     target_under_test = ":compile_flags_tests_with_impl_dep_local_defines",
 )
 

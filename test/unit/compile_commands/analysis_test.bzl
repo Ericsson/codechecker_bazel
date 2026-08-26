@@ -129,30 +129,35 @@ local_defines_test = analysistest.make(
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _local_defines_from_impl_deps_test_impl(ctx):
-    """BUG: local_defines from implementation_deps are missing in compile commands. #306
-
-    get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
-    system_includes, and external_includes — but NOT local_defines.
-    """
+def _local_defines_in_impl_deps_test_impl(ctx):
+    """local_defines from implementation_deps are local to the dep's own sources."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
 
     foo_commands = [c for c in commands if "foo.cc" in c]
     asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
 
-    # FIXME: Change to true
     asserts.false(
         env,
         "IMPL_DEP_LOCAL_DEF" in foo_commands[0],
-        "Should contain local_define IMPL_DEP_LOCAL_DEF from " +
+        "Should not contain local_define IMPL_DEP_LOCAL_DEF from " +
         "implementation_dep, got: %s" % foo_commands[0],
+    )
+
+    bar_commands = [c for c in commands if "bar.cc" in c]
+    asserts.true(env, len(bar_commands) > 0, "Should have a command for bar.cc")
+
+    asserts.true(
+        env,
+        "IMPL_DEP_LOCAL_DEF" in bar_commands[0],
+        "Should contain local_define IMPL_DEP_LOCAL_DEF from " +
+        "implementation_dep, got: %s" % bar_commands[0],
     )
 
     return analysistest.end(env)
 
-local_defines_from_impl_deps_test = analysistest.make(
-    _local_defines_from_impl_deps_test_impl,
+local_defines_in_impl_deps_test = analysistest.make(
+    _local_defines_in_impl_deps_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
