@@ -342,13 +342,22 @@ def _no_duplicates_test_impl(ctx):
     foo_commands = [c for c in commands if "foo.cc" in c]
     asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
 
-    # Split command into flags and check for duplicates
-    flags = foo_commands[0].split(" ")
+    # Split command into flag+value pairs and check for duplicates.
+    # If a token starts with "-" it begins a new flag; otherwise it's the
+    # value of the previous flag (e.g. "-I /path" becomes one entry).
+    tokens = foo_commands[0].split(" ")
+    flags = []
+    for t in tokens:
+        if t == "":
+            continue
+        if t.startswith("-") or len(flags) == 0:
+            flags.append(t)
+        else:
+            flags[-1] = flags[-1] + " " + t
+
     seen = []
     duplicates = []
     for f in flags:
-        if f == "":
-            continue
         if f in seen and f not in duplicates:
             duplicates.append(f)
         seen.append(f)
