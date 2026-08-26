@@ -85,20 +85,14 @@ defines_test = analysistest.make(
 )
 
 def _defines_from_impl_deps_test_impl(ctx):
-    """BUG: defines from implementation_deps are missing. #305
-
-    Compile command generation iterates over deps in SOURCE_ATTR and
-    collects includes, system_includes, and external_includes — but
-    NOT defines.
-    """
+    """defines from implementation_deps appear as -D in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
 
     foo_commands = [c for c in commands if "foo.cc" in c]
     asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
 
-    # FIXME: Change to true
-    asserts.false(
+    asserts.true(
         env,
         "IMPL_DEP_DEFINE" in foo_commands[0],
         "Should contain define IMPL_DEP_DEFINE from implementation_dep, got: %s" % foo_commands[0],
@@ -304,20 +298,14 @@ quote_includes_test = analysistest.make(
 )
 
 def _quote_includes_from_deps_test_impl(ctx):
-    """BUG: quote_includes from implementation_deps are missing. #304
-
-    Compile command generation iterates over deps in SOURCE_ATTR and
-    collects includes, system_includes, and external_includes — but
-    NOT quote_includes.
-    """
+    """quote_includes from implementation_deps appear as -iquote in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
 
     foo_commands = [c for c in commands if "foo.cc" in c]
     asserts.true(env, len(foo_commands) > 0, "Should have a command for foo.cc")
 
-    # FIXME: Change to true
-    asserts.false(
+    asserts.true(
         env,
         "-iquote dep/quote/path" in foo_commands[0],
         "Should contain -iquote dep/quote/path from implementation_dep, got: %s" % foo_commands[0],
@@ -331,14 +319,7 @@ quote_includes_from_deps_test = analysistest.make(
 )
 
 def _no_duplicates_test_impl(ctx):
-    """BUG: Compile flags should not contain duplicates. #307
-
-    Compile command generation may add the same include path multiple
-    times — once from the target's own CcInfo compilation_context,
-    and again when iterating over deps in SOURCE_ATTR. This test
-    asserts the desired behavior: no flag should appear more than
-    once in a compile command.
-    """
+    """Compile flags should not contain duplicates."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
 
@@ -365,8 +346,7 @@ def _no_duplicates_test_impl(ctx):
             duplicates.append(f)
         seen.append(f)
 
-    # FIXME: Change to true
-    asserts.false(
+    asserts.true(
         env,
         len(duplicates) == 0,
         "Compile command should not have duplicate flags, found: %s" % duplicates,
