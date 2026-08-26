@@ -62,7 +62,7 @@ def _get_compile_commands(source_files_info):
     return [entry.command for entry in source_files_info.compilation_db.to_list()]
 
 # =============================================================================
-# get_compile_flags
+# Compilation flag collection tests
 # =============================================================================
 
 def _defines_test_impl(ctx):
@@ -85,10 +85,11 @@ defines_test = analysistest.make(
 )
 
 def _defines_from_impl_deps_test_impl(ctx):
-    """BUG: defines from implementation_deps are missing in compile commands. #305
+    """BUG: defines from implementation_deps are missing. #305
 
-    get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
-    system_includes, and external_includes — but NOT defines.
+    Compile command generation iterates over deps in SOURCE_ATTR and
+    collects includes, system_includes, and external_includes — but
+    NOT defines.
     """
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -303,10 +304,11 @@ quote_includes_test = analysistest.make(
 )
 
 def _quote_includes_from_deps_test_impl(ctx):
-    """BUG: quote_includes from implementation_deps are missing in compile commands. #304
+    """BUG: quote_includes from implementation_deps are missing. #304
 
-    get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
-    system_includes, and external_includes — but NOT quote_includes.
+    Compile command generation iterates over deps in SOURCE_ATTR and
+    collects includes, system_includes, and external_includes — but
+    NOT quote_includes.
     """
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -331,10 +333,11 @@ quote_includes_from_deps_test = analysistest.make(
 def _no_duplicates_test_impl(ctx):
     """BUG: Compile flags should not contain duplicates. #307
 
-    get_compile_flags may add the same include path multiple times — once
-    from the target's own CcInfo compilation_context, and again when iterating
-    over deps in SOURCE_ATTR. This test asserts the desired behavior:
-    no flag should appear more than once in a compile command.
+    Compile command generation may add the same include path multiple
+    times — once from the target's own CcInfo compilation_context,
+    and again when iterating over deps in SOURCE_ATTR. This test
+    asserts the desired behavior: no flag should appear more than
+    once in a compile command.
     """
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -381,7 +384,7 @@ no_duplicates_test = analysistest.make(
 # =============================================================================
 
 def compile_flags_test_suite(name):
-    """Analysis tests for get_compile_flags.
+    """Analysis tests for compile command generation.
 
     Args:
         name: the name prefix for the test suite.
