@@ -113,6 +113,7 @@ def _run_codechecker() -> None:
         + ["--skip", SKIP_FILE]
         + ["--config", CONFIG_FILE]
         + [COMPILE_COMMANDS_ABSOLUTE]
+        + ["-j 1"] # Analysis of a single file should use a single thread!
     )
     log(f"CodeChecker command: {' '.join(codechecker_cmd)}\n")
     log("===-----------------------------------------------------===\n")
