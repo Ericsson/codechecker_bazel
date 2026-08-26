@@ -14,15 +14,15 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load(
-    ":compile_commands_analysis_test.bzl",
+    ":analysis_test.bzl",
+    "compile_flags_test_suite",
     "custom_ccinfo",
-    "get_compile_flags_defines_from_impl_deps_test",
-    "get_compile_flags_includes_from_impl_deps_test",
-    "get_compile_flags_local_defines_from_impl_deps_test",
-    "get_compile_flags_no_duplicates_test",
-    "get_compile_flags_quote_includes_from_deps_test",
-    "get_compile_flags_system_includes_from_impl_deps_test",
-    "get_compile_flags_test_suite",
+    "defines_from_impl_deps_test",
+    "includes_from_impl_deps_test",
+    "local_defines_from_impl_deps_test",
+    "no_duplicates_test",
+    "quote_includes_from_deps_test",
+    "system_includes_from_impl_deps_test",
 )
 
 # =============================================================================
@@ -56,8 +56,8 @@ cc_library(
     tags = ["manual"],
 )
 
-get_compile_flags_defines_from_impl_deps_test(
-    name = "get_compile_flags_defines_from_impl_deps",
+defines_from_impl_deps_test(
+    name = "defines_from_impl_deps",
     target_under_test = ":compile_flags_tests_with_impl_dep_defines",
 )
 
@@ -85,8 +85,8 @@ cc_library(
     tags = ["manual"],
 )
 
-get_compile_flags_local_defines_from_impl_deps_test(
-    name = "get_compile_flags_local_defines_from_impl_deps",
+local_defines_from_impl_deps_test(
+    name = "local_defines_from_impl_deps",
     target_under_test = ":compile_flags_tests_with_impl_dep_local_defines",
 )
 
@@ -115,8 +115,8 @@ cc_library(
     tags = ["manual"],
 )
 
-get_compile_flags_includes_from_impl_deps_test(
-    name = "get_compile_flags_includes_from_impl_deps",
+includes_from_impl_deps_test(
+    name = "includes_from_impl_deps",
     target_under_test = ":compile_flags_tests_with_impl_dep_includes",
 )
 
@@ -176,8 +176,8 @@ cc_library(
     tags = ["manual"],
 )
 
-get_compile_flags_system_includes_from_impl_deps_test(
-    name = "get_compile_flags_system_includes_from_impl_deps",
+system_includes_from_impl_deps_test(
+    name = "system_includes_from_impl_deps",
     target_under_test = ":compile_flags_tests_with_impl_dep_system_includes",
 )
 
@@ -209,14 +209,14 @@ cc_library(
     tags = ["manual"],
 )
 
-get_compile_flags_quote_includes_from_deps_test(
-    name = "get_compile_flags_quote_includes_from_deps",
+quote_includes_from_deps_test(
+    name = "quote_includes_from_deps",
     target_under_test = ":compile_flags_tests_with_dep_quote_includes",
 )
 
-get_compile_flags_test_suite(name = "compile_flags_tests")
+compile_flags_test_suite(name = "compile_flags_tests")
 
-get_compile_flags_no_duplicates_test(
-    name = "get_compile_flags_no_duplicates",
+no_duplicates_test(
+    name = "no_duplicates",
     target_under_test = ":compile_flags_tests_with_dep_includes",
 )

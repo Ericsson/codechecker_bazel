@@ -65,7 +65,7 @@ def _get_compile_commands(source_files_info):
 # get_compile_flags
 # =============================================================================
 
-def _get_compile_flags_defines_test_impl(ctx):
+def _defines_test_impl(ctx):
     """defines appear as -D in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -79,12 +79,12 @@ def _get_compile_flags_defines_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_defines_test = analysistest.make(
-    _get_compile_flags_defines_test_impl,
+defines_test = analysistest.make(
+    _defines_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_defines_from_impl_deps_test_impl(ctx):
+def _defines_from_impl_deps_test_impl(ctx):
     """BUG: defines from implementation_deps are missing in compile commands. #305
 
     get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
@@ -105,12 +105,12 @@ def _get_compile_flags_defines_from_impl_deps_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_defines_from_impl_deps_test = analysistest.make(
-    _get_compile_flags_defines_from_impl_deps_test_impl,
+defines_from_impl_deps_test = analysistest.make(
+    _defines_from_impl_deps_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_local_defines_test_impl(ctx):
+def _local_defines_test_impl(ctx):
     """local_defines appear as -D in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -124,12 +124,12 @@ def _get_compile_flags_local_defines_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_local_defines_test = analysistest.make(
-    _get_compile_flags_local_defines_test_impl,
+local_defines_test = analysistest.make(
+    _local_defines_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_local_defines_from_impl_deps_test_impl(ctx):
+def _local_defines_from_impl_deps_test_impl(ctx):
     """BUG: local_defines from implementation_deps are missing in compile commands. #306
 
     get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
@@ -151,12 +151,12 @@ def _get_compile_flags_local_defines_from_impl_deps_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_local_defines_from_impl_deps_test = analysistest.make(
-    _get_compile_flags_local_defines_from_impl_deps_test_impl,
+local_defines_from_impl_deps_test = analysistest.make(
+    _local_defines_from_impl_deps_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_includes_test_impl(ctx):
+def _includes_test_impl(ctx):
     """includes appear as -I in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -170,12 +170,12 @@ def _get_compile_flags_includes_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_includes_test = analysistest.make(
-    _get_compile_flags_includes_test_impl,
+includes_test = analysistest.make(
+    _includes_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_includes_from_impl_deps_test_impl(ctx):
+def _includes_from_impl_deps_test_impl(ctx):
     """includes from implementation_deps propagate to the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -190,12 +190,12 @@ def _get_compile_flags_includes_from_impl_deps_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_includes_from_impl_deps_test = analysistest.make(
-    _get_compile_flags_includes_from_impl_deps_test_impl,
+includes_from_impl_deps_test = analysistest.make(
+    _includes_from_impl_deps_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_copts_test_impl(ctx):
+def _copts_test_impl(ctx):
     """The copts flags are passed through to the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -214,12 +214,12 @@ def _get_compile_flags_copts_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_copts_test = analysistest.make(
-    _get_compile_flags_copts_test_impl,
+copts_test = analysistest.make(
+    _copts_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_dep_includes_test_impl(ctx):
+def _dep_includes_test_impl(ctx):
     """includes from deps propagate to the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -234,12 +234,12 @@ def _get_compile_flags_dep_includes_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_dep_includes_test = analysistest.make(
-    _get_compile_flags_dep_includes_test_impl,
+dep_includes_test = analysistest.make(
+    _dep_includes_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_system_includes_test_impl(ctx):
+def _system_includes_test_impl(ctx):
     """system_includes appear as -isystem in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -253,12 +253,12 @@ def _get_compile_flags_system_includes_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_system_includes_test = analysistest.make(
-    _get_compile_flags_system_includes_test_impl,
+system_includes_test = analysistest.make(
+    _system_includes_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_system_includes_from_impl_deps_test_impl(ctx):
+def _system_includes_from_impl_deps_test_impl(ctx):
     """system_includes from implementation_deps appear as -isystem in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -273,12 +273,12 @@ def _get_compile_flags_system_includes_from_impl_deps_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_system_includes_from_impl_deps_test = analysistest.make(
-    _get_compile_flags_system_includes_from_impl_deps_test_impl,
+system_includes_from_impl_deps_test = analysistest.make(
+    _system_includes_from_impl_deps_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_quote_includes_test_impl(ctx):
+def _quote_includes_test_impl(ctx):
     """quote_includes appear as -iquote in the compile command."""
     env = analysistest.begin(ctx)
     commands = _get_compile_commands(analysistest.target_under_test(env)[SourceFilesInfo])
@@ -292,12 +292,12 @@ def _get_compile_flags_quote_includes_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_quote_includes_test = analysistest.make(
-    _get_compile_flags_quote_includes_test_impl,
+quote_includes_test = analysistest.make(
+    _quote_includes_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_quote_includes_from_deps_test_impl(ctx):
+def _quote_includes_from_deps_test_impl(ctx):
     """BUG: quote_includes from implementation_deps are missing in compile commands. #304
 
     get_compile_flags iterates over deps in SOURCE_ATTR and collects includes,
@@ -318,12 +318,12 @@ def _get_compile_flags_quote_includes_from_deps_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_quote_includes_from_deps_test = analysistest.make(
-    _get_compile_flags_quote_includes_from_deps_test_impl,
+quote_includes_from_deps_test = analysistest.make(
+    _quote_includes_from_deps_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
-def _get_compile_flags_no_duplicates_test_impl(ctx):
+def _no_duplicates_test_impl(ctx):
     """BUG: Compile flags should not contain duplicates. #307
 
     get_compile_flags may add the same include path multiple times — once
@@ -357,8 +357,8 @@ def _get_compile_flags_no_duplicates_test_impl(ctx):
 
     return analysistest.end(env)
 
-get_compile_flags_no_duplicates_test = analysistest.make(
-    _get_compile_flags_no_duplicates_test_impl,
+no_duplicates_test = analysistest.make(
+    _no_duplicates_test_impl,
     extra_target_under_test_aspects = [compile_commands_aspect],
 )
 
@@ -366,37 +366,37 @@ get_compile_flags_no_duplicates_test = analysistest.make(
 # Test suites
 # =============================================================================
 
-def get_compile_flags_test_suite(name):
+def compile_flags_test_suite(name):
     """Analysis tests for get_compile_flags.
 
     Args:
         name: the name prefix for the test suite.
     """
-    get_compile_flags_defines_test(
+    defines_test(
         name = name + "_defines_test",
         target_under_test = ":" + name + "_with_defines",
     )
-    get_compile_flags_local_defines_test(
+    local_defines_test(
         name = name + "_local_defines_test",
         target_under_test = ":" + name + "_with_local_defines",
     )
-    get_compile_flags_includes_test(
+    includes_test(
         name = name + "_includes_test",
         target_under_test = ":" + name + "_with_includes",
     )
-    get_compile_flags_copts_test(
+    copts_test(
         name = name + "_copts_test",
         target_under_test = ":" + name + "_with_copts",
     )
-    get_compile_flags_dep_includes_test(
+    dep_includes_test(
         name = name + "_dep_includes_test",
         target_under_test = ":" + name + "_with_dep_includes",
     )
-    get_compile_flags_system_includes_test(
+    system_includes_test(
         name = name + "_system_includes_test",
         target_under_test = ":" + name + "_with_system_includes",
     )
-    get_compile_flags_quote_includes_test(
+    quote_includes_test(
         name = name + "_quote_includes_test",
         target_under_test = ":" + name + "_with_quote_includes",
     )
