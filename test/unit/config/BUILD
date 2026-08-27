@@ -62,6 +62,42 @@ codechecker_config(
     config_file = "yaml_config_file",
 )
 
+# The env entries of the config have to reach the CodeChecker environment
+codechecker_config(
+    name = "config_env",
+    config_file = "json_config_file",
+    env = [
+        "CC_TEST_VAR=42",
+        "CC_TEST_PATH=/tmp/first:/tmp/second",
+        "CC_TEST_FLAGS=-DFIRST=1 -DSECOND=2",
+        # Values may contain the "; " that used to separate the entries
+        "CC_TEST_PAIRS=VAR1=1; VAR2=2",
+        "CC_TEST_LIST=1; 2; 3;",
+    ],
+)
+
+codechecker_test(
+    name = "codechecker_env",
+    config = "config_env",
+    tags = ["manual"],
+    targets = [
+        "test_zero",
+    ],
+)
+
+unit_test(
+    name = "codechecker_env_test",
+    contains = [
+        "'CC_TEST_VAR': '42'",
+        "'CC_TEST_PATH': '/tmp/first:/tmp/second'",
+        "'CC_TEST_FLAGS': '-DFIRST=1 -DSECOND=2'",
+        "'CC_TEST_PAIRS': 'VAR1=1; VAR2=2'",
+        "'CC_TEST_LIST': '1; 2; 3;'",
+    ],
+    data = [":codechecker_env"],
+    files = "test/unit/config/codechecker_env/codechecker.log",
+)
+
 # None of these codechecker rules should find any issues
 codechecker(
     name = "codechecker_json",

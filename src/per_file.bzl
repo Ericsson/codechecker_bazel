@@ -286,9 +286,8 @@ per_file_test = rule(
                   "Bazel's toolchain resolution.",
         ),
         "_per_file_script": attr.label(
-            allow_files = True,
             executable = True,
-            cfg = "target",
+            cfg = "exec",
             default = ":per_file_script",
         ),
     },

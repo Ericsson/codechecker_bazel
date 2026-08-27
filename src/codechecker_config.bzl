@@ -86,8 +86,8 @@ def get_config_file(ctx):
                 is_executable = False,
             )
 
-        # Pack env vars for CodeChecker
-        codechecker_env = "; ".join(config_info.env)
+        # Env vars for CodeChecker, one entry per variable
+        codechecker_env = config_info.env
     else:
         # Empty CodeChecker JSON config file
         ctx.actions.write(
@@ -95,7 +95,7 @@ def get_config_file(ctx):
             content = "{}",
             is_executable = False,
         )
-        codechecker_env = ""
+        codechecker_env = []
     return (ctx_config_file, codechecker_env)
 
 CodeCheckerConfigInfo = provider(
