@@ -111,8 +111,7 @@ def _run_code_checker(
             info.codechecker.path,
             "--commands",
             compile_commands_json.path,
-            "--analyze",
-            " ".join(options),
+            "--analyze=" + " ".join(options),
             "--config",
             config_file.path,
             "--data_dir",
@@ -191,12 +190,7 @@ def _per_file_impl(ctx):
     config_file, env_vars = get_config_file(ctx)
     all_files = [compile_commands, config_file]
 
-    # Create per_file_script
-    per_file_script = ctx.actions.declare_file(ctx.label.name + "/per_file_script")
-    ctx.actions.symlink(
-        output = per_file_script,
-        target_file = ctx.executable._per_file_script,
-    )
+    per_file_script = ctx.attr._per_file_script[DefaultInfo].files_to_run
 
     if ctx.attr.toolchain:
         info = ctx.attr.toolchain[platform_common.ToolchainInfo].codecheckerinfo

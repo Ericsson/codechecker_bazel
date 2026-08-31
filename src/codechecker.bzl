@@ -99,11 +99,7 @@ def _codechecker_impl(ctx):
 
     codechecker_files = ctx.actions.declare_directory(ctx.label.name + "/codechecker-files")
 
-    codechecker_script = ctx.actions.declare_file(ctx.label.name + "/codechecker_script")
-    ctx.actions.symlink(
-        output = codechecker_script,
-        target_file = ctx.executable._codechecker_script,
-    )
+    codechecker_script = ctx.attr._codechecker_script[DefaultInfo].files_to_run
     cmd_args = ctx.actions.args()
     cmd_args.add("--mode", "Run")
     cmd_args.add("--verbosity", "DEBUG")
@@ -114,7 +110,7 @@ def _codechecker_impl(ctx):
     cmd_args.add("--skip", ctx.outputs.codechecker_skipfile.path)
     cmd_args.add("--config", config_file.path)
     if len(ctx.attr.analyze) != 0:
-        cmd_args.add("--analyze", "'" + " ".join(ctx.attr.analyze) + "'")
+        cmd_args.add("--analyze=" + " ".join(ctx.attr.analyze))
     cmd_args.add("--files", codechecker_files.path)
     cmd_args.add("--log", ctx.outputs.codechecker_log.path)
     cmd_args.add("--env", codechecker_env)

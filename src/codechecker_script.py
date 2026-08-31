@@ -324,26 +324,16 @@ def realpath(filename):
 
 def resolve_plist_symlinks(filepath):
     """Resolve the symbolic links in plist files to real file paths"""
-    # plistlib replaced readPlist/writePlist with load/dump in Python 3.9.
-    # Since Pylint analyzes every line,
-    # it flags the methods missing in the current environment.
-    # pylint: disable=no-member
     logging.info("Processing plist file: %s", filepath)
-    if sys.version_info >= (3, 9):
-        with open(filepath, "rb") as input_file:
-            file_contents = plistlib.load(input_file)
-    else:
-        file_contents = plistlib.readPlist(filepath)
+    with open(filepath, "rb") as input_file:
+        file_contents = plistlib.load(input_file)
     if file_contents["files"]:
         final_files = []
         for entry in file_contents["files"]:
             final_files.append(realpath(entry))
         file_contents["files"] = final_files
         with open(filepath, "wb") as output_file:
-            if sys.version_info >= (3, 9):
-                plistlib.dump(file_contents, output_file)
-            else:
-                plistlib.writePlist(file_contents, output_file)
+            plistlib.dump(file_contents, output_file)
 
 
 def resolve_yaml_symlinks(filepath):
