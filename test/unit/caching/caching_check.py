@@ -34,7 +34,6 @@ import os
 import subprocess
 import sys
 
-
 MODULE_BAZEL_TEMPLATE = """\
 module(name = "caching_test_workspace")
 
@@ -149,6 +148,7 @@ def run_bazel(cmd: str, cwd: str) -> tuple[int, str, str]:
         text=True,
         cwd=cwd,
         env=env,
+        check=False,
     )
     return result.returncode, result.stdout, result.stderr
 
@@ -168,7 +168,7 @@ def find_rules_codechecker_path() -> str:
     )
     if os.path.isfile(os.path.join(repo_root, "MODULE.bazel")):
         return repo_root
-    print(f"FAILED: Cannot find rules_codechecker repo root")
+    print("FAILED: Cannot find rules_codechecker repo root")
     print(f"  script_real_path: {script_real_path}")
     print(f"  computed root: {repo_root}")
     sys.exit(1)
