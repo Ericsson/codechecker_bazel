@@ -8,6 +8,9 @@ CodeCheckerInfo = provider(
         "clang_tidy": "clang-tidy executable",
         "clangsa": "Clang executable",
         "codechecker": "CodeChecker executable",
+        "codechecker_files_to_run": "FilesToRunProvider for the CodeChecker executable. " +
+                                    "Pass to `tools` in ctx.actions.run so that Bazel " +
+                                    "creates the .runfiles tree in the sandbox.",
         "runfiles": "Depset of files needed to run the tools: the three executables " +
                     "plus their transitive data_runfiles. Pass to `tools` in " +
                     "ctx.actions.run and include in test runfiles.",
@@ -33,6 +36,7 @@ def _codechecker_toolchain_impl(ctx):
     toolchain_info = platform_common.ToolchainInfo(
         codecheckerinfo = CodeCheckerInfo(
             codechecker = ctx.executable.codechecker,
+            codechecker_files_to_run = ctx.attr.codechecker[DefaultInfo].files_to_run,
             clang_tidy = ctx.executable.clang_tidy,
             clangsa = ctx.executable.clangsa,
             runfiles = runfiles,

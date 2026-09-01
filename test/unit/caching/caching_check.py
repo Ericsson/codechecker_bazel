@@ -39,10 +39,17 @@ MODULE_BAZEL_TEMPLATE = """\
 module(name = "caching_test_workspace")
 
 bazel_dep(name = "rules_cc", version = "0.2.3")
+bazel_dep(name = "rules_python", version = "0.40.0")
 bazel_dep(name = "rules_codechecker")
 local_path_override(
     module_name = "rules_codechecker",
     path = "{rules_codechecker_path}",
+)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = "3.12",
 )
 """
 

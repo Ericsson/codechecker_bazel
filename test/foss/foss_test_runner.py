@@ -37,6 +37,12 @@ local_path_override(
     path = "{rules_path}",
 )
 bazel_dep(name = "rules_codechecker")
+bazel_dep(name = "rules_python", version = "0.40.0")
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = "3.12",
+)
 """
 
 BUILD_TEMPLATE = """

@@ -46,3 +46,8 @@ exports_files(
     ["MODULE.bazel"],
     visibility = ["//test/buildifier:__pkg__"],
 )
+
+exports_files(
+    ["requirements_lock.txt"],
+    visibility = ["//visibility:public"],
+)
