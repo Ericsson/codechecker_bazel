@@ -33,14 +33,14 @@ caching_test(
 
 caching_test(
     name = "caching_per_file_test",
-    expected_action_count = 1,
+    expected_action_count = 2,
     file_to_modify = "secondary.cc",
     target_name = "per_file_caching",
 )
 
 caching_test(
     name = "caching_per_file_ctu_test",
-    expected_action_count = 2,
+    expected_action_count = 3,
     file_to_modify = "secondary.cc",
     target_name = "per_file_caching_ctu",
 )

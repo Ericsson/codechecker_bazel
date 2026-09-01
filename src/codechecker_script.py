@@ -22,10 +22,18 @@ import logging
 import os
 import plistlib
 import re
-import shlex
-import subprocess
 import sys
 import argparse
+# pylint outside bazel cannot follow the dependency graph
+# This should be removed when pylint is integrated into bazel
+from common import (  # pylint: disable=no-name-in-module
+    setup_logging,
+    fail,
+    execute,
+    parse,
+    stage,
+    check_results,
+)
 
 
 @dataclass
@@ -98,85 +106,6 @@ def parse_args(argv=None):
     )
 
 
-def fail(codechecker_log, message, exit_code=1):
-    """Print error message and return exit code"""
-    logging.error(message)
-    print()
-    print("*" * 50)
-    print("codechecker script execution FAILED!")
-    if log_file_name(codechecker_log):
-        print(f"See: {log_file_name(codechecker_log)}")
-        print("*" * 50)
-        try:
-            with open(
-                log_file_name(codechecker_log), encoding="utf-8"
-            ) as log_file:
-                print(log_file.read())
-        except IOError:
-            print("File not accessible")
-    else:
-        print(message)
-    print("*" * 50)
-    print()
-    sys.exit(exit_code)
-
-
-def read_file(codechecker_log, filename):
-    """Read text file and return its contents"""
-    if not os.path.isfile(filename):
-        fail(codechecker_log, f"File not found: {filename}")
-    with open(filename, encoding="utf-8") as handle:
-        return handle.read()
-
-
-def separator(method="info"):
-    """Print log separator line to logging.info() or other logging methods"""
-    getattr(logging, method)("#" * 23)
-
-
-def stage(title, method="info"):
-    """Print stage title into log"""
-    separator(method)
-    getattr(logging, method)("### " + title)
-    separator(method)
-
-
-def valid_parameter(parameter):
-    """Check if external parameter is defined and valid"""
-    if parameter is None:
-        return False
-    if parameter and parameter[0] == "{":
-        return False
-    return True
-
-
-def log_file_name(codechecker_log):
-    """Check and return log file name"""
-    if valid_parameter(codechecker_log):
-        return codechecker_log
-    return None
-
-
-def setup(verbosity, codechecker_log):
-    """Setup logging parameters for execution session"""
-    if verbosity == "INFO":
-        log_level = logging.INFO
-    elif verbosity == "WARN":
-        log_level = logging.WARN
-    else:
-        log_level = logging.DEBUG
-    log_format = "[codechecker] %(levelname)5s: %(message)s"
-
-    if log_file_name(codechecker_log):
-        logging.basicConfig(
-            filename=log_file_name(codechecker_log),
-            level=log_level,
-            format=log_format,
-        )
-    else:
-        logging.basicConfig(level=log_level, format=log_format)
-
-
 def input_data(cfg):
     """Print out input (external) parameters"""
     stage("CodeChecker input data:", "debug")
@@ -191,31 +120,6 @@ def input_data(cfg):
     logging.debug("CODECHECKER_ENV      : %s", str(cfg.codechecker_env))
     logging.debug("COMPILE_COMMANDS     : %s", str(cfg.compile_commands))
     logging.debug("")
-
-
-def execute(codechecker_log, cmd, env=None, codes=None):
-    """Execute CodeChecker commands"""
-    if codes is None:
-        codes = [0]
-    with subprocess.Popen(
-        cmd,
-        env=env,
-        shell=True,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
-        stdout, stderr = process.communicate()
-        stdout = stdout.decode("utf-8")
-        stderr = stderr.decode("utf-8")
-        if process.returncode not in codes:
-            fail(
-                codechecker_log,
-                f"\ncommand: {cmd}\nstdout: {stdout}\nstderr: {stderr}\n",
-            )
-        logging.debug("Executing: %s", cmd)
-        # logging.debug("Output:\n\n%s\n", stdout)
-    return stdout
 
 
 def create_folder(path):
@@ -397,106 +301,31 @@ def update_file_paths(codechecker_files):
     resolve_symlinks(codechecker_files)
 
 
-def parse(cfg):
-    """Run CodeChecker parse commands"""
-    stage("CodeChecker parse:")
-    logging.info("CodeChecker parse -e json")
-    codechecker_parse = (
-        f"{cfg.codechecker_path} parse --config "
-        f"{cfg.codechecker_config} {cfg.codechecker_files}/data"
-    )
-    # Save results to JSON file
-    command = (
-        f"{codechecker_parse} --export=json > "
-        f"{cfg.codechecker_files}/result.json"
-    )
-    execute(cfg.codechecker_log, command, codes=[0, 2])
-    # Save results as HTML report
-    logging.info("CodeChecker parse -e html")
-    command = (
-        codechecker_parse
-        + " --export=html --output="
-        + cfg.codechecker_files
-        + "/report"
-    )
-    execute(cfg.codechecker_log, command, codes=[0, 2])
-    # Save results to text file
-    logging.info("CodeChecker parse to text result")
-    command = codechecker_parse + " > " + cfg.codechecker_files + "/result.txt"
-    execute(cfg.codechecker_log, command, codes=[0, 2])
-    logging.info(
-        "Result:\n\n%s\n",
-        read_file(cfg.codechecker_log, cfg.codechecker_files + "/result.txt"),
-    )
-
-
 def run(cfg):
     """Perform all steps for "bazel build" phase"""
     prepare(cfg.codechecker_files)
     analyze(cfg)
-    parse(cfg)
-    update_file_paths(cfg.codechecker_files)
-
-
-def check_results(cfg):
-    """Check/verify CodeChecker results"""
-    stage("Checking result:")
-    # Get results file and read it
-    result_file = cfg.codechecker_files + "/result.txt"
-    logging.info("Find CodeChecker results in bazel-out")
-    logging.info("      all artifacts: %s/", cfg.codechecker_files)
-    logging.info(
-        "      HTML report:   %s/report/index.html", cfg.codechecker_files
+    parse(
+        cfg.codechecker_path,
+        cfg.codechecker_config,
+        cfg.codechecker_files + "/data",
+        cfg.codechecker_files,
+        cfg.codechecker_log,
     )
-    logging.info("      result file:   %s", result_file)
-    results = read_file(cfg.codechecker_log, result_file)
-    logging.info("Results: \n\n%s\n", results)
-    # Collect defect severities to detect
-    if not valid_parameter(cfg.codechecker_severities):
-        fail(
-            cfg.codechecker_log,
-            "CodeChecker defect severities are invalid: "
-            f"{str(cfg.codechecker_severities)}",
-        )
-    severities = shlex.split(cfg.codechecker_severities)
-    # Add HIGH severity by default
-    if not severities:
-        severities.append("HIGH")
-    # We should always detect CRITICAL defects
-    if "CRITICAL" not in severities:
-        severities.append("CRITICAL")
-    logging.debug("Severities: %s", str(severities))
-    issues = dict.fromkeys(severities, 0)
-    logging.debug("Issues: %s", str(issues))
-    # Grep results for defects according to severities
-    for issue in issues:
-        found = re.findall(rf"^{issue} .* (\d+)", results, re.M)
-        defects = sum(int(number) for number in found)
-        logging.debug("   %s : %s = %d", issue, str(found), defects)
-        issues[issue] = defects
-    logging.info("Defects: %s", str(issues))
-    # Check collected defects
-    passed = True
-    conclusion = ""
-    for issue, num in issues.items():
-        if num > 0:
-            passed = False
-            conclusion += f"{issue:>15} : {num}\n"
-    if passed:
-        logging.info("No defects found by CodeChecker")
-    else:
-        fail(cfg.codechecker_log, f"CodeChecker found defects:\n{conclusion}")
+    update_file_paths(cfg.codechecker_files)
 
 
 def test(cfg):
     """Perform all steps for "bazel test" phase"""
-    check_results(cfg)
+    check_results(
+        cfg.codechecker_files, cfg.codechecker_log, cfg.codechecker_severities
+    )
 
 
 def main():
     """Main function"""
     cfg = parse_args()
-    setup(cfg.verbosity, cfg.codechecker_log)
+    setup_logging(cfg.verbosity, cfg.codechecker_log)
     input_data(cfg)
     try:
         if cfg.execution_mode == "Run":

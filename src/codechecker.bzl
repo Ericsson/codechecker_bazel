@@ -384,6 +384,7 @@ def codechecker_test(
             options = analyze,
             skip = skip,
             config = config,
+            severities = severities,
             toolchain = toolchain,
             tags = codechecker_tags,
             **kwargs

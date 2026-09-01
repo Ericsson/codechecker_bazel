@@ -12,6 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 load("@rules_python//python:py_binary.bzl", "py_binary")
+load("@rules_python//python:py_library.bzl", "py_library")
+
+py_library(
+    name = "common",
+    srcs = ["common.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
 
 # Tool filter compile_commands.json file
 py_binary(
@@ -24,12 +32,14 @@ py_binary(
     name = "codechecker_script",
     srcs = ["codechecker_script.py"],
     visibility = ["//visibility:public"],
+    deps = [":common"],
 )
 
 py_binary(
     name = "per_file_script",
     srcs = ["per_file_script.py"],
     visibility = ["//visibility:public"],
+    deps = [":common"],
 )
 
 # The following are flags and default values for clang_tidy_aspect
