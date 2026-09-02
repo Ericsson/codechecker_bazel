@@ -24,11 +24,13 @@ import json
 import logging
 import os
 import shutil
+import ssl
 import subprocess
 import sys
 import tarfile
 import tempfile
 import unittest
+import urllib.request
 from pathlib import Path
 
 MODULE_TEMPLATE = """
@@ -111,14 +113,26 @@ class FossTest(unittest.TestCase):
             shutil.rmtree(cls.work_dir, ignore_errors=True)
 
     @classmethod
+    def ssl_context(cls):
+        """Context with the certificates, some interpreters find none"""
+        context = ssl.create_default_context()
+        if context.cert_store_stats()["x509"]:
+            return context
+        for bundle in ("/etc/pki/tls/certs/ca-bundle.crt",
+                       "/etc/ssl/certs/ca-certificates.crt"):
+            if Path(bundle).exists():
+                logging.debug("Certificates: %s", bundle)
+                return ssl.create_default_context(cafile=bundle)
+        return context
+
+    @classmethod
     def download_and_extract(cls):
         """Download and extract FOSS project"""
         archive = cls.work_dir / "archive.tar.gz"
-        # NOTE: using wget - it should be available in the system
         logging.debug("Downloading: %s", cls.url)
-        subprocess.run(
-            ["wget", "-q", "-O", str(archive), cls.url],
-            check=True)
+        with urllib.request.urlopen(
+                cls.url, context=cls.ssl_context()) as response:
+            archive.write_bytes(response.read())
         logging.debug("Extracting: %s", archive)
         with tarfile.open(archive) as tar:
             members = tar.getmembers()
