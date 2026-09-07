@@ -20,10 +20,15 @@ for each translation unit.
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("codechecker_config.bzl", "get_config_file")
 load(
+    "common.bzl",
+    "version_specific_attributes",
+)
+load(
     "compile_commands.bzl",
     "SourceFilesInfo",
     "compile_commands_aspect",
     "compile_commands_impl",
+    "platforms_transition",
 )
 
 # buildifier: disable=unused-variable
@@ -255,6 +260,7 @@ per_file_test = rule(
     attrs = {
         "config": attr.label(
             default = None,
+            cfg = platforms_transition,
             doc = "CodeChecker configuration",
         ),
         "default_options": attr.string_list(
@@ -268,6 +274,10 @@ per_file_test = rule(
             default = [],
             doc = "List of CodeChecker options, e.g.: --ctu",
         ),
+        "platform": attr.string(
+            default = "",  #"@platforms//os:linux",
+            doc = "Platform to build for",
+        ),
         "skip": attr.string_list(
             default = [],
             doc = "List of skip/ignore file rules. " +
@@ -277,6 +287,7 @@ per_file_test = rule(
             aspects = [
                 compile_commands_aspect,
             ],
+            cfg = platforms_transition,
             doc = "List of compilable targets which should be checked.",
         ),
         "toolchain": attr.label(
@@ -290,7 +301,7 @@ per_file_test = rule(
             cfg = "exec",
             default = ":per_file_script",
         ),
-    },
+    } | version_specific_attributes(),
     outputs = {
         "compile_commands": "%{name}/compile_commands.json",
         "test_script": "%{name}/test_script.sh",

@@ -357,6 +357,7 @@ def codechecker_test(
     if per_file:
         per_file_test(
             name = name,
+            platform = platform,
             targets = targets,
             options = analyze,
             skip = skip,
