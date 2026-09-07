@@ -1,4 +1,4 @@
-# Copyright 2023 Ericsson AB
+# Copyright 2026 Ericsson AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,49 +13,46 @@
 # limitations under the License.
 
 load(
-    "@rules_cc//cc:defs.bzl",
-    "cc_binary",
-    "cc_library",
-)
-load(
-    "@rules_codechecker//:defs.bzl",
-    "codechecker_test",
-    "compile_commands",
+    "//test/unit/external_repository:external_test.bzl",
+    "external_test",
 )
 
-# This is the important bit -- not only do we have an external dependency here
-# in the form of external_lib, but is also an implementation_dep. This is a
-# tricky edge case we need to handle.
-cc_library(
-    name = "intermediate_lib",
-    srcs = ["intermediate.cpp"],
-    hdrs = ["intermediate.h"],
-    implementation_deps = ["@external_lib//:lib"],
-    visibility = ["//visibility:public"],
-)
+exports_files([
+    "external_test_runner.py",
+    "main.cc",
+    "intermediate.cpp",
+    "intermediate.h",
+])
 
-cc_binary(
-    name = "isystem_impl_dep",
-    srcs = ["main.cc"],
-    deps = [":intermediate_lib"],
-)
-
-compile_commands(
-    name = "compile_commands_isystem",
-    targets = [
-        ":isystem_impl_dep",
+external_test(
+    name = "compile_commands_isystem_test",
+    action = "build",
+    contains = [
+        "-isystem external/external_lib[~+]/include",
+        "-isystem bazel-out/k8-fastbuild/bin/external/external_lib[~+]/include",
     ],
+    output_file = "bazel-bin/compile_commands_isystem/compile_commands.json",
+    target = ":compile_commands_isystem",
 )
 
-codechecker_test(
-    name = "codechecker_external_deps",
-    tags = ["manual"],
-    targets = ["isystem_impl_dep"],
+external_test(
+    name = "codechecker_external_deps_test",
+    target = ":codechecker_external_deps",
 )
 
-codechecker_test(
-    name = "per_file_external_deps",
-    per_file = True,
-    tags = ["manual"],
-    targets = ["isystem_impl_dep"],
+external_test(
+    name = "per_file_external_deps_test",
+    target = ":per_file_external_deps",
+)
+
+external_test(
+    name = "codechecker_external_include_paths_test",
+    extra_flags = ["--features=external_include_paths"],
+    target = ":codechecker_external_deps",
+)
+
+external_test(
+    name = "per_file_external_include_paths_test",
+    extra_flags = ["--features=external_include_paths"],
+    target = ":per_file_external_deps",
 )
