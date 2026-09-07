@@ -1,0 +1,102 @@
+# Copyright 2023 Ericsson AB
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: docker-ci
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform to test"
+        required: true
+        type: choice
+        options:
+          - ubuntu
+          - rhel9
+          - all
+        default: all
+      bazel_version:
+        description: "Bazel version to use (leave empty to use 7.7.0)"
+        required: false
+        type: string
+        default: "7.7.0"
+
+permissions: read-all
+
+jobs:
+  ubuntu:
+    name: "Docker CI: Ubuntu"
+    runs-on: ubuntu-24.04
+    if: >
+      inputs.platform == 'ubuntu' ||
+      inputs.platform == 'all'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Ubuntu image
+        uses: docker/build-push-action@v7
+        with:
+          context: .ci/docker/
+          file: .ci/docker/ubuntu/Dockerfile
+          tags: rules-codechecker-ubuntu
+          load: true
+          cache-from: type=gha,scope=ubuntu
+          cache-to: type=gha,mode=max,scope=ubuntu
+
+      - name: Run tests in Ubuntu container
+        run: |
+          docker run --rm \
+            ${BAZEL_VERSION:+-e BAZEL_VERSION="${BAZEL_VERSION}"} \
+            -v "${{ github.workspace }}:/workspace" \
+            rules-codechecker-ubuntu
+        env:
+          BAZEL_VERSION: ${{ inputs.bazel_version }}
+
+  rhel9:
+    name: "Docker CI: RHEL9"
+    runs-on: ubuntu-24.04
+    if: >
+      inputs.platform == 'rhel9' ||
+      inputs.platform == 'all'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build RHEL9 image
+        uses: docker/build-push-action@v7
+        with:
+          context: .ci/docker/
+          file: .ci/docker/rhel9/Dockerfile
+          tags: rules-codechecker-rhel9
+          load: true
+          cache-from: type=gha,scope=rhel9
+          cache-to: type=gha,mode=max,scope=rhel9
+
+      - name: Run tests in RHEL9 container
+        run: |
+          docker run --rm \
+            ${BAZEL_VERSION:+-e BAZEL_VERSION="${BAZEL_VERSION}"} \
+            -v "${{ github.workspace }}:/workspace" \
+            rules-codechecker-rhel9
+        env:
+          BAZEL_VERSION: ${{ inputs.bazel_version }}
