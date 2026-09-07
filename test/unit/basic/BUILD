@@ -24,6 +24,14 @@ load(
     "//test/unit:unit_test.bzl",
     "unit_test",
 )
+load(
+    ":analysis_test.bzl",
+    "analysis_test_suite",
+)
+load(
+    ":unit_test.bzl",
+    "unit_test_suite",
+)
 
 cc_library(
     name = "basic_target",
@@ -68,3 +76,7 @@ unit_test(
     regex_patterns = ["[a-z]"],
     require_patterns_in_each_file = False,
 )
+
+analysis_test_suite(name = "analysis_tests")
+
+unit_test_suite(name = "unit_tests")
