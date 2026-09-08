@@ -18,6 +18,14 @@ load(
     "cc_library",
 )
 load(
+    "@rules_python//python:py_library.bzl",
+    "py_library",
+)
+load(
+    "@rules_python//python:py_test.bzl",
+    "py_test",
+)
+load(
     "//:defs.bzl",
     "codechecker_test",
 )
@@ -29,9 +37,66 @@ cc_library(
 )
 
 codechecker_test(
-    name = "codechecker",
+    name = "codechecker_data",
     tags = ["manual"],
     targets = [
         "c_target",
     ],
+)
+
+# codechecker_data is a test target, so its own $(rootpaths) resolve to the
+# test launcher. This plain filegroup re-exports the analysis output files,
+# letting the tests receive their paths from Bazel and pick the report
+# directory (codechecker-files) instead of hard-coding it.
+filegroup(
+    name = "report_files",
+    testonly = True,
+    srcs = [":codechecker_data"],
+    tags = ["manual"],
+)
+
+py_test(
+    name = "parse_test",
+    srcs = ["parse_check.py"],
+    args = [
+        "--mode=parse",
+        "$(rootpaths :report_files)",
+    ],
+    data = [":report_files"],
+    local = True,
+    main = "parse_check.py",
+    tags = ["unit"],
+    deps = [":helpers"],
+)
+
+py_test(
+    name = "parse_html_test",
+    srcs = ["parse_check.py"],
+    args = [
+        "--mode=parse_html",
+        "$(rootpaths :report_files)",
+    ],
+    data = [":report_files"],
+    local = True,
+    main = "parse_check.py",
+    tags = ["unit"],
+    deps = [":helpers"],
+)
+
+py_test(
+    name = "store_test",
+    size = "large",
+    srcs = ["store_check.py"],
+    args = ["$(rootpaths :report_files)"],
+    data = [":report_files"],
+    local = True,
+    main = "store_check.py",
+    tags = ["unit"],
+    deps = [":helpers"],
+)
+
+py_library(
+    name = "helpers",
+    srcs = ["helpers.py"],
+    imports = ["."],
 )
