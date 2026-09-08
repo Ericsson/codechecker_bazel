@@ -44,6 +44,28 @@ codechecker_extension = use_extension(
 )
 use_repo(codechecker_extension, "default_codechecker_tools")
 
+python = use_extension(
+    "@rules_python//python/extensions:python.bzl",
+    "python",
+    dev_dependency = True,
+)
+python.toolchain(
+    is_default = True,
+    python_version = "3.12",
+)
+
+pip = use_extension(
+    "@rules_python//python/extensions:pip.bzl",
+    "pip",
+    dev_dependency = True,
+)
+pip.parse(
+    hub_name = "pylint_deps",
+    python_version = "3.12",
+    requirements_lock = "//test/pylint:requirements.txt",
+)
+use_repo(pip, "pylint_deps")
+
 register_toolchains(
     "//:default_toolchain",
 )

@@ -1,4 +1,4 @@
-# Copyright 2023 Ericsson AB
+# Copyright 2026 Ericsson AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,3 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+load("//test/pylint:pylint_test.bzl", "pylint_test")
+
+exports_files([
+    ".pylintrc",
+    "pylint_runner.py",
+    "requirements.txt",
+])
+
+pylint_test(
+    name = "pylint",
+    exclude = [
+        "**/venv/**",
+        "**/__pycache__/**",
+    ],
+    paths = [
+        "src",
+        "test",
+    ],
+    pylint = "@pylint_deps//pylint",
+    pylintrc = ":.pylintrc",
+)
