@@ -12,4 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_python//python:py_library.bzl", "py_library")
+load("//test/pylint:pylint_test.bzl", "pylint")
+
 exports_files(["grep_check.py"])
+
+# Library wrapping the unit_test runner so it can be linted.
+py_library(
+    name = "grep_check_lib",
+    srcs = ["grep_check.py"],
+    tags = ["manual"],
+)
+
+pylint(
+    name = "pylint",
+    targets = [":grep_check_lib"],
+)

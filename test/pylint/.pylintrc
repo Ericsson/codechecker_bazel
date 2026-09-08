@@ -1,0 +1,8 @@
+[MASTER]
+
+[FORMAT]
+max-line-length=80
+
+[MESSAGES CONTROL]
+disable=
+    fixme,

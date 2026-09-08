@@ -97,9 +97,23 @@ Or let one script do the whole round:
 On how to run or add a new test, see
 [test/README.md](https://github.com/Ericsson/rules_codechecker/blob/main/test/README.md).
 
-Note that `test/unit/external_repository` is in `.bazelignore`, it consumes
-these rules as an external module and therefore runs through `pytest` only.
-It is the test that catches breakage visible to our users but not to us.
+### Linting Python with Bazel
+
+Python targets are linted through a per-target Bazel macro.
+Add a `pylint(...)` target next to a top-level
+`py_binary`/`py_library`/`py_test`:
+
+```starlark
+load("//test/pylint:pylint_test.bzl", "pylint")
+
+pylint(
+    name = "pylint",
+    targets = [":my_py_binary"],
+)
+```
+
+It lints the targets and their dependencies (except pip packages)
+These targets run as part of `bazel test //...` (tagged `pylint`).
 
 
 ## Submitting a patch

@@ -80,8 +80,8 @@ jobs:
 
       - name: Run lint tests
         run: |
-          pylint .
           bazel test //test/buildifier --test_output=all
+          bazel test //... --test_tag_filters=pylint --test_output=all
         shell: bash -el {0}
 
       # Splitting test runs to: bazel unit tests, bazel foss tests, python unittests
@@ -155,8 +155,8 @@ jobs:
 
       - name: Run lint tests
         run: |
-          pylint .
           runuser -u test -- bazel test //test/buildifier --test_output=all
+          runuser -u test -- bazel test //... --test_tag_filters=pylint --test_output=all
         shell: bash -el {0}
 
       # Splitting test runs to: bazel unit tests, bazel foss tests, python unittests

@@ -1,0 +1,14 @@
+astroid==4.0.4
+    # via pylint
+dill==0.4.1
+    # via pylint
+isort==8.0.1
+    # via pylint
+mccabe==0.7.0
+    # via pylint
+platformdirs==4.11.5
+    # via pylint
+pylint==4.0.5
+    # via -r -
+tomlkit==0.15.1
+    # via pylint

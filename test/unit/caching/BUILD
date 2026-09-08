@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_python//python:py_library.bzl", "py_library")
+load("//test/pylint:pylint_test.bzl", "pylint")
 load(
     "//test/unit/caching:caching_test.bzl",
     "caching_test",
@@ -22,6 +24,18 @@ load(
 # warnings.
 
 exports_files(["caching_check.py"])
+
+# Library wrapping the caching test runner so it can be linted.
+py_library(
+    name = "caching_check_lib",
+    srcs = ["caching_check.py"],
+    tags = ["manual"],
+)
+
+pylint(
+    name = "pylint",
+    targets = [":caching_check_lib"],
+)
 
 # Bazel-native caching tests (bazel inside bazel)
 caching_test(

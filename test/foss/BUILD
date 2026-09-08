@@ -25,7 +25,21 @@
 # To add a new project: add a foss_test() call below.
 # -----------------------------------------------------------------------
 
+load("@rules_python//python:py_library.bzl", "py_library")
+load("//test/pylint:pylint_test.bzl", "pylint")
 load(":foss_test.bzl", "foss_test")
+
+# Library wrapping the foss_test runner so it can be linted.
+py_library(
+    name = "foss_test_runner_lib",
+    srcs = ["foss_test_runner.py"],
+    tags = ["manual"],
+)
+
+pylint(
+    name = "pylint",
+    targets = [":foss_test_runner_lib"],
+)
 
 foss_test(
     name = "zlib",

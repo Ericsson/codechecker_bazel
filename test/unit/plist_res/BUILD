@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@rules_python//python:py_test.bzl", "py_test")
+load("//test/pylint:pylint_test.bzl", "pylint")
 
 py_test(
     name = "path_resolution_test",
@@ -21,4 +22,9 @@ py_test(
     main = "path_resolution_check.py",
     tags = ["unit"],
     deps = ["//src:codechecker_script"],
+)
+
+pylint(
+    name = "pylint",
+    targets = [":path_resolution_test"],
 )

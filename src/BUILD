@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 load("@rules_python//python:py_binary.bzl", "py_binary")
+load("//test/pylint:pylint_test.bzl", "pylint")
 
 # Tool filter compile_commands.json file
 py_binary(
@@ -30,6 +31,15 @@ py_binary(
     name = "per_file_script",
     srcs = ["per_file_script.py"],
     visibility = ["//visibility:public"],
+)
+
+pylint(
+    name = "pylint",
+    targets = [
+        ":codechecker_script",
+        ":compile_commands_filter",
+        ":per_file_script",
+    ],
 )
 
 # The following are flags and default values for clang_tidy_aspect
