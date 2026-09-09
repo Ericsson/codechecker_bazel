@@ -44,6 +44,20 @@ codechecker_extension = use_extension(
 )
 use_repo(codechecker_extension, "default_codechecker_tools")
 
+# Pylint is fetched from PyPI, so that the linter version is pinned and
+# independent of the environment. It is only used by //test/pylint.
+pip = use_extension(
+    "@rules_python//python/extensions:pip.bzl",
+    "pip",
+    dev_dependency = True,
+)
+pip.parse(
+    hub_name = "pylint_deps",
+    python_version = "3.11",
+    requirements_lock = "//test/pylint:requirements.txt",
+)
+use_repo(pip, "pylint_deps")
+
 register_toolchains(
     "//:default_toolchain",
 )

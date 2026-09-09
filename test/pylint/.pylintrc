@@ -1,7 +1,9 @@
 [MASTER]
 # To find common lib for tests
 init-hook='import sys; import os; sys.path.append("test"); sys.path.append(os.getcwd())'
-ignore = test_template.py
+# Check every directory, except the ones that are not ours
+recursive = yes
+ignore-patterns = .ci,bazel-*
 
 [FORMAT]
 max-line-length=80

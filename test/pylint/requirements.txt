@@ -1,0 +1,10 @@
+# Pylint and its dependency closure, fetched by the pip extension.
+# Regenerate with: pip-compile --output-file=requirements.txt <(echo pylint)
+astroid==4.0.4
+dill==0.4.1
+isort==9.0.1
+mccabe==0.7.0
+mypy_extensions==1.1.0
+platformdirs==4.11.8
+pylint==4.0.8
+tomlkit==0.15.1

@@ -41,8 +41,11 @@ toolchain(
     toolchain_type = ":toolchain_type",
 )
 
-# Repository root marker, used by the buildifier test to find the workspace
+# Repository root marker, used by buildifier and pylint tests
 exports_files(
     ["MODULE.bazel"],
-    visibility = ["//test/buildifier:__pkg__"],
+    visibility = [
+        "//test/buildifier:__pkg__",
+        "//test/pylint:__pkg__",
+    ],
 )
