@@ -50,6 +50,12 @@ load(
     _platforms_transition = "platforms_transition",
 )
 
+# Store rule, for uploading results to a CodeChecker server
+load(
+    "//src:store.bzl",
+    _store = "store",
+)
+
 codechecker_test = _codechecker_test
 codechecker_suite = _codechecker_suite
 codechecker_config = _codechecker_config
@@ -57,6 +63,7 @@ codechecker_toolchain = _codechecker_toolchain
 compile_commands = _compile_commands
 clang_tidy_test = _clang_tidy_test
 clang_analyze_test = _clang_analyze_test
+codechecker_store = _store
 
 # Helper for the platform suffix codechecker_suite() adds to its test names
 get_platform_alias = _get_platform_alias

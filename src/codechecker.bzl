@@ -255,6 +255,9 @@ def _codechecker_test_impl(ctx):
             runfiles = all_runfiles,
             executable = launcher,
         ),
+        OutputGroupInfo(
+            codechecker_files = depset([codechecker_files]),
+        ),
     ]
 
 _codechecker_test = rule(

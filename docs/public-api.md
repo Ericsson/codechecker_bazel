@@ -20,6 +20,7 @@ load("@rules_codechecker//:defs.bzl", "codechecker_test")
 | [`clang_tidy_test()`](clang#clang_tidy_test) | run clang-tidy without CodeChecker |
 | [`clang_analyze_test()`](clang#clang_analyze_test) | run the Clang Static Analyzer without CodeChecker |
 | [`compile_commands()`](compile-commands#compile_commands) | generate `compile_commands.json` |
+| [`codechecker_store()`](store#store) | upload analysis results to a CodeChecker server |
 | [`codechecker_toolchain()`](toolchains#providing-your-own-tools) | provide your own tools |
 
 

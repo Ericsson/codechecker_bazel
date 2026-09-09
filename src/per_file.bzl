@@ -248,6 +248,9 @@ def _per_file_impl(ctx):
             runfiles = ctx.runfiles(files = run_files),
             executable = ctx.outputs.test_script,
         ),
+        OutputGroupInfo(
+            codechecker_files = files,
+        ),
     ]
 
 per_file_test = rule(

@@ -19,6 +19,7 @@ load(
 )
 load(
     "//:defs.bzl",
+    "codechecker_store",
     "codechecker_test",
 )
 
@@ -33,5 +34,36 @@ codechecker_test(
     tags = ["manual"],
     targets = [
         "c_target",
+    ],
+)
+
+codechecker_test(
+    name = "per_file",
+    per_file = True,
+    tags = ["manual"],
+    targets = [
+        "c_target",
+    ],
+)
+
+codechecker_store(
+    name = "store_mono",
+    targets = [
+        ":codechecker",
+    ],
+)
+
+codechecker_store(
+    name = "store_per_file",
+    targets = [
+        ":per_file",
+    ],
+)
+
+codechecker_store(
+    name = "store_mixed",
+    targets = [
+        ":codechecker",
+        ":per_file",
     ],
 )

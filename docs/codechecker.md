@@ -78,16 +78,17 @@ bazel test ...
 ### Analysis results
 
 You can find the analysis results in the `bazel-bin/` folder, on which you
-can run [`CodeChecker store`](https://github.com/Ericsson/codechecker/blob/master/docs/web/user_guide.md#store)
-or [`CodeChecker parse`](https://github.com/Ericsson/codechecker/blob/master/docs/analyzer/user_guide.md#parse).
+can run [`CodeChecker parse`](https://github.com/Ericsson/codechecker/blob/master/docs/analyzer/user_guide.md#parse).
 The precise output path to the directory can vary,
 but you should look for `your_codechecker_rule_name/codechecker-files/data`.
-In simpler cases, something like the following:
 
 ```bash
 CodeChecker parse bazel-bin/your_codechecker_rule_name/codechecker-files/data
-CodeChecker store bazel-bin/your_codechecker_rule_name/codechecker-files/data -n "Run name"
 ```
+
+To upload results to a CodeChecker server, use the [`codechecker_store()`](store#store)
+rule instead of calling `CodeChecker store` manually. See [Store](store) for
+details.
 
 <!-- For now, we consider codechecker() to be an internal rule.
 

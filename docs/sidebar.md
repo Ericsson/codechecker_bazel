@@ -9,5 +9,6 @@
 
 - **Rules**
   - [CodeChecker](codechecker)
+  - [Store](store)
   - [Clang](clang)
   - [Compilation Database](compile-commands)
